@@ -795,7 +795,7 @@
           URL.revokeObjectURL(url); a.remove();
 
           // --- START COOLDOWN ---
-          const cooldownDuration = 30 * 60 * 1000; // 30 minutes in milliseconds
+          const cooldownDuration = 30 * 600 * 1000; // 30 minutes in milliseconds
           const endTime = Date.now() + cooldownDuration;
           localStorage.setItem('cooldownEndTime', endTime);
           startCooldownTimer(endTime);
