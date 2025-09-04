@@ -730,13 +730,9 @@
                 return;
             }
 
-              const hours = Math.floor(remaining / (1000 * 60 * 60));  
-            const minutes = Math.floor((remaining % (1000 * 60 * 60)) / (1000 * 60));
-            const seconds = Math.floor((remaining % (1000 * 60)) / 1000);
-            const timeString = `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
-            
-            status.textContent = translations[currentLang].cooldownActive(timeString);
-
+            const minutes = Math.floor((remaining / 1000) / 60);
+            const seconds = Math.floor((remaining / 1000) % 60);
+            const timeString = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
             
             status.textContent = translations[currentLang].cooldownActive(timeString);
             info.textContent = ''; // Hide file info during cooldown
@@ -799,7 +795,7 @@
           URL.revokeObjectURL(url); a.remove();
 
           // --- START COOLDOWN ---
-          const cooldownDuration = 24 * 60 * 60 * 1000; // 30 minutes in milliseconds
+          const cooldownDuration = 30 * 60 * 1000; // 30 minutes in milliseconds
           const endTime = Date.now() + cooldownDuration;
           localStorage.setItem('cooldownEndTime', endTime);
           startCooldownTimer(endTime);
