@@ -508,47 +508,14 @@
     const status = document.getElementById('status');
     const mb = n => (n/1024/1024).toFixed(2)+' MB';
     
-    let countdownInterval = null;
-
-    function disableUpload() {
-        processBtn.disabled = true;
-        drop.style.pointerEvents = 'none';
-        drop.style.opacity = '0.5';
-        fileInput.disabled = true;
-    }
-
     function enableUpload() {
-        processBtn.disabled = !fileInput.files[0];
         drop.style.pointerEvents = 'auto';
         drop.style.opacity = '1';
         fileInput.disabled = false;
-        localStorage.removeItem('cooldownEndTime');
-        status.textContent = "You can now upload another video.";
-        info.textContent = "Drag & drop your video here, or click to select";
         fileInput.value = ''; // Clear file input
-    }
-    
-    function startCooldownTimer(endTime) {
-        disableUpload();
-        if(countdownInterval) clearInterval(countdownInterval);
-
-        countdownInterval = setInterval(() => {
-            const now = Date.now();
-            const remaining = endTime - now;
-
-            if (remaining <= 0) {
-                clearInterval(countdownInterval);
-                enableUpload();
-                return;
-            }
-
-            const minutes = Math.floor((remaining / 1000) / 60);
-            const seconds = Math.floor((remaining / 1000) % 60);
-            const timeString = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
-            
-            status.textContent = `Service suspended to prevent server overload. You can upload again in: ${timeString}`;
-            info.textContent = ''; // Hide file info during cooldown
-        }, 1000);
+        info.textContent = "Drag & drop your video here, or click to select";
+        status.textContent = "You can now upload another video.";
+        processBtn.disabled = true;
     }
     
     drop.addEventListener('click', () => fileInput.click());
@@ -578,6 +545,10 @@
       status.textContent = "Uploading…";
       bar.classList.remove('running'); bar.style.width='0%';
       processBtn.disabled = true;
+      fileInput.disabled = true; // Disable file input during upload
+      drop.style.pointerEvents = 'none';
+      drop.style.opacity = '0.5';
+
       const fd = new FormData(); fd.append('file', f);
       const xhr = new XMLHttpRequest();
       xhr.open('POST', '/process', true);
@@ -599,39 +570,31 @@
           const a = document.createElement('a');
           a.href = url; a.download = 'output.mp4'; document.body.appendChild(a); a.click();
           URL.revokeObjectURL(url); a.remove();
-
-          // --- START COOLDOWN ---
-          const cooldownDuration = 30 * 60 * 1000; // 30 minutes in milliseconds
-          const endTime = Date.now() + cooldownDuration;
-          localStorage.setItem('cooldownEndTime', endTime);
-          startCooldownTimer(endTime);
-          // --- END COOLDOWN ---
-
+          
+          // Reset for next upload
+          setTimeout(enableUpload, 1000); // Small delay to ensure download starts
+          
         } else {
           status.textContent = "An error occurred, please try again.";
-          updateInfo(); // Re-enable button if file is still selected
+          // Re-enable everything if there's an error
+          drop.style.pointerEvents = 'auto';
+          drop.style.opacity = '1';
+          fileInput.disabled = false;
+          updateInfo();
         }
       };
       xhr.onerror = () => { 
         bar.classList.remove('running');
         status.textContent = "Connection failed.";
-        updateInfo(); // Re-enable button if file is still selected
+        // Re-enable everything if there's an error
+        drop.style.pointerEvents = 'auto';
+        drop.style.opacity = '1';
+        fileInput.disabled = false;
+        updateInfo();
       };
       xhr.send(fd);
     });
 
-    // --- On Page Load ---
-    document.addEventListener('DOMContentLoaded', () => {
-        const cooldownEndTime = localStorage.getItem('cooldownEndTime');
-        if (cooldownEndTime) {
-            const endTime = parseInt(cooldownEndTime, 10);
-            if (endTime > Date.now()) {
-                startCooldownTimer(endTime);
-            } else {
-                localStorage.removeItem('cooldownEndTime');
-            }
-        }
-    });
   </script>
 
 </body>
