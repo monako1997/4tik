@@ -355,6 +355,7 @@
       display: flex;
       flex-direction: column;
       align-items: center;
+      gap: 20px;
     }
     .footer {
       padding: 40px 20px 20px;
@@ -440,6 +441,15 @@
         transform: scale(1.03);
     }
     
+    /* Blinking Button Animation */
+    @keyframes blink {
+      50% {
+        box-shadow: 0 0 10px var(--c2), 0 0 20px var(--c2);
+      }
+    }
+    .blinking-btn {
+        animation: blink 1.5s linear infinite;
+    }
   </style>
 </head>
 <body>
@@ -467,7 +477,10 @@
         <div id="fileInfo" class="hint" data-translate="dragDrop">اسحب المقطع هنا أو اضغط للاختيار</div>
       </div>
       <div class="row">
-        <button class="button" id="process" disabled>
+        <button class="button blinking-btn" id="followBtn" disabled>
+          <span class="text_button" data-translate="followToProcess">تابع للمعالجة</span>
+        </button>
+        <button class="button" id="process" style="display: none;">
             <div class="dots_border"></div>
             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" class="sparkle">
               <path class="path" stroke-linejoin="round" stroke-linecap="round" stroke="black" fill="black" d="M14.187 8.096L15 5.25L15.813 8.096C16.0231 8.83114 16.4171 9.50062 16.9577 10.0413C17.4984 10.5819 18.1679 10.9759 18.903 11.186L21.75 12L18.904 12.813C18.1689 13.0231 17.4994 13.4171 16.9587 13.9577C16.4181 14.4984 16.0241 15.1679 15.814 15.903L15 18.75L14.187 15.904C13.9769 15.1689 13.5829 14.4994 13.0423 13.9587C12.5016 13.4181 11.8321 13.0241 11.097 12.814L8.25 12L11.096 11.187C11.8311 10.9769 12.5006 10.5829 13.0413 10.0423C13.5819 9.50162 13.9759 8.83214 14.186 8.097L14.187 8.096Z"></path>
@@ -587,7 +600,8 @@
     <section id="visitor-counter-card" class="card text-section animated-entry">
       <div class="card-inner-content">
         <h2 class="card-title" data-translate="visitorStats">إحصائيات الزوار</h2>
-        <script type='text/javascript' id='mapmyvisitors' src='httpshttps://mapmyvisitors.com/map.js?cl=ffffff&w=167&t=tt&d=meZlgvBGIrbRPp-0UKc1lAfXYPXslsuznPtsEddaIZ4&ct=ffffff'></script>
+        <script type='text/javascript' id='mapmyvisitors' src='https://mapmyvisitors.com/map.js?cl=ffffff&w=167&t=tt&d=meZlgvBGIrbRPp-0UKc1lAfXYPXslsuznPtsEddaIZ4&ct=ffffff'></script>
+        <div id="sfcsxqzk2hnkcsj5w1lhr71n76f4yxtuu3k"></div> <script type="text/javascript" src="https://counter5.optistats.ovh/private/counter.js?c=sxqzk2hnkcsj5w1lhr71n76f4yxtuu3k&down=async" async></script> <noscript><a href="https://www.freecounterstat.com" title="website view counter"><img src="https://counter5.optistats.ovh/private/freecounterstat.php?c=sxqzk2hnkcsj5w1lhr71n76f4yxtuu3k" border="0" title="website view counter" alt="website view counter"></a></noscript>
       </div>
     </section>
     
@@ -601,6 +615,7 @@
     const drop = document.getElementById('drop');
     const fileInput = document.getElementById('file');
     const info = document.getElementById('fileInfo');
+    const followBtn = document.getElementById('followBtn');
     const processBtn = document.getElementById('process');
     const bar = document.getElementById('bar');
     const status = document.getElementById('status');
@@ -613,6 +628,7 @@
         en: {
             uploadVideo: "Upload Video",
             dragDrop: "Drag & drop your video here, or click to select",
+            followToProcess: "Follow to Process",
             process: "Process",
             howToUse: "How to Use",
             step1: "1. Upload a video of at least 100MB.",
@@ -643,6 +659,7 @@
         ar: {
             uploadVideo: "رفع فيديو",
             dragDrop: "اسحب المقطع هنا أو اضغط للاختيار",
+            followToProcess: "تابع للمعالجة",
             process: "معالجة",
             howToUse: "كيفية الاستخدام",
             step1: "١. ارفع الفديو لايقل عن 100 ميقا.",
@@ -700,13 +717,16 @@
 
     function disableUpload() {
         processBtn.disabled = true;
+        followBtn.disabled = true;
         drop.style.pointerEvents = 'none';
         drop.style.opacity = '0.5';
         fileInput.disabled = true;
     }
 
     function enableUpload() {
-        processBtn.disabled = !fileInput.files[0];
+        processBtn.disabled = true;
+        processBtn.style.display = 'none';
+        followBtn.style.display = 'flex';
         drop.style.pointerEvents = 'auto';
         drop.style.opacity = '1';
         fileInput.disabled = false;
@@ -714,6 +734,7 @@
         status.textContent = translations[currentLang].cooldownEnded;
         info.textContent = translations[currentLang].fileInfoDefault;
         fileInput.value = ''; // Clear file input
+        updateInfo();
     }
     
     function startCooldownTimer(endTime) {
@@ -758,14 +779,22 @@
       status.textContent = '';
       if(!f){ 
         info.textContent = translations[currentLang].fileInfoDefault;
+        followBtn.disabled = true;
         processBtn.disabled = true;
         return;
       }
       info.textContent = translations[currentLang].fileInfoSelected(f.name, mb(f.size));
-      processBtn.disabled = false;
+      followBtn.disabled = false;
     }
     
     fileInput.addEventListener('change', updateInfo);
+
+    followBtn.addEventListener('click', () => {
+        window.open('https://www.tiktok.com/@queen_iy', '_blank');
+        followBtn.style.display = 'none';
+        processBtn.style.display = 'flex';
+        processBtn.disabled = false;
+    });
     
     processBtn.addEventListener('click', () => {
       const f = fileInput.files[0]; if(!f) return;
@@ -803,13 +832,13 @@
 
         } else {
           status.textContent = translations[currentLang].statusError;
-          updateInfo(); // Re-enable button if file is still selected
+          enableUpload();
         }
       };
       xhr.onerror = () => { 
         bar.classList.remove('running');
         status.textContent = translations[currentLang].statusConnectionError;
-        updateInfo(); // Re-enable button if file is still selected
+        enableUpload();
       };
       xhr.send(fd);
     });
