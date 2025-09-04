@@ -637,6 +637,8 @@
             statusConnectionError: "Connection failed.",
             fileInfoDefault: "Drag & drop your video here, or click to select",
             fileInfoSelected: (name, size) => `File: ${name} — ${size}`,
+            cooldownActive: (time) => `Service suspended to prevent server overload. You can upload again in: ${time}`,
+            cooldownEnded: "You can now upload another video."
         },
         ar: {
             uploadVideo: "رفع فيديو",
@@ -665,10 +667,13 @@
             statusConnectionError: "تعذّر الاتصال.",
             fileInfoDefault: "اسحب المقطع هنا أو اضغط للاختيار",
             fileInfoSelected: (name, size) => `الملف: ${name} — ${size}`,
+            cooldownActive: (time) => `تم تعليق الخدمة لتفادي الضغط على السيرفر. يمكنك الرفع مجدداً بعد: ${time}`,
+            cooldownEnded: "يمكنك الآن رفع فيديو آخر."
         }
     };
     
     let currentLang = 'ar';
+    let countdownInterval = null;
     
     function setLanguage(lang) {
         currentLang = lang;
@@ -686,10 +691,54 @@
         langEnBtn.classList.toggle('active', lang === 'en');
         langArBtn.classList.toggle('active', lang === 'ar');
         
-        if (!fileInput.files[0]) {
+        if (!fileInput.files[0] && !localStorage.getItem('cooldownEndTime')) {
              info.textContent = translations[currentLang].fileInfoDefault;
         }
     }
+
+    // --- Cooldown and UI Management Logic ---
+
+    function disableUpload() {
+        processBtn.disabled = true;
+        drop.style.pointerEvents = 'none';
+        drop.style.opacity = '0.5';
+        fileInput.disabled = true;
+    }
+
+    function enableUpload() {
+        processBtn.disabled = !fileInput.files[0];
+        drop.style.pointerEvents = 'auto';
+        drop.style.opacity = '1';
+        fileInput.disabled = false;
+        localStorage.removeItem('cooldownEndTime');
+        status.textContent = translations[currentLang].cooldownEnded;
+        info.textContent = translations[currentLang].fileInfoDefault;
+        fileInput.value = ''; // Clear file input
+    }
+    
+    function startCooldownTimer(endTime) {
+        disableUpload();
+        if(countdownInterval) clearInterval(countdownInterval);
+
+        countdownInterval = setInterval(() => {
+            const now = Date.now();
+            const remaining = endTime - now;
+
+            if (remaining <= 0) {
+                clearInterval(countdownInterval);
+                enableUpload();
+                return;
+            }
+
+            const minutes = Math.floor((remaining / 1000) / 60);
+            const seconds = Math.floor((remaining / 1000) % 60);
+            const timeString = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+            
+            status.textContent = translations[currentLang].cooldownActive(timeString);
+            info.textContent = ''; // Hide file info during cooldown
+        }, 1000);
+    }
+
 
     // --- Event Listeners and Initial Setup ---
     
@@ -745,12 +794,12 @@
           a.href = url; a.download = 'output.mp4'; document.body.appendChild(a); a.click();
           URL.revokeObjectURL(url); a.remove();
 
-          // Reset UI for next upload
-          setTimeout(() => {
-              fileInput.value = ''; // Clear the file input
-              updateInfo(); // Reset info text and button state
-              bar.style.width = '0%';
-          }, 1000);
+          // --- START COOLDOWN ---
+          const cooldownDuration = 30 * 60 * 1000; // 30 minutes in milliseconds
+          const endTime = Date.now() + cooldownDuration;
+          localStorage.setItem('cooldownEndTime', endTime);
+          startCooldownTimer(endTime);
+          // --- END COOLDOWN ---
 
         } else {
           status.textContent = translations[currentLang].statusError;
@@ -769,8 +818,18 @@
     document.addEventListener('DOMContentLoaded', () => {
         const savedLang = localStorage.getItem('preferredLanguage') || 'ar';
         setLanguage(savedLang);
+
+        const cooldownEndTime = localStorage.getItem('cooldownEndTime');
+        if (cooldownEndTime) {
+            const endTime = parseInt(cooldownEndTime, 10);
+            if (endTime > Date.now()) {
+                startCooldownTimer(endTime);
+            } else {
+                localStorage.removeItem('cooldownEndTime'); // Clean up expired timer
+            }
+        }
     });
   </script>
 
 </body>
-  </html>
+</html>
