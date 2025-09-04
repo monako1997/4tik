@@ -65,15 +65,14 @@
     .button:is(:hover,:focus) .sparkle .path{animation:path 1.5s linear .5s infinite}
     .button .text_button{position:relative;z-index:10;background-image:linear-gradient(90deg, hsla(0 0% 100% / 1) 0%, hsla(0 0% 100% / var(--active,0)) 120%);background-clip:text;font-size:1.1rem;font-weight:bold;color:transparent}
     .button:disabled{opacity:.6;cursor:not-allowed;pointer-events:none}
-    /* Cooldown pill */
     .pill{display:inline-block;padding:6px 10px;border:1px solid var(--line);border-radius:999px;font-size:13px;color:var(--muted);background:rgba(255,255,255,.02)}
-    /* Avatar circle inside rating card (top-right) */
     .rating-avatar{
       position:absolute;top:18px;right:20px;width:64px;height:64px;border-radius:50%;object-fit:cover;border:3px solid var(--c1);box-shadow:0 0 14px rgba(37,244,238,.45)
     }
-    @media (max-width:520px){
-      .rating-avatar{width:54px;height:54px;top:14px;right:16px}
-    }
+    @media (max-width:520px){.rating-avatar{width:54px;height:54px;top:14px;right:16px}}
+    .footer{padding:40px 20px 20px;text-align:center;color:var(--muted);font-size:16px}
+    .heart{display:inline-block;animation:beat 1.2s infinite ease-in-out;color:#FE2C55}
+    @keyframes beat{0%,100%{transform:scale(1)}50%{transform:scale(1.1)}}
   </style>
 </head>
 <body>
@@ -118,32 +117,22 @@
 
     <section id="rating-card" class="card text-section animated-entry">
       <div class="card-inner-content">
-        <!-- Avatar circle at top-right -->
+        <!-- TikTok avatar at top-right -->
         <img class="rating-avatar" alt="TikTok avatar"
-             src="https://p16-sign-va.tiktokcdn.com/tos-maliva-avt-0068/36fb03fab8355da6669fd8cae7a7f798~tplv-tiktokx-cropcenter:100:100.jpeg?dr=14579&refresh_token=040b34c5&x-expires=1757174400&x-signature=8gvI%2Fih2GY%2Byv6%2FPDPZ7tSWCuwo%3D&t=4d5b0474&ps=13740610&shp=a5d48078&shcp=81f88b70&idc=maliva" />
+          src="https://p16-sign-va.tiktokcdn.com/tos-maliva-avt-0068/36fb03fab8355da6669fd8cae7a7f798~tplv-tiktokx-cropcenter:100:100.jpeg?dr=14579&refresh_token=040b34c5&x-expires=1757174400&x-signature=8gvI%2Fih2GY%2Byv6%2FPDPZ7tSWCuwo%3D&t=4d5b0474&ps=13740610&shp=a5d48078&shcp=81f88b70&idc=maliva" />
         <h2 class="card-title">Please Rate Your Experience</h2>
         <p class="card-text">To help us serve you better</p>
         <div class="rating-stars-container">
           <input value="star-5" name="star" id="star-5" type="radio" />
-          <label for="star-5" class="star-label">
-            <svg viewBox="0 0 24 24"><path d="M12,17.27L18.18,21L16.54,13.97L22,9.24L14.81,8.62L12,2L9.19,8.62L2,9.24L7.45,13.97L5.82,21L12,17.27Z"/></svg>
-          </label>
+          <label for="star-5" class="star-label"><svg viewBox="0 0 24 24"><path d="M12,17.27L18.18,21L16.54,13.97L22,9.24L14.81,8.62L12,2L9.19,8.62L2,9.24L7.45,13.97L5.82,21L12,17.27Z"/></svg></label>
           <input value="star-4" name="star" id="star-4" type="radio" />
-          <label for="star-4" class="star-label">
-            <svg viewBox="0 0 24 24"><path d="M12,17.27L18.18,21L16.54,13.97L22,9.24L14.81,8.62L12,2L9.19,8.62L2,9.24L7.45,13.97L5.82,21L12,17.27Z"/></svg>
-          </label>
+          <label for="star-4" class="star-label"><svg viewBox="0 0 24 24"><path d="M12,17.27L18.18,21L16.54,13.97L22,9.24L14.81,8.62L12,2L9.19,8.62L2,9.24L7.45,13.97L5.82,21L12,17.27Z"/></svg></label>
           <input value="star-3" name="star" id="star-3" type="radio" />
-          <label for="star-3" class="star-label">
-            <svg viewBox="0 0 24 24"><path d="M12,17.27L18.18,21L16.54,13.97L22,9.24L14.81,8.62L12,2L9.19,8.62L2,9.24L7.45,13.97L5.82,21L12,17.27Z"/></svg>
-          </label>
+          <label for="star-3" class="star-label"><svg viewBox="0 0 24 24"><path d="M12,17.27L18.18,21L16.54,13.97L22,9.24L14.81,8.62L12,2L9.19,8.62L2,9.24L7.45,13.97L5.82,21L12,17.27Z"/></svg></label>
           <input value="star-2" name="star" id="star-2" type="radio" />
-          <label for="star-2" class="star-label">
-            <svg viewBox="0 0 24 24"><path d="M12,17.27L18.18,21L16.54,13.97L22,9.24L14.81,8.62L12,2L9.19,8.62L2,9.24L7.45,13.97L5.82,21L12,17.27Z"/></svg>
-          </label>
+          <label for="star-2" class="star-label"><svg viewBox="0 0 24 24"><path d="M12,17.27L18.18,21L16.54,13.97L22,9.24L14.81,8.62L12,2L9.19,8.62L2,9.24L7.45,13.97L5.82,21L12,17.27Z"/></svg></label>
           <input value="star-1" name="star" id="star-1" type="radio" />
-          <label for="star-1" class="star-label">
-            <svg viewBox="0 0 24 24"><path d="M12,17.27L18.18,21L16.54,13.97L22,9.24L14.81,8.62L12,2L9.19,8.62L2,9.24L7.45,13.97L5.82,21L12,17.27Z"/></svg>
-          </label>
+          <label for="star-1" class="star-label"><svg viewBox="0 0 24 24"><path d="M12,17.27L18.18,21L16.54,13.97L22,9.24L14.81,8.62L12,2L9.19,8.62L2,9.24L7.45,13.97L5.82,21L12,17.27Z"/></svg></label>
         </div>
       </div>
     </section>
@@ -152,6 +141,121 @@
   <footer class="footer"><p>Made by Manal <span class="heart">❤️</span></p></footer>
 
   <script>
+    // ====== Client-side "hardened" daily limit (not foolproof) ======
+    const LOCK_MS = 24*60*60*1000;
+
+    // simple fingerprint (non-unique لكن للغلق المحلّي)
+    function simpleFingerprint(){
+      const ua = navigator.userAgent || '';
+      const lang = navigator.language || '';
+      const tz = Intl.DateTimeFormat().resolvedOptions().timeZone || '';
+      const scr = (screen.width||0)+'x'+(screen.height||0)+'@'+(devicePixelRatio||1);
+      let x = 0, str = ua+'|'+lang+'|'+tz+'|'+scr;
+      for(let i=0;i<str.length;i++){ x = (x*31 + str.charCodeAt(i)) >>> 0; }
+      return x.toString(16);
+    }
+
+    // poor-man HMAC (تشويش فقط)
+    const SECRET = 'm4n4l_4tik_secret';
+    function sign(val){
+      let h=2166136261; const s = String(val)+SECRET;
+      for(let i=0;i<s.length;i++){ h^=s.charCodeAt(i); h=(h*16777619)>>>0; }
+      return h.toString(16);
+    }
+
+    // multi-storage helpers
+    const KEY = 'fourTik_last_success_ms';
+    const SIG = 'fourTik_sig';
+    const COOKIE = 'fourTik_lock';
+    const DBNAME = 'fourTikDB';
+    const STORE = 'lock';
+    let idb;
+    function setCookie(name, value, days){
+      const d = new Date(); d.setTime(d.getTime() + (days*24*60*60*1000));
+      document.cookie = `${name}=${encodeURIComponent(value)}; expires=${d.toUTCString()}; path=/; SameSite=Lax`;
+    }
+    function getCookie(name){
+      const m = document.cookie.match(new RegExp('(?:^|; )'+name.replace(/([.$?*|{}()[]\\\/\+^])/g,'\\$1')+'=([^;]*)'));
+      return m ? decodeURIComponent(m[1]) : null;
+    }
+
+    // IndexedDB open
+    function openDB(){
+      return new Promise((resolve,reject)=>{
+        const req = indexedDB.open(DBNAME,1);
+        req.onupgradeneeded = ()=>{ req.result.createObjectStore(STORE); };
+        req.onsuccess = ()=> resolve(req.result);
+        req.onerror = ()=> reject(req.error);
+      });
+    }
+    async function idbGet(key){
+      try{
+        if(!idb) idb = await openDB();
+        return await new Promise((res,rej)=>{
+          const tx = idb.transaction(STORE,'readonly').objectStore(STORE).get(key);
+          tx.onsuccess = ()=> res(tx.result || null);
+          tx.onerror = ()=> rej(tx.error);
+        });
+      }catch{ return null; }
+    }
+    async function idbSet(key,val){
+      try{
+        if(!idb) idb = await openDB();
+        return await new Promise((res,rej)=>{
+          const tx = idb.transaction(STORE,'readwrite').objectStore(STORE).put(val,key);
+          tx.onsuccess = ()=> res(true);
+          tx.onerror = ()=> rej(tx.error);
+        });
+      }catch{ return false; }
+    }
+
+    // CacheStorage
+    async function cacheSet(val){
+      try{
+        const c = await caches.open('fourTik-cache');
+        const body = new Blob([String(val)],{type:'text/plain'});
+        const resp = new Response(body,{headers:{'Content-Type':'text/plain'}});
+        await c.put('/fourTik-lock', resp);
+      }catch{}
+    }
+    async function cacheGet(){
+      try{
+        const c = await caches.open('fourTik-cache');
+        const r = await c.match('/fourTik-lock');
+        if(!r) return null;
+        return parseInt(await r.text(),10);
+      }catch{ return null; }
+    }
+
+    // consensus read across storages
+    async function readLock(){
+      const ls = parseInt(localStorage.getItem(KEY)||'0',10)||0;
+      const ck = parseInt(getCookie(COOKIE)||'0',10)||0;
+      const db = parseInt((await idbGet(KEY))||'0',10)||0;
+      const cg = parseInt((await cacheGet())||'0',10)||0;
+      // verify signature (best-effort)
+      const sig = localStorage.getItem(SIG);
+      const fp = simpleFingerprint();
+      const best = Math.max(ls, ck, db, cg);
+      if (best>0 && sig !== sign(best+'|'+fp)) {
+        // tamper detected → still honor best but rewrite fresh sig
+        await writeLock(best);
+      }
+      return best;
+    }
+
+    async function writeLock(ts){
+      const fp = simpleFingerprint();
+      const s = sign(ts+'|'+fp);
+      localStorage.setItem(KEY, String(ts));
+      localStorage.setItem(SIG, s);
+      setCookie(COOKIE, String(ts), 365);
+      await idbSet(KEY, String(ts));
+      await cacheSet(String(ts));
+    }
+
+    function nowMs(){ return Date.now(); }
+
     // Elements
     const drop = document.getElementById('drop');
     const fileInput = document.getElementById('file');
@@ -162,149 +266,105 @@
     const cooldownEl = document.getElementById('cooldown');
     const mb = n => (n/1024/1024).toFixed(2)+' MB';
 
-    // ===== Server-driven cooldown =====
-    let cooldownTimer = null;
-    const LOCK_MS = 24*60*60*1000;
+    function fmt(ms){ if(ms<0)ms=0; const h=Math.floor(ms/3600000), m=Math.floor(ms%3600000/60000), s=Math.floor(ms%60000/1000);
+      const p=n=>String(n).padStart(2,'0'); return `${p(h)}:${p(m)}:${p(s)}`; }
 
-    function formatRemaining(ms){
-      if (ms < 0) ms = 0;
-      const h = Math.floor(ms/3600000);
-      const m = Math.floor((ms%3600000)/60000);
-      const s = Math.floor((ms%60000)/1000);
-      const pad = n => String(n).padStart(2,'0');
-      return `${pad(h)}:${pad(m)}:${pad(s)}`;
-    }
-
-    async function fetchCooldown(){
-      try{
-        const r = await fetch('/cooldown', {cache:'no-store'});
-        if(!r.ok) return {remaining_ms:0};
-        return r.json();
-      }catch(e){ return {remaining_ms:0}; }
-    }
-
-    function lockUI(remaining_ms){
-      processBtn.disabled = true;
-      fileInput.disabled = true;
-      drop.style.pointerEvents = 'none';
-      drop.style.opacity = '0.5';
-      info.textContent = "Uploads are limited to 1 video per 24 hours.";
-      startTick(remaining_ms);
-    }
-
-    function unlockUI(){
-      processBtn.disabled = true;
-      fileInput.disabled = false;
-      drop.style.pointerEvents = 'auto';
-      drop.style.opacity = '1';
-      info.textContent = "Drag & drop your video here, or click to select";
+    let tickTimer=null;
+    function startTick(rem){
       stopTick();
-      cooldownEl.textContent = "";
-    }
-
-    function startTick(ms){
-      stopTick();
-      let remain = ms;
-      const tick = () => {
-        if (remain <= 0){
-          stopTick();
-          unlockUI();
-          statusEl.textContent = "You're good to go. You can upload a new video now.";
-          cooldownEl.textContent = "";
+      const go = ()=>{
+        if(rem<=0){
+          stopTick(); unlockUI(); statusEl.textContent="You're good to go. You can upload a new video now."; cooldownEl.textContent="";
         } else {
-          cooldownEl.innerHTML = `<span class="pill">Daily limit — next upload in ${formatRemaining(remain)}</span>`;
-          remain -= 1000;
+          cooldownEl.innerHTML=`<span class="pill">Daily limit — next upload in ${fmt(rem)}</span>`;
+          rem -= 1000;
         }
       };
-      tick();
-      cooldownTimer = setInterval(tick, 1000);
+      go(); tickTimer=setInterval(go,1000);
     }
-    function stopTick(){ if(cooldownTimer){ clearInterval(cooldownTimer); cooldownTimer = null; } }
+    function stopTick(){ if(tickTimer){clearInterval(tickTimer); tickTimer=null;} }
 
-    async function applyCooldownOnLoad(){
-      const {remaining_ms=0} = await fetchCooldown();
-      if (remaining_ms > 0){ lockUI(remaining_ms); }
-      else { unlockUI(); }
+    function lockUI(rem){
+      processBtn.disabled=true; fileInput.disabled=true; drop.style.pointerEvents='none'; drop.style.opacity='0.5';
+      info.textContent="Uploads are limited to 1 video per 24 hours."; startTick(rem);
+    }
+    function unlockUI(){
+      processBtn.disabled=true; fileInput.disabled=false; drop.style.pointerEvents='auto'; drop.style.opacity='1';
+      info.textContent="Drag & drop your video here, or click to select"; stopTick(); cooldownEl.textContent="";
     }
 
-    // Upload UI
     function updateInfo(){
-      const f = fileInput.files[0];
-      statusEl.textContent = '';
-      if(!f){ info.textContent = "Drag & drop your video here, or click to select"; processBtn.disabled = true; return; }
-      info.textContent = `File: ${f.name} — ${mb(f.size)}`;
-      processBtn.disabled = false;
+      const f=fileInput.files[0]; statusEl.textContent='';
+      if(!f){ info.textContent="Drag & drop your video here, or click to select"; processBtn.disabled=true; return; }
+      info.textContent=`File: ${f.name} — ${mb(f.size)}`; processBtn.disabled=false;
     }
 
-    drop.addEventListener('click', async () => {
-      const {remaining_ms=0} = await fetchCooldown();
-      if (remaining_ms > 0) return; // locked
-      fileInput.click();
+    drop.addEventListener('click', async ()=>{
+      const last = await readLock();
+      const rem = Math.max(0, (last+LOCK_MS) - nowMs());
+      if(rem>0) return; fileInput.click();
     });
-    drop.addEventListener('dragover', e => e.preventDefault());
-    drop.addEventListener('drop', async (e) => {
+    drop.addEventListener('dragover', e=>e.preventDefault());
+    drop.addEventListener('drop', async (e)=>{
       e.preventDefault();
-      const {remaining_ms=0} = await fetchCooldown();
-      if (remaining_ms > 0) return;
-      fileInput.files = e.dataTransfer.files;
-      updateInfo();
+      const last = await readLock();
+      const rem = Math.max(0, (last+LOCK_MS) - nowMs());
+      if(rem>0) return;
+      fileInput.files = e.dataTransfer.files; updateInfo();
     });
     fileInput.addEventListener('change', updateInfo);
 
-    // Process
-    processBtn.addEventListener('click', async () => {
-      const {remaining_ms=0} = await fetchCooldown();
-      if (remaining_ms > 0) { lockUI(remaining_ms); return; }
-      const f = fileInput.files[0]; if(!f) return;
-      statusEl.textContent = "Uploading…";
-      bar.classList.remove('running'); bar.style.width='0%';
-      processBtn.disabled = true; fileInput.disabled = true; drop.style.pointerEvents = 'none'; drop.style.opacity = '0.5';
+    // Processing (واجهة فقط)
+    processBtn.addEventListener('click', async ()=>{
+      const last = await readLock();
+      const rem = Math.max(0, (last+LOCK_MS) - nowMs());
+      if(rem>0){ lockUI(rem); return; }
 
-      const fd = new FormData(); fd.append('file', f);
-      const xhr = new XMLHttpRequest();
-      xhr.open('POST', '/process', true);
-      xhr.responseType = 'blob';
-      xhr.upload.onprogress = e => { if(e.lengthComputable){ bar.style.width = Math.round((e.loaded/e.total)*100) + '%'; } };
-      xhr.onreadystatechange = () => { if (xhr.readyState === XMLHttpRequest.HEADERS_RECEIVED){ statusEl.textContent = "Enhancing video…"; bar.classList.add('running'); } };
-      xhr.onload = async () => {
+      const f=fileInput.files[0]; if(!f) return;
+      statusEl.textContent="Uploading…";
+      bar.classList.remove('running'); bar.style.width='0%';
+      processBtn.disabled=true; fileInput.disabled=true; drop.style.pointerEvents='none'; drop.style.opacity='0.5';
+
+      const fd=new FormData(); fd.append('file', f);
+      const xhr=new XMLHttpRequest();
+      xhr.open('POST','/process',true);
+      xhr.responseType='blob';
+      xhr.upload.onprogress=e=>{ if(e.lengthComputable){ bar.style.width=Math.round((e.loaded/e.total)*100)+'%'; } };
+      xhr.onreadystatechange=()=>{ if(xhr.readyState===XMLHttpRequest.HEADERS_RECEIVED){ statusEl.textContent="Enhancing video…"; bar.classList.add('running'); } };
+      xhr.onload=async ()=>{
         bar.classList.remove('running');
-        if (xhr.status === 200) {
-          statusEl.textContent = "Processing complete — download will start now";
-          const blob = xhr.response, url = URL.createObjectURL(blob);
-          const a = document.createElement('a'); a.href = url; a.download = 'output.mp4'; document.body.appendChild(a); a.click();
+        if(xhr.status===200){
+          statusEl.textContent="Processing complete — download will start now";
+          const blob=xhr.response, url=URL.createObjectURL(blob);
+          const a=document.createElement('a'); a.href=url; a.download='output.mp4'; document.body.appendChild(a); a.click();
           URL.revokeObjectURL(url); a.remove();
-          // بعد النجاح، الخادم سجّل القفل فعليًا — اسحب الزمن المتبقي واغلق الواجهة
-          const {remaining_ms=LOCK_MS} = await fetchCooldown();
-          lockUI(remaining_ms || LOCK_MS);
-          statusEl.textContent = "Daily limit is now active. Thank you! 🌟";
-        } else if (xhr.status === 429) {
-          // الخادم يقول: لا يزال هناك وقت متبقٍ
-          try{
-            const r = JSON.parse(await xhr.response.text());
-            lockUI(r.remaining_ms || LOCK_MS);
-            statusEl.textContent = "Daily limit is active.";
-          }catch{
-            const {remaining_ms=LOCK_MS} = await fetchCooldown();
-            lockUI(remaining_ms);
-          }
-        } else if (xhr.status === 413) {
-          statusEl.textContent = "File too large. Max 100MB.";
-          drop.style.pointerEvents = 'auto'; drop.style.opacity = '1'; fileInput.disabled = false; updateInfo();
+          // سجّل القفل محليًا عبر كل المخازن
+          const ts = nowMs();
+          await writeLock(ts);
+          lockUI(LOCK_MS);
+          statusEl.textContent="Daily limit is now active. Thank you! 🌟";
+        } else if (xhr.status===413){
+          statusEl.textContent="File too large. Max 100MB.";
+          drop.style.pointerEvents='auto'; drop.style.opacity='1'; fileInput.disabled=false; updateInfo();
         } else {
-          statusEl.textContent = "An error occurred, please try again.";
-          drop.style.pointerEvents = 'auto'; drop.style.opacity = '1'; fileInput.disabled = false; updateInfo();
+          statusEl.textContent="An error occurred, please try again.";
+          drop.style.pointerEvents='auto'; drop.style.opacity='1'; fileInput.disabled=false; updateInfo();
         }
       };
-      xhr.onerror = () => {
+      xhr.onerror=()=>{
         bar.classList.remove('running');
-        statusEl.textContent = "Connection failed.";
-        drop.style.pointerEvents = 'auto'; drop.style.opacity = '1'; fileInput.disabled = false; updateInfo();
+        statusEl.textContent="Connection failed.";
+        drop.style.pointerEvents='auto'; drop.style.opacity='1'; fileInput.disabled=false; updateInfo();
       };
       xhr.send(fd);
     });
 
-    // Init
-    applyCooldownOnLoad();
+    // Apply lock on load
+    (async ()=>{
+      const last = await readLock();
+      const rem = Math.max(0, (last+LOCK_MS) - nowMs());
+      if(rem>0){ lockUI(rem); } else { unlockUI(); }
+    })();
   </script>
 </body>
 </html>
