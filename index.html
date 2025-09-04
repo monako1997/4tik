@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="ar" dir="rtl">
+<html lang="en" dir="ltr">
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
@@ -43,10 +43,8 @@
     }
     #main-card { animation-delay: 0.2s; }
     #how-to-card { animation-delay: 0.4s; }
-    #4tik-tool-card { animation-delay: 0.6s; }
-    #rating-card { animation-delay: 0.8s; }
-    #developer-card { animation-delay: 1.0s; }
-    #visitor-counter-card { animation-delay: 1.2s; }
+    #rating-card { animation-delay: 0.6s; }
+    #developer-card { animation-delay: 0.8s; }
     @keyframes fadeInUp { to { opacity: 1; transform: translateY(0); } }
     .wrap{width:min(900px,96vw); padding:20px 16px 80px; }
     .card + .card {
@@ -60,9 +58,7 @@
       box-shadow:0 20px 60px rgba(0,0,0,.35);
     }
     #how-to-card.card,
-    #4tik-tool-card.card,
     #developer-card.card,
-    #visitor-counter-card.card,
     #rating-card.card {
       position: relative;
       background: linear-gradient(137deg, var(--c2) 0%, var(--c1) 100%);
@@ -72,9 +68,7 @@
       padding: 2px;
     }
     #how-to-card.card:hover,
-    #4tik-tool-card.card:hover,
     #developer-card.card:hover,
-    #visitor-counter-card.card:hover,
     #rating-card.card:hover {
       filter: drop-shadow(0px 0px 25px rgba(37, 244, 238, 0.7));
     }
@@ -127,11 +121,6 @@
       text-align: start;
       max-width: 100%;
       margin-bottom: 20px;
-    }
-    html[dir="rtl"] .how-to-section ol {
-      padding-inline-start: 25px;
-    }
-    html[dir="ltr"] .how-to-section ol {
       padding-inline-start: 40px;
     }
     .how-to-section li {
@@ -307,11 +296,6 @@
       align-items: center;
       justify-content: center;
       margin-bottom: 24px;
-    }
-    html[dir="rtl"] .rating-stars-container {
-      flex-direction: row-reverse;
-    }
-    html[dir="ltr"] .rating-stars-container {
       flex-direction: row;
     }
     .star-label svg {
@@ -351,11 +335,6 @@
     .social-button:hover svg {
       fill: rgb(255, 102, 47);
     }
-    #visitor-counter-card .card-inner-content {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-    }
     .footer {
       padding: 40px 20px 20px;
       text-align: center;
@@ -371,44 +350,6 @@
       0%, 100% { transform: scale(1); }
       50% { transform: scale(1.1); }
     }
-    
-    /* Language Switcher Styles */
-    .lang-switcher {
-        position: fixed;
-        top: 20px;
-        left: 20px;
-        display: flex;
-        flex-direction: row;
-        gap: 8px;
-        z-index: 100;
-        background: rgba(15, 19, 32, 0.7);
-        padding: 8px;
-        border-radius: 12px;
-        border: 1px solid var(--line);
-        backdrop-filter: blur(4px);
-    }
-    .lang-switcher button {
-        background: transparent;
-        border: 1px solid transparent;
-        color: var(--muted);
-        padding: 8px 12px;
-        cursor: pointer;
-        border-radius: 8px;
-        font-weight: 700;
-        transition: all 0.2s ease;
-    }
-    .lang-switcher button:hover {
-        background: rgba(255, 255, 255, 0.1);
-        color: var(--ink);
-    }
-    .lang-switcher button.active {
-        background: var(--c1);
-        color: var(--bg);
-        border-color: var(--c1);
-        cursor: default;
-    }
-    
-    /* New Developer Card Styles */
     .developer-avatar {
         width: 120px;
         height: 120px;
@@ -418,8 +359,6 @@
         border: 3px solid var(--c1);
         box-shadow: 0 0 20px rgba(37, 244, 238, 0.5);
     }
-
-    /* TikTok Follow Button Style */
     .tiktok-follow-btn {
         display: inline-block;
         padding: 10px 28px;
@@ -435,25 +374,13 @@
         text-align: center;
     }
     .tiktok-follow-btn:hover {
-        background-color: #e41e45; /* A slightly darker shade */
+        background-color: #e41e45;
         border-color: #e41e45;
         transform: scale(1.03);
     }
-    
   </style>
 </head>
 <body>
-
-  <svg style="position: absolute; width: 0; height: 0;">
-    <filter width="300%" x="-100%" height="300%" y="-100%" id="unopaq"><feColorMatrix values="1 0 0 0 0 0 1 0 0 0 0 0 1 0 0 0 0 0 9 0"></feColorMatrix></filter>
-    <filter width="300%" x="-100%" height="300%" y="-100%" id="unopaq2"><feColorMatrix values="1 0 0 0 0 0 1 0 0 0 0 0 1 0 0 0 0 0 3 0"></feColorMatrix></filter>
-    <filter width="300%" x="-100%" height="300%" y="-100%" id="unopaq3"><feColorMatrix values="1 0 0 0.2 0 0 1 0 0.2 0 0 0 1 0.2 0 0 0 0 2 0"></feColorMatrix></filter>
-  </svg>
-
-  <div class="lang-switcher">
-    <button id="lang-en">EN</button>
-    <button id="lang-ar">AR</button>
-  </div>
 
   <header class="topbar animated-entry">
     <h1 class="brand">4Tik Pro</h1>
@@ -463,8 +390,8 @@
     <section id="main-card" class="card animated-entry">
       <div id="drop" class="upload">
         <input id="file" type="file" accept="video/*" hidden />
-        <div class="u-title" data-translate="uploadVideo">Ø±ÙØ¹ ÙÙØ¯ÙÙ</div>
-        <div id="fileInfo" class="hint" data-translate="dragDrop">Ø§Ø³Ø­Ø¨ Ø§ÙÙÙØ·Ø¹ ÙÙØ§ Ø£Ù Ø§Ø¶ØºØ· ÙÙØ§Ø®ØªÙØ§Ø±</div>
+        <div class="u-title">Upload Video</div>
+        <div id="fileInfo" class="hint">Drag & drop your video here, or click to select</div>
       </div>
       <div class="row">
         <button class="button" id="process" disabled>
@@ -474,7 +401,7 @@
               <path class="path" stroke-linejoin="round" stroke-linecap="round" stroke="black" fill="black" d="M6 14.25L5.741 15.285C5.59267 15.8785 5.28579 16.4206 4.85319 16.8532C4.42059 17.2858 3.87853 17.5927 3.285 17.741L2.25 18L3.285 18.259C3.87853 18.4073 4.42059 18.7142 4.85319 19.1468C5.28579 19.5794 5.59267 20.1215 5.741 20.715L6 21.75L6.259 20.715C6.40725 20.1216 6.71398 19.5796 7.14639 19.147C7.5788 18.7144 8.12065 18.4075 8.714 18.259L9.75 18L8.714 17.741C8.12065 17.5925 7.5788 17.2856 7.14639 16.853C6.71398 16.4204 6.40725 15.8784 6.259 15.285L6 14.25Z"></path>
               <path class="path" stroke-linejoin="round" stroke-linecap="round" stroke="black" fill="black" d="M6.5 4L6.303 4.5915C6.24777 4.75718 6.15472 4.90774 6.03123 5.03123C5.90774 5.15472 5.75718 5.24777 5.5915 5.303L5 5.5L5.5915 5.697C5.75718 5.75223 5.90774 5.84528 6.03123 5.96877C6.15472 6.09226 6.24777 6.24282 6.303 6.4085L6.5 7L6.697 6.4085C6.75223 6.24282 6.84528 6.09226 6.96877 5.96877C7.09226 5.84528 7.24282 5.75223 7.4085 5.697L8 5.5L7.4085 5.303C7.24282 5.24777 7.09226 5.15472 6.96877 5.03123C6.84528 4.90774 6.75223 4.75718 6.697 4.5915L6.5 4Z"></path>
             </svg>
-            <span class="text_button" data-translate="process">ÙØ¹Ø§ÙØ¬Ø©</span>
+            <span class="text_button">Process</span>
         </button>
         <div id="status" class="status"></div>
       </div>
@@ -485,40 +412,22 @@
 
     <section id="how-to-card" class="card text-section how-to-section animated-entry">
       <div class="card-inner-content">
-        <h2 class="card-title" data-translate="howToUse">ÙÙÙÙØ© Ø§ÙØ§Ø³ØªØ®Ø¯Ø§Ù</h2>
+        <h2 class="card-title">How to Use</h2>
         <ol>
-          <li data-translate="step1">Ø§Ø±ÙØ¹ Ø§ÙÙØ¯ÙÙ ÙØ§ÙÙÙ Ø¹Ù 100 ÙÙÙØ§.</li>
-          <li data-translate="step2">Ø§Ø¶ØºØ· Ø¹ÙÙ Ø²Ø± ÙØ¹Ø§ÙØ¬Ø© ÙÙØªÙ ØªØ­Ø³ÙÙ Ø§ÙÙØ¯ÙÙ.</li>
-          <li data-translate="step3">Ø¨Ø¹Ø¯ Ø§ÙØªÙØ§Ù Ø§ÙÙØ¹Ø§ÙØ¬Ø© Ø­ÙÙ Ø§ÙÙØ¯ÙÙ.</li>
-          <li data-translate="step4">Ø§ÙØªØ­ ØªØ·Ø¨ÙÙ Tiktok ÙÙ Ø¨ÙØ´Ø± Ø§ÙÙÙØ·Ø¹ ÙØ§Ø¬Ø¹ÙÙ Ø®Ø§Øµ ÙÙØ³ ÙÙØ¹Ø§Ù.</li>
-          <li data-translate="step5">Ø¨Ø¹Ø¯ Ø§ÙØ§ÙØªÙØ§Ø¡ ÙÙ Ø§ÙØ±ÙØ¹ ÙÙÙÙÙ Ø§ÙØ§Ù ØªØºÙÙØ±Ù ÙÙØ¹Ø§ÙØ©.</li>
+          <li>1. Upload a video of at least 100MB.</li>
+          <li>2. Click the 'Process' button to enhance the video.</li>
+          <li>3. After processing is complete, download the video.</li>
+          <li>4. Open TikTok, upload the clip, and set it to 'Private'.</li>
+          <li>5. Once uploaded, you can change its visibility to 'Public'.</li>
         </ol>
-        <p class="card-text" data-translate="supportMsg">Ø§ØªÙÙÙ Ø§Ù ÙÙÙÙ Ø§ÙÙÙÙØ¹ Ø³ÙÙ Ø§ÙØ§Ø³ØªØ®Ø¯Ø§Ù ÙØ¯Ø¹ÙÙÙ ÙÙ ÙØ¬Ø¹ÙÙÙ Ø§Ø³ØªÙØ± â¤ï¸</p>
-      </div>
-    </section>
-
-    <section id="4tik-tool-card" class="card text-section animated-entry">
-      <div class="card-inner-content">
-        <h2 class="card-title">4Tik tool</h2>
-        <p class="card-text" data-translate="toolDescription">ÙÙÙÙÙ ØªØ­ÙÙÙ Ø¨Ø±ÙØ§ÙØ¬ 4Tik pro ÙØªØ­Ø³ÙÙ ÙØ±ÙØ¹ Ø¬ÙØ¯Ø© Ø§ÙÙØ¯ÙÙ ÙÙÙØµØ© ØªÙØªÙÙ ÙÙ Ø§Ø¬ÙØ²Ø© Ø§ÙÙÙØ¨ÙÙØªØ±</p>
-        <div class="row" style="margin-top: 0; min-height: initial;">
-            <button class="button" onclick="window.open('http://4tik.nekoweb.org', '_blank')">
-                <div class="dots_border"></div>
-                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" class="sparkle">
-                  <path class="path" stroke-linejoin="round" stroke-linecap="round" stroke="black" fill="black" d="M14.187 8.096L15 5.25L15.813 8.096C16.0231 8.83114 16.4171 9.50062 16.9577 10.0413C17.4984 10.5819 18.1679 10.9759 18.903 11.186L21.75 12L18.904 12.813C18.1689 13.0231 17.4994 13.4171 16.9587 13.9577C16.4181 14.4984 16.0241 15.1679 15.814 15.903L15 18.75L14.187 15.904C13.9769 15.1689 13.5829 14.4994 13.0423 13.9587C12.5016 13.4181 11.8321 13.0241 11.097 12.814L8.25 12L11.096 11.187C11.8311 10.9769 12.5006 10.5829 13.0413 10.0423C13.5819 9.50162 13.9759 8.83214 14.186 8.097L14.187 8.096Z"></path>
-                  <path class="path" stroke-linejoin="round" stroke-linecap="round" stroke="black" fill="black" d="M6 14.25L5.741 15.285C5.59267 15.8785 5.28579 16.4206 4.85319 16.8532C4.42059 17.2858 3.87853 17.5927 3.285 17.741L2.25 18L3.285 18.259C3.87853 18.4073 4.42059 18.7142 4.85319 19.1468C5.28579 19.5794 5.59267 20.1215 5.741 20.715L6 21.75L6.259 20.715C6.40725 20.1216 6.71398 19.5796 7.14639 19.147C7.5788 18.7144 8.12065 18.4075 8.714 18.259L9.75 18L8.714 17.741C8.12065 17.5925 7.5788 17.2856 7.14639 16.853C6.71398 16.4204 6.40725 15.8784 6.259 15.285L6 14.25Z"></path>
-                  <path class="path" stroke-linejoin="round" stroke-linecap="round" stroke="black" fill="black" d="M6.5 4L6.303 4.5915C6.24777 4.75718 6.15472 4.90774 6.03123 5.03123C5.90774 5.15472 5.75718 5.24777 5.5915 5.303L5 5.5L5.5915 5.697C5.75718 5.75223 5.90774 5.84528 6.03123 5.96877C6.15472 6.09226 6.24777 6.24282 6.303 6.4085L6.5 7L6.697 6.4085C6.75223 6.24282 6.84528 6.09226 6.96877 5.96877C7.09226 5.84528 7.24282 5.75223 7.4085 5.697L8 5.5L7.4085 5.303C7.24282 5.24777 7.09226 5.15472 6.96877 5.03123C6.84528 4.90774 6.75223 4.75718 6.697 4.5915L6.5 4Z"></path>
-                </svg>
-                <span class="text_button" data-translate="download">ØªØ­ÙÙÙ</span>
-            </button>
-        </div>
+        <p class="card-text">I hope you find the site easy to use. Your support keeps me going ❤️</p>
       </div>
     </section>
 
     <section id="rating-card" class="card text-section animated-entry">
       <div class="card-inner-content">
-        <h2 class="card-title" data-translate="rateExperience">ÙØ±Ø¬Ù ØªÙÙÙÙ ØªØ¬Ø±Ø¨ØªÙ</h2>
-        <p class="card-text" data-translate="helpUs">ÙÙØ³Ø§Ø¹Ø¯ØªÙØ§ Ø¹ÙÙ Ø®Ø¯ÙØªÙ Ø¨Ø´ÙÙ Ø£ÙØ¶Ù</p>
+        <h2 class="card-title">Please Rate Your Experience</h2>
+        <p class="card-text">To help us serve you better</p>
         <div class="rating-stars-container">
            <input value="star-5" name="star" id="star-5" type="radio" />
           <label for="star-5" class="star-label">
@@ -573,28 +482,21 @@
     
     <section id="developer-card" class="card text-section animated-entry">
       <div class="card-inner-content">
-        <h2 class="card-title" data-translate="developerTitle">ÙØ·ÙØ±Ø© Ø§ÙÙÙÙØ¹</h2>
+        <h2 class="card-title">About the Developer</h2>
         <img src="https://p16-sign-va.tiktokcdn.com/tos-maliva-avt-0068/36fb03fab8355da6669fd8cae7a7f798~tplv-tiktokx-cropcenter:100:100.jpeg?dr=14579&refresh_token=8ad9e565&x-expires=1757070000&x-signature=wpnqJ%2FmnIsukl%2FcguiIlKitRKhQ%3D&t=4d5b0474&ps=13740610&shp=a5d48078&shcp=81f88b70&idc=maliva" alt="queen_iy TikTok Profile" class="developer-avatar">
-        <p class="card-text" data-translate="developerText">ØªØ§Ø¨Ø¹ÙÙÙ Ø¹ÙÙ ØªÙÙ ØªÙÙ ÙÙÙØ²ÙØ¯ ÙÙ Ø§ÙØªØ­Ø¯ÙØ«Ø§Øª!</p>
+        <p class="card-text">Follow me on TikTok for more updates!</p>
         <div class="row" style="margin-top: 16px; min-height: initial;">
-            <a href="https://www.tiktok.com/@queen_iy" target="_blank" rel="noopener noreferrer" class="tiktok-follow-btn" data-translate="followButton">
-                ÙØªØ§Ø¨Ø¹Ø©
+            <a href="https://www.tiktok.com/@queen_iy" target="_blank" rel="noopener noreferrer" class="tiktok-follow-btn">
+                Follow
             </a>
         </div>
-      </div>
-    </section>
-
-    <section id="visitor-counter-card" class="card text-section animated-entry">
-      <div class="card-inner-content">
-        <h2 class="card-title" data-translate="visitorStats">Ø¥Ø­ØµØ§Ø¦ÙØ§Øª Ø§ÙØ²ÙØ§Ø±</h2>
-        <script type='text/javascript' id='mapmyvisitors' src='httpshttps://mapmyvisitors.com/map.js?cl=ffffff&w=167&t=tt&d=meZlgvBGIrbRPp-0UKc1lAfXYPXslsuznPtsEddaIZ4&ct=ffffff'></script>
       </div>
     </section>
     
   </main>
   
   <footer class="footer">
-    <p data-translate="footer">Made by Manal <span class="heart">â¤ï¸</span></p>
+    <p>Made by Manal <span class="heart">❤️</span></p>
   </footer>
 
   <script>
@@ -604,99 +506,9 @@
     const processBtn = document.getElementById('process');
     const bar = document.getElementById('bar');
     const status = document.getElementById('status');
-    const langEnBtn = document.getElementById('lang-en');
-    const langArBtn = document.getElementById('lang-ar');
     const mb = n => (n/1024/1024).toFixed(2)+' MB';
     
-    // --- Translation and Language Switching Logic ---
-    const translations = {
-        en: {
-            uploadVideo: "Upload Video",
-            dragDrop: "Drag & drop your video here, or click to select",
-            process: "Process",
-            howToUse: "How to Use",
-            step1: "1. Upload a video of at least 100MB.",
-            step2: "2. Click the 'Process' button to enhance the video.",
-            step3: "3. After processing is complete, download the video.",
-            step4: "4. Open TikTok, upload the clip, and set it to 'Private'.",
-            step5: "5. Once uploaded, you can change its visibility to 'Public'.",
-            supportMsg: "I hope you find the site easy to use. Your support keeps me going â¤ï¸",
-            toolDescription: "You can download the 4Tik Pro software to enhance and improve video quality for TikTok on your computer.",
-            download: "Download",
-            developerTitle: "About the Developer",
-            developerText: "Follow me on TikTok for more updates!",
-            followButton: "Follow",
-            visitorStats: "Visitor Stats",
-            rateExperience: "Please Rate Your Experience",
-            helpUs: "To help us serve you better",
-            footer: "Made by Manal <span class=\"heart\">â¤ï¸</span>",
-            statusUploading: "Uploadingâ¦",
-            statusEnhancing: "Enhancing videoâ¦",
-            statusDone: "Processing complete â download will start now",
-            statusError: "An error occurred, please try again.",
-            statusConnectionError: "Connection failed.",
-            fileInfoDefault: "Drag & drop your video here, or click to select",
-            fileInfoSelected: (name, size) => `File: ${name} â ${size}`,
-            cooldownActive: (time) => `Service suspended to prevent server overload. You can upload again in: ${time}`,
-            cooldownEnded: "You can now upload another video."
-        },
-        ar: {
-            uploadVideo: "Ø±ÙØ¹ ÙÙØ¯ÙÙ",
-            dragDrop: "Ø§Ø³Ø­Ø¨ Ø§ÙÙÙØ·Ø¹ ÙÙØ§ Ø£Ù Ø§Ø¶ØºØ· ÙÙØ§Ø®ØªÙØ§Ø±",
-            process: "ÙØ¹Ø§ÙØ¬Ø©",
-            howToUse: "ÙÙÙÙØ© Ø§ÙØ§Ø³ØªØ®Ø¯Ø§Ù",
-            step1: "Ù¡. Ø§Ø±ÙØ¹ Ø§ÙÙØ¯ÙÙ ÙØ§ÙÙÙ Ø¹Ù 100 ÙÙÙØ§.",
-            step2: "Ù¢. Ø§Ø¶ØºØ· Ø¹ÙÙ Ø²Ø± ÙØ¹Ø§ÙØ¬Ø© ÙÙØªÙ ØªØ­Ø³ÙÙ Ø§ÙÙØ¯ÙÙ.",
-            step3: "Ù£. Ø¨Ø¹Ø¯ Ø§ÙØªÙØ§Ù Ø§ÙÙØ¹Ø§ÙØ¬Ø© Ø­ÙÙ Ø§ÙÙØ¯ÙÙ.",
-            step4: "Ù¤. Ø§ÙØªØ­ ØªØ·Ø¨ÙÙ Tiktok ÙÙ Ø¨ÙØ´Ø± Ø§ÙÙÙØ·Ø¹ ÙØ§Ø¬Ø¹ÙÙ Ø®Ø§Øµ ÙÙØ³ ÙÙØ¹Ø§Ù.",
-            step5: "Ù¥. Ø¨Ø¹Ø¯ Ø§ÙØ§ÙØªÙØ§Ø¡ ÙÙ Ø§ÙØ±ÙØ¹ ÙÙÙÙÙ Ø§ÙØ§Ù ØªØºÙÙØ±Ù ÙÙØ¹Ø§ÙØ©.",
-            supportMsg: "Ø§ØªÙÙÙ Ø§Ù ÙÙÙÙ Ø§ÙÙÙÙØ¹ Ø³ÙÙ Ø§ÙØ§Ø³ØªØ®Ø¯Ø§Ù ÙØ¯Ø¹ÙÙÙ ÙÙ ÙØ¬Ø¹ÙÙÙ Ø§Ø³ØªÙØ± â¤ï¸",
-            toolDescription: "ÙÙÙÙÙ ØªØ­ÙÙÙ Ø¨Ø±ÙØ§ÙØ¬ 4Tik pro ÙØªØ­Ø³ÙÙ ÙØ±ÙØ¹ Ø¬ÙØ¯Ø© Ø§ÙÙØ¯ÙÙ ÙÙÙØµØ© ØªÙØªÙÙ ÙÙ Ø§Ø¬ÙØ²Ø© Ø§ÙÙÙØ¨ÙÙØªØ±",
-            download: "ØªØ­ÙÙÙ",
-            developerTitle: "ÙØ·ÙØ±Ø© Ø§ÙÙÙÙØ¹",
-            developerText: "Ø¨Ø¯Ø¹ÙÙÙ ÙÙØ³ØªÙØ± ð©·!",
-            followButton: "ÙØªØ§Ø¨Ø¹Ø©",
-            visitorStats: "Ø¥Ø­ØµØ§Ø¦ÙØ§Øª Ø§ÙØ²ÙØ§Ø±",
-            rateExperience: "ÙØ±Ø¬Ù ØªÙÙÙÙ ØªØ¬Ø±Ø¨ØªÙ",
-            helpUs: "ÙÙØ³Ø§Ø¹Ø¯ØªÙØ§ Ø¹ÙÙ Ø®Ø¯ÙØªÙ Ø¨Ø´ÙÙ Ø£ÙØ¶Ù",
-            footer: "made by manal <span class=\"heart\">â¤ï¸</span>",
-            statusUploading: "Ø¬Ø§Ø±Ù Ø§ÙØ±ÙØ¹â¦",
-            statusEnhancing: "Ø¬Ø§Ø±Ù ØªØ­Ø³ÙÙ Ø§ÙÙÙØ¯ÙÙ...",
-            statusDone: "ØªÙÙØª Ø§ÙÙØ¹Ø§ÙØ¬Ø© â ÙØ¨Ø¯Ø£ Ø§ÙØªÙØ²ÙÙ Ø§ÙØ¢Ù",
-            statusError: "Ø­Ø¯Ø« Ø®Ø·Ø£Ø Ø­Ø§ÙÙ ÙØ¬Ø¯Ø¯ÙØ§.",
-            statusConnectionError: "ØªØ¹Ø°ÙØ± Ø§ÙØ§ØªØµØ§Ù.",
-            fileInfoDefault: "Ø§Ø³Ø­Ø¨ Ø§ÙÙÙØ·Ø¹ ÙÙØ§ Ø£Ù Ø§Ø¶ØºØ· ÙÙØ§Ø®ØªÙØ§Ø±",
-            fileInfoSelected: (name, size) => `Ø§ÙÙÙÙ: ${name} â ${size}`,
-            cooldownActive: (time) => `ØªÙ ØªØ¹ÙÙÙ Ø§ÙØ®Ø¯ÙØ© ÙØªÙØ§Ø¯Ù Ø§ÙØ¶ØºØ· Ø¹ÙÙ Ø§ÙØ³ÙØ±ÙØ±. ÙÙÙÙÙ Ø§ÙØ±ÙØ¹ ÙØ¬Ø¯Ø¯Ø§Ù Ø¨Ø¹Ø¯: ${time}`,
-            cooldownEnded: "ÙÙÙÙÙ Ø§ÙØ¢Ù Ø±ÙØ¹ ÙÙØ¯ÙÙ Ø¢Ø®Ø±."
-        }
-    };
-    
-    let currentLang = 'ar';
     let countdownInterval = null;
-    
-    function setLanguage(lang) {
-        currentLang = lang;
-        document.querySelectorAll('[data-translate]').forEach(el => {
-            const key = el.getAttribute('data-translate');
-            if (translations[lang][key]) {
-                el.innerHTML = typeof translations[lang][key] === 'function' ? translations[lang][key]('', '') : translations[lang][key];
-            }
-        });
-        
-        document.documentElement.lang = lang;
-        document.documentElement.dir = lang === 'ar' ? 'rtl' : 'ltr';
-        localStorage.setItem('preferredLanguage', lang);
-        
-        langEnBtn.classList.toggle('active', lang === 'en');
-        langArBtn.classList.toggle('active', lang === 'ar');
-        
-        if (!fileInput.files[0] && !localStorage.getItem('cooldownEndTime')) {
-             info.textContent = translations[currentLang].fileInfoDefault;
-        }
-    }
-
-    // --- Cooldown and UI Management Logic ---
 
     function disableUpload() {
         processBtn.disabled = true;
@@ -711,8 +523,8 @@
         drop.style.opacity = '1';
         fileInput.disabled = false;
         localStorage.removeItem('cooldownEndTime');
-        status.textContent = translations[currentLang].cooldownEnded;
-        info.textContent = translations[currentLang].fileInfoDefault;
+        status.textContent = "You can now upload another video.";
+        info.textContent = "Drag & drop your video here, or click to select";
         fileInput.value = ''; // Clear file input
     }
     
@@ -734,16 +546,10 @@
             const seconds = Math.floor((remaining / 1000) % 60);
             const timeString = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
             
-            status.textContent = translations[currentLang].cooldownActive(timeString);
+            status.textContent = `Service suspended to prevent server overload. You can upload again in: ${timeString}`;
             info.textContent = ''; // Hide file info during cooldown
         }, 1000);
     }
-
-
-    // --- Event Listeners and Initial Setup ---
-    
-    langEnBtn.addEventListener('click', () => setLanguage('en'));
-    langArBtn.addEventListener('click', () => setLanguage('ar'));
     
     drop.addEventListener('click', () => fileInput.click());
     drop.addEventListener('dragover', e => e.preventDefault());
@@ -757,11 +563,11 @@
       const f = fileInput.files[0];
       status.textContent = '';
       if(!f){ 
-        info.textContent = translations[currentLang].fileInfoDefault;
+        info.textContent = "Drag & drop your video here, or click to select";
         processBtn.disabled = true;
         return;
       }
-      info.textContent = translations[currentLang].fileInfoSelected(f.name, mb(f.size));
+      info.textContent = `File: ${f.name} — ${mb(f.size)}`;
       processBtn.disabled = false;
     }
     
@@ -769,7 +575,7 @@
     
     processBtn.addEventListener('click', () => {
       const f = fileInput.files[0]; if(!f) return;
-      status.textContent = translations[currentLang].statusUploading;
+      status.textContent = "Uploading…";
       bar.classList.remove('running'); bar.style.width='0%';
       processBtn.disabled = true;
       const fd = new FormData(); fd.append('file', f);
@@ -781,14 +587,14 @@
       };
       xhr.onreadystatechange = () => {
         if (xhr.readyState === XMLHttpRequest.HEADERS_RECEIVED){
-          status.textContent = translations[currentLang].statusEnhancing;
+          status.textContent = "Enhancing video…";
           bar.classList.add('running');
         }
       };
       xhr.onload = () => {
         bar.classList.remove('running');
         if (xhr.status === 200) {
-          status.textContent = translations[currentLang].statusDone;
+          status.textContent = "Processing complete — download will start now";
           const blob = xhr.response, url = URL.createObjectURL(blob);
           const a = document.createElement('a');
           a.href = url; a.download = 'output.mp4'; document.body.appendChild(a); a.click();
@@ -802,13 +608,13 @@
           // --- END COOLDOWN ---
 
         } else {
-          status.textContent = translations[currentLang].statusError;
+          status.textContent = "An error occurred, please try again.";
           updateInfo(); // Re-enable button if file is still selected
         }
       };
       xhr.onerror = () => { 
         bar.classList.remove('running');
-        status.textContent = translations[currentLang].statusConnectionError;
+        status.textContent = "Connection failed.";
         updateInfo(); // Re-enable button if file is still selected
       };
       xhr.send(fd);
@@ -816,16 +622,13 @@
 
     // --- On Page Load ---
     document.addEventListener('DOMContentLoaded', () => {
-        const savedLang = localStorage.getItem('preferredLanguage') || 'ar';
-        setLanguage(savedLang);
-
         const cooldownEndTime = localStorage.getItem('cooldownEndTime');
         if (cooldownEndTime) {
             const endTime = parseInt(cooldownEndTime, 10);
             if (endTime > Date.now()) {
                 startCooldownTimer(endTime);
             } else {
-                localStorage.removeItem('cooldownEndTime'); // Clean up expired timer
+                localStorage.removeItem('cooldownEndTime');
             }
         }
     });
