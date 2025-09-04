@@ -45,11 +45,19 @@
     #how-to-card { animation-delay: 0.4s; }
     #4tik-tool-card { animation-delay: 0.6s; }
     #rating-card { animation-delay: 0.8s; }
+    #developer-card { animation-delay: 1.0s; }
     #visitor-counter-card { animation-delay: 1.2s; }
     @keyframes fadeInUp { to { opacity: 1; transform: translateY(0); } }
     .wrap{width:min(900px,96vw); padding:20px 16px 80px; }
     .card + .card {
       margin-top: 24px;
+    }
+    #main-card.card {
+      background:#0f1320;
+      border:1px solid var(--line);
+      border-radius:16px;
+      padding:22px;
+      box-shadow:0 20px 60px rgba(0,0,0,.35);
     }
     #how-to-card.card,
     #4tik-tool-card.card,
@@ -75,7 +83,31 @@
       border-radius: 16px;
       padding: 22px;
     }
+    .upload{
+      position:relative; border-radius:16px; padding:28px; text-align:center; cursor:pointer;
+      background:rgba(255,255,255,.02); border:2px dashed #314055; overflow:hidden; isolation:isolate;
+      transition: opacity 0.3s ease;
+    }
+    .upload::before{
+      content:""; position:absolute; inset:-2px; z-index:-1; border-radius:18px;
+      background:conic-gradient(from 0deg,var(--c1),var(--c2),var(--c1));
+      filter:blur(14px); opacity:.45;
+    }
+    .u-title{
+      display:inline-block; font-weight:800; font-size:22px; text-transform:uppercase;
+      background:linear-gradient(90deg,var(--c1),var(--c2)); -webkit-background-clip:text; background-clip:text; color:transparent;
+    }
+    .hint{margin-top:6px; color:var(--muted); font-size:14px}
     .row{display:flex; gap:10px; align-items:center; flex-wrap:wrap; margin-top:14px; min-height: 80px; flex-direction: column; justify-content: center;}
+    .bar-wrap{height:14px; background:#0a0f1a; border:1px solid var(--line); border-radius:999px; overflow:hidden}
+    .bar{height:100%; width:0%; border-radius:999px; background:linear-gradient(90deg,var(--c2),var(--c1)); transition:width .12s}
+    .bar.running{
+      animation:slide 1.1s linear infinite;
+      background:linear-gradient(90deg, transparent 0%, rgba(255,255,255,.15) 50%, transparent 100%);
+      width:40%;
+    }
+    @keyframes slide { from { margin-inline-start:-40% } to { margin-inline-start:100% } }
+    .status{font-size:14px; color:var(--muted)}
     .text-section { text-align: center; }
     .card-title {
       font-size: 24px;
@@ -106,6 +138,35 @@
       margin-bottom: 12px;
       color: var(--muted);
       line-height: 1.7;
+    }
+    .social-icons {
+      margin-top: 20px; display: flex;
+      justify-content: center;
+      gap: 16px;
+    }
+    .social-icons a {
+      display: flex; align-items: center;
+      justify-content: center;
+      width: 44px;
+      height: 44px;
+      background: rgba(255,255,255,0.05);
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      transition: all .2s;
+    }
+    .social-icons a:hover {
+      background: rgba(255,255,255,0.1);
+      border-color: var(--c1);
+      transform: translateY(-2px);
+    }
+    .social-icons svg {
+      width: 24px;
+      height: 24px;
+      fill: var(--muted);
+      transition: fill .2s;
+    }
+    .social-icons a:hover svg {
+      fill: var(--c1);
     }
     .button {
       --black-700: hsla(0 0% 12% / 1); --border_radius: 9999px;
@@ -234,6 +295,11 @@
       font-weight: bold;
       color: transparent;
     }
+    .button:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+      pointer-events: none;
+    }
     .rating-stars-container {
       width: 100%;
       height: 30px;
@@ -342,7 +408,7 @@
         cursor: default;
     }
     
-    /* Developer Card Styles */
+    /* New Developer Card Styles */
     .developer-avatar {
         width: 120px;
         height: 120px;
@@ -373,81 +439,10 @@
         border-color: #e41e45;
         transform: scale(1.03);
     }
-
-    /* --- NEW MODAL STYLES --- */
-    .modal-overlay {
-        position: fixed;
-        top: 0; left: 0;
-        width: 100%; height: 100%;
-        background-color: rgba(10, 11, 18, 0.8);
-        backdrop-filter: blur(8px);
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        z-index: 1000;
-        opacity: 0;
-        visibility: hidden;
-        transition: opacity 0.4s ease, visibility 0.4s ease;
-    }
-    .modal-overlay.show {
-        opacity: 1;
-        visibility: visible;
-    }
-    .modal-content {
-        position: relative;
-        background: #0f1320;
-        border: 1px solid var(--line);
-        border-radius: 18px;
-        padding: 30px;
-        width: min(450px, 90vw);
-        text-align: center;
-        box-shadow: 0 20px 60px rgba(0,0,0,.5);
-        transform: scale(0.9);
-        transition: transform 0.4s cubic-bezier(0.25, 1, 0.5, 1);
-    }
-    .modal-overlay.show .modal-content {
-        transform: scale(1);
-    }
-    .modal-title {
-        font-size: 22px;
-        font-weight: 700;
-        color: var(--ink);
-        margin-bottom: 25px;
-    }
-    .modal-close-btn {
-        position: absolute;
-        top: 15px;
-        right: 15px;
-        background: transparent;
-        border: none;
-        color: var(--muted);
-        font-size: 28px;
-        line-height: 1;
-        cursor: pointer;
-        padding: 5px;
-        transition: color 0.2s, transform 0.2s;
-    }
-    .modal-close-btn:hover {
-        color: var(--c1);
-        transform: rotate(90deg);
-    }
     
   </style>
 </head>
 <body>
-
-  <div id="welcome-modal" class="modal-overlay">
-    <div class="modal-content">
-      <button id="modal-close" class="modal-close-btn">&times;</button>
-      <h2 class="modal-title">تابعني لمزيد من الخدمات فضلا ليس امرا</h2>
-      <img src="https://p16-sign-va.tiktokcdn.com/tos-maliva-avt-0068/36fb03fab8355da6669fd8cae7a7f798~tplv-tiktokx-cropcenter:100:100.jpeg?dr=14579&refresh_token=8ad9e565&x-expires=1757070000&x-signature=wpnqJ%2FmnIsukl%2FcguiIlKitRKhQ%3D&t=4d5b0474&ps=13740610&shp=a5d48078&shcp=81f88b70&idc=maliva" alt="queen_iy TikTok Profile" class="developer-avatar">
-      <div class="row" style="margin-top: 16px; min-height: initial;">
-          <a href="https://www.tiktok.com/@queen_iy" target="_blank" rel="noopener noreferrer" class="tiktok-follow-btn">
-              متابعة
-          </a>
-      </div>
-    </div>
-  </div>
 
   <svg style="position: absolute; width: 0; height: 0;">
     <filter width="300%" x="-100%" height="300%" y="-100%" id="unopaq"><feColorMatrix values="1 0 0 0 0 0 1 0 0 0 0 0 1 0 0 0 0 0 9 0"></feColorMatrix></filter>
@@ -465,25 +460,47 @@
   </header>
 
   <main class="wrap">
+    <section id="main-card" class="card animated-entry">
+      <div id="drop" class="upload">
+        <input id="file" type="file" accept="video/*" hidden />
+        <div class="u-title" data-translate="uploadVideo">Ø±ÙØ¹ ÙÙØ¯ÙÙ</div>
+        <div id="fileInfo" class="hint" data-translate="dragDrop">Ø§Ø³Ø­Ø¨ Ø§ÙÙÙØ·Ø¹ ÙÙØ§ Ø£Ù Ø§Ø¶ØºØ· ÙÙØ§Ø®ØªÙØ§Ø±</div>
+      </div>
+      <div class="row">
+        <button class="button" id="process" disabled>
+            <div class="dots_border"></div>
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" class="sparkle">
+              <path class="path" stroke-linejoin="round" stroke-linecap="round" stroke="black" fill="black" d="M14.187 8.096L15 5.25L15.813 8.096C16.0231 8.83114 16.4171 9.50062 16.9577 10.0413C17.4984 10.5819 18.1679 10.9759 18.903 11.186L21.75 12L18.904 12.813C18.1689 13.0231 17.4994 13.4171 16.9587 13.9577C16.4181 14.4984 16.0241 15.1679 15.814 15.903L15 18.75L14.187 15.904C13.9769 15.1689 13.5829 14.4994 13.0423 13.9587C12.5016 13.4181 11.8321 13.0241 11.097 12.814L8.25 12L11.096 11.187C11.8311 10.9769 12.5006 10.5829 13.0413 10.0423C13.5819 9.50162 13.9759 8.83214 14.186 8.097L14.187 8.096Z"></path>
+              <path class="path" stroke-linejoin="round" stroke-linecap="round" stroke="black" fill="black" d="M6 14.25L5.741 15.285C5.59267 15.8785 5.28579 16.4206 4.85319 16.8532C4.42059 17.2858 3.87853 17.5927 3.285 17.741L2.25 18L3.285 18.259C3.87853 18.4073 4.42059 18.7142 4.85319 19.1468C5.28579 19.5794 5.59267 20.1215 5.741 20.715L6 21.75L6.259 20.715C6.40725 20.1216 6.71398 19.5796 7.14639 19.147C7.5788 18.7144 8.12065 18.4075 8.714 18.259L9.75 18L8.714 17.741C8.12065 17.5925 7.5788 17.2856 7.14639 16.853C6.71398 16.4204 6.40725 15.8784 6.259 15.285L6 14.25Z"></path>
+              <path class="path" stroke-linejoin="round" stroke-linecap="round" stroke="black" fill="black" d="M6.5 4L6.303 4.5915C6.24777 4.75718 6.15472 4.90774 6.03123 5.03123C5.90774 5.15472 5.75718 5.24777 5.5915 5.303L5 5.5L5.5915 5.697C5.75718 5.75223 5.90774 5.84528 6.03123 5.96877C6.15472 6.09226 6.24777 6.24282 6.303 6.4085L6.5 7L6.697 6.4085C6.75223 6.24282 6.84528 6.09226 6.96877 5.96877C7.09226 5.84528 7.24282 5.75223 7.4085 5.697L8 5.5L7.4085 5.303C7.24282 5.24777 7.09226 5.15472 6.96877 5.03123C6.84528 4.90774 6.75223 4.75718 6.697 4.5915L6.5 4Z"></path>
+            </svg>
+            <span class="text_button" data-translate="process">ÙØ¹Ø§ÙØ¬Ø©</span>
+        </button>
+        <div id="status" class="status"></div>
+      </div>
+      <div class="bar-wrap" style="margin-top:12px">
+        <div id="bar" class="bar"></div>
+      </div>
+    </section>
 
     <section id="how-to-card" class="card text-section how-to-section animated-entry">
       <div class="card-inner-content">
-        <h2 class="card-title" data-translate="howToUse">كيفية الاستخدام</h2>
+        <h2 class="card-title" data-translate="howToUse">ÙÙÙÙØ© Ø§ÙØ§Ø³ØªØ®Ø¯Ø§Ù</h2>
         <ol>
-          <li data-translate="step1">ارفع الفديو لايقل عن 100 ميقا.</li>
-          <li data-translate="step2">اضغط على زر معالجة ليتم تحسين الفديو.</li>
-          <li data-translate="step3">بعد اكتمال المعالجة حمل الفديو.</li>
-          <li data-translate="step4">افتح تطبيق Tiktok قم بنشر المقطع واجعله خاص ليس للعام.</li>
-          <li data-translate="step5">بعد الانتهاء من الرفع يمكنك الان تغييره للعامة.</li>
+          <li data-translate="step1">Ø§Ø±ÙØ¹ Ø§ÙÙØ¯ÙÙ ÙØ§ÙÙÙ Ø¹Ù 100 ÙÙÙØ§.</li>
+          <li data-translate="step2">Ø§Ø¶ØºØ· Ø¹ÙÙ Ø²Ø± ÙØ¹Ø§ÙØ¬Ø© ÙÙØªÙ ØªØ­Ø³ÙÙ Ø§ÙÙØ¯ÙÙ.</li>
+          <li data-translate="step3">Ø¨Ø¹Ø¯ Ø§ÙØªÙØ§Ù Ø§ÙÙØ¹Ø§ÙØ¬Ø© Ø­ÙÙ Ø§ÙÙØ¯ÙÙ.</li>
+          <li data-translate="step4">Ø§ÙØªØ­ ØªØ·Ø¨ÙÙ Tiktok ÙÙ Ø¨ÙØ´Ø± Ø§ÙÙÙØ·Ø¹ ÙØ§Ø¬Ø¹ÙÙ Ø®Ø§Øµ ÙÙØ³ ÙÙØ¹Ø§Ù.</li>
+          <li data-translate="step5">Ø¨Ø¹Ø¯ Ø§ÙØ§ÙØªÙØ§Ø¡ ÙÙ Ø§ÙØ±ÙØ¹ ÙÙÙÙÙ Ø§ÙØ§Ù ØªØºÙÙØ±Ù ÙÙØ¹Ø§ÙØ©.</li>
         </ol>
-        <p class="card-text" data-translate="supportMsg">اتمنى ان يكون الموقع سهل الاستخدام ودعمكم لي يجعلني استمر ❤️</p>
+        <p class="card-text" data-translate="supportMsg">Ø§ØªÙÙÙ Ø§Ù ÙÙÙÙ Ø§ÙÙÙÙØ¹ Ø³ÙÙ Ø§ÙØ§Ø³ØªØ®Ø¯Ø§Ù ÙØ¯Ø¹ÙÙÙ ÙÙ ÙØ¬Ø¹ÙÙÙ Ø§Ø³ØªÙØ± â¤ï¸</p>
       </div>
     </section>
 
     <section id="4tik-tool-card" class="card text-section animated-entry">
       <div class="card-inner-content">
         <h2 class="card-title">4Tik tool</h2>
-        <p class="card-text" data-translate="toolDescription">يمكنك تحميل برنامج 4Tik pro لتحسين ورفع جودة الفديو لمنصة تكتوك لي اجهزة الكمبيوتر</p>
+        <p class="card-text" data-translate="toolDescription">ÙÙÙÙÙ ØªØ­ÙÙÙ Ø¨Ø±ÙØ§ÙØ¬ 4Tik pro ÙØªØ­Ø³ÙÙ ÙØ±ÙØ¹ Ø¬ÙØ¯Ø© Ø§ÙÙØ¯ÙÙ ÙÙÙØµØ© ØªÙØªÙÙ ÙÙ Ø§Ø¬ÙØ²Ø© Ø§ÙÙÙØ¨ÙÙØªØ±</p>
         <div class="row" style="margin-top: 0; min-height: initial;">
             <button class="button" onclick="window.open('http://4tik.nekoweb.org', '_blank')">
                 <div class="dots_border"></div>
@@ -492,7 +509,7 @@
                   <path class="path" stroke-linejoin="round" stroke-linecap="round" stroke="black" fill="black" d="M6 14.25L5.741 15.285C5.59267 15.8785 5.28579 16.4206 4.85319 16.8532C4.42059 17.2858 3.87853 17.5927 3.285 17.741L2.25 18L3.285 18.259C3.87853 18.4073 4.42059 18.7142 4.85319 19.1468C5.28579 19.5794 5.59267 20.1215 5.741 20.715L6 21.75L6.259 20.715C6.40725 20.1216 6.71398 19.5796 7.14639 19.147C7.5788 18.7144 8.12065 18.4075 8.714 18.259L9.75 18L8.714 17.741C8.12065 17.5925 7.5788 17.2856 7.14639 16.853C6.71398 16.4204 6.40725 15.8784 6.259 15.285L6 14.25Z"></path>
                   <path class="path" stroke-linejoin="round" stroke-linecap="round" stroke="black" fill="black" d="M6.5 4L6.303 4.5915C6.24777 4.75718 6.15472 4.90774 6.03123 5.03123C5.90774 5.15472 5.75718 5.24777 5.5915 5.303L5 5.5L5.5915 5.697C5.75718 5.75223 5.90774 5.84528 6.03123 5.96877C6.15472 6.09226 6.24777 6.24282 6.303 6.4085L6.5 7L6.697 6.4085C6.75223 6.24282 6.84528 6.09226 6.96877 5.96877C7.09226 5.84528 7.24282 5.75223 7.4085 5.697L8 5.5L7.4085 5.303C7.24282 5.24777 7.09226 5.15472 6.96877 5.03123C6.84528 4.90774 6.75223 4.75718 6.697 4.5915L6.5 4Z"></path>
                 </svg>
-                <span class="text_button" data-translate="download">تحميل</span>
+                <span class="text_button" data-translate="download">ØªØ­ÙÙÙ</span>
             </button>
         </div>
       </div>
@@ -500,8 +517,8 @@
 
     <section id="rating-card" class="card text-section animated-entry">
       <div class="card-inner-content">
-        <h2 class="card-title" data-translate="rateExperience">يرجى تقييم تجربتك</h2>
-        <p class="card-text" data-translate="helpUs">لمساعدتنا على خدمتك بشكل أفضل</p>
+        <h2 class="card-title" data-translate="rateExperience">ÙØ±Ø¬Ù ØªÙÙÙÙ ØªØ¬Ø±Ø¨ØªÙ</h2>
+        <p class="card-text" data-translate="helpUs">ÙÙØ³Ø§Ø¹Ø¯ØªÙØ§ Ø¹ÙÙ Ø®Ø¯ÙØªÙ Ø¨Ø´ÙÙ Ø£ÙØ¶Ù</p>
         <div class="rating-stars-container">
            <input value="star-5" name="star" id="star-5" type="radio" />
           <label for="star-5" class="star-label">
@@ -553,109 +570,264 @@
         </div>
       </div>
     </section>
+    
+    <section id="developer-card" class="card text-section animated-entry">
+      <div class="card-inner-content">
+        <h2 class="card-title" data-translate="developerTitle">ÙØ·ÙØ±Ø© Ø§ÙÙÙÙØ¹</h2>
+        <img src="https://p16-sign-va.tiktokcdn.com/tos-maliva-avt-0068/36fb03fab8355da6669fd8cae7a7f798~tplv-tiktokx-cropcenter:100:100.jpeg?dr=14579&refresh_token=8ad9e565&x-expires=1757070000&x-signature=wpnqJ%2FmnIsukl%2FcguiIlKitRKhQ%3D&t=4d5b0474&ps=13740610&shp=a5d48078&shcp=81f88b70&idc=maliva" alt="queen_iy TikTok Profile" class="developer-avatar">
+        <p class="card-text" data-translate="developerText">ØªØ§Ø¨Ø¹ÙÙÙ Ø¹ÙÙ ØªÙÙ ØªÙÙ ÙÙÙØ²ÙØ¯ ÙÙ Ø§ÙØªØ­Ø¯ÙØ«Ø§Øª!</p>
+        <div class="row" style="margin-top: 16px; min-height: initial;">
+            <a href="https://www.tiktok.com/@queen_iy" target="_blank" rel="noopener noreferrer" class="tiktok-follow-btn" data-translate="followButton">
+                ÙØªØ§Ø¨Ø¹Ø©
+            </a>
+        </div>
+      </div>
+    </section>
 
     <section id="visitor-counter-card" class="card text-section animated-entry">
       <div class="card-inner-content">
-        <h2 class="card-title" data-translate="visitorStats">إحصائيات الزوار</h2>
-        <script type='text/javascript' id='mapmyvisitors' src='https://mapmyvisitors.com/map.js?cl=ffffff&w=167&t=tt&d=meZlgvBGIrbRPp-0UKc1lAfXYPXslsuznPtsEddaIZ4&ct=ffffff'></script>
+        <h2 class="card-title" data-translate="visitorStats">Ø¥Ø­ØµØ§Ø¦ÙØ§Øª Ø§ÙØ²ÙØ§Ø±</h2>
+        <script type='text/javascript' id='mapmyvisitors' src='httpshttps://mapmyvisitors.com/map.js?cl=ffffff&w=167&t=tt&d=meZlgvBGIrbRPp-0UKc1lAfXYPXslsuznPtsEddaIZ4&ct=ffffff'></script>
       </div>
     </section>
     
   </main>
   
   <footer class="footer">
-    <p data-translate="footer">Made by Manal <span class="heart">❤️</span></p>
+    <p data-translate="footer">Made by Manal <span class="heart">â¤ï¸</span></p>
   </footer>
 
   <script>
+    const drop = document.getElementById('drop');
+    const fileInput = document.getElementById('file');
+    const info = document.getElementById('fileInfo');
+    const processBtn = document.getElementById('process');
+    const bar = document.getElementById('bar');
+    const status = document.getElementById('status');
+    const langEnBtn = document.getElementById('lang-en');
+    const langArBtn = document.getElementById('lang-ar');
+    const mb = n => (n/1024/1024).toFixed(2)+' MB';
+    
     // --- Translation and Language Switching Logic ---
     const translations = {
         en: {
+            uploadVideo: "Upload Video",
+            dragDrop: "Drag & drop your video here, or click to select",
+            process: "Process",
             howToUse: "How to Use",
             step1: "1. Upload a video of at least 100MB.",
             step2: "2. Click the 'Process' button to enhance the video.",
             step3: "3. After processing is complete, download the video.",
             step4: "4. Open TikTok, upload the clip, and set it to 'Private'.",
             step5: "5. Once uploaded, you can change its visibility to 'Public'.",
-            supportMsg: "I hope you find the site easy to use. Your support keeps me going ❤️",
+            supportMsg: "I hope you find the site easy to use. Your support keeps me going â¤ï¸",
             toolDescription: "You can download the 4Tik Pro software to enhance and improve video quality for TikTok on your computer.",
             download: "Download",
+            developerTitle: "About the Developer",
+            developerText: "Follow me on TikTok for more updates!",
+            followButton: "Follow",
             visitorStats: "Visitor Stats",
             rateExperience: "Please Rate Your Experience",
             helpUs: "To help us serve you better",
-            footer: "Made by Manal <span class=\"heart\">❤️</span>",
+            footer: "Made by Manal <span class=\"heart\">â¤ï¸</span>",
+            statusUploading: "Uploadingâ¦",
+            statusEnhancing: "Enhancing videoâ¦",
+            statusDone: "Processing complete â download will start now",
+            statusError: "An error occurred, please try again.",
+            statusConnectionError: "Connection failed.",
+            fileInfoDefault: "Drag & drop your video here, or click to select",
+            fileInfoSelected: (name, size) => `File: ${name} â ${size}`,
+            cooldownActive: (time) => `Service suspended to prevent server overload. You can upload again in: ${time}`,
+            cooldownEnded: "You can now upload another video."
         },
         ar: {
-            howToUse: "كيفية الاستخدام",
-            step1: "١. ارفع الفديو لايقل عن 100 ميقا.",
-            step2: "٢. اضغط على زر معالجة ليتم تحسين الفديو.",
-            step3: "٣. بعد اكتمال المعالجة حمل الفديو.",
-            step4: "٤. افتح تطبيق Tiktok قم بنشر المقطع واجعله خاص ليس للعام.",
-            step5: "٥. بعد الانتهاء من الرفع يمكنك الان تغييره للعامة.",
-            supportMsg: "اتمنى ان يكون الموقع سهل الاستخدام ودعمكم لي يجعلني استمر ❤️",
-            toolDescription: "يمكنك تحميل برنامج 4Tik pro لتحسين ورفع جودة الفديو لمنصة تكتوك لي اجهزة الكمبيوتر",
-            download: "تحميل",
-            visitorStats: "إحصائيات الزوار",
-            rateExperience: "يرجى تقييم تجربتك",
-            helpUs: "لمساعدتنا على خدمتك بشكل أفضل",
-            footer: "made by manal <span class=\"heart\">❤️</span>",
+            uploadVideo: "Ø±ÙØ¹ ÙÙØ¯ÙÙ",
+            dragDrop: "Ø§Ø³Ø­Ø¨ Ø§ÙÙÙØ·Ø¹ ÙÙØ§ Ø£Ù Ø§Ø¶ØºØ· ÙÙØ§Ø®ØªÙØ§Ø±",
+            process: "ÙØ¹Ø§ÙØ¬Ø©",
+            howToUse: "ÙÙÙÙØ© Ø§ÙØ§Ø³ØªØ®Ø¯Ø§Ù",
+            step1: "Ù¡. Ø§Ø±ÙØ¹ Ø§ÙÙØ¯ÙÙ ÙØ§ÙÙÙ Ø¹Ù 100 ÙÙÙØ§.",
+            step2: "Ù¢. Ø§Ø¶ØºØ· Ø¹ÙÙ Ø²Ø± ÙØ¹Ø§ÙØ¬Ø© ÙÙØªÙ ØªØ­Ø³ÙÙ Ø§ÙÙØ¯ÙÙ.",
+            step3: "Ù£. Ø¨Ø¹Ø¯ Ø§ÙØªÙØ§Ù Ø§ÙÙØ¹Ø§ÙØ¬Ø© Ø­ÙÙ Ø§ÙÙØ¯ÙÙ.",
+            step4: "Ù¤. Ø§ÙØªØ­ ØªØ·Ø¨ÙÙ Tiktok ÙÙ Ø¨ÙØ´Ø± Ø§ÙÙÙØ·Ø¹ ÙØ§Ø¬Ø¹ÙÙ Ø®Ø§Øµ ÙÙØ³ ÙÙØ¹Ø§Ù.",
+            step5: "Ù¥. Ø¨Ø¹Ø¯ Ø§ÙØ§ÙØªÙØ§Ø¡ ÙÙ Ø§ÙØ±ÙØ¹ ÙÙÙÙÙ Ø§ÙØ§Ù ØªØºÙÙØ±Ù ÙÙØ¹Ø§ÙØ©.",
+            supportMsg: "Ø§ØªÙÙÙ Ø§Ù ÙÙÙÙ Ø§ÙÙÙÙØ¹ Ø³ÙÙ Ø§ÙØ§Ø³ØªØ®Ø¯Ø§Ù ÙØ¯Ø¹ÙÙÙ ÙÙ ÙØ¬Ø¹ÙÙÙ Ø§Ø³ØªÙØ± â¤ï¸",
+            toolDescription: "ÙÙÙÙÙ ØªØ­ÙÙÙ Ø¨Ø±ÙØ§ÙØ¬ 4Tik pro ÙØªØ­Ø³ÙÙ ÙØ±ÙØ¹ Ø¬ÙØ¯Ø© Ø§ÙÙØ¯ÙÙ ÙÙÙØµØ© ØªÙØªÙÙ ÙÙ Ø§Ø¬ÙØ²Ø© Ø§ÙÙÙØ¨ÙÙØªØ±",
+            download: "ØªØ­ÙÙÙ",
+            developerTitle: "ÙØ·ÙØ±Ø© Ø§ÙÙÙÙØ¹",
+            developerText: "Ø¨Ø¯Ø¹ÙÙÙ ÙÙØ³ØªÙØ± ð©·!",
+            followButton: "ÙØªØ§Ø¨Ø¹Ø©",
+            visitorStats: "Ø¥Ø­ØµØ§Ø¦ÙØ§Øª Ø§ÙØ²ÙØ§Ø±",
+            rateExperience: "ÙØ±Ø¬Ù ØªÙÙÙÙ ØªØ¬Ø±Ø¨ØªÙ",
+            helpUs: "ÙÙØ³Ø§Ø¹Ø¯ØªÙØ§ Ø¹ÙÙ Ø®Ø¯ÙØªÙ Ø¨Ø´ÙÙ Ø£ÙØ¶Ù",
+            footer: "made by manal <span class=\"heart\">â¤ï¸</span>",
+            statusUploading: "Ø¬Ø§Ø±Ù Ø§ÙØ±ÙØ¹â¦",
+            statusEnhancing: "Ø¬Ø§Ø±Ù ØªØ­Ø³ÙÙ Ø§ÙÙÙØ¯ÙÙ...",
+            statusDone: "ØªÙÙØª Ø§ÙÙØ¹Ø§ÙØ¬Ø© â ÙØ¨Ø¯Ø£ Ø§ÙØªÙØ²ÙÙ Ø§ÙØ¢Ù",
+            statusError: "Ø­Ø¯Ø« Ø®Ø·Ø£Ø Ø­Ø§ÙÙ ÙØ¬Ø¯Ø¯ÙØ§.",
+            statusConnectionError: "ØªØ¹Ø°ÙØ± Ø§ÙØ§ØªØµØ§Ù.",
+            fileInfoDefault: "Ø§Ø³Ø­Ø¨ Ø§ÙÙÙØ·Ø¹ ÙÙØ§ Ø£Ù Ø§Ø¶ØºØ· ÙÙØ§Ø®ØªÙØ§Ø±",
+            fileInfoSelected: (name, size) => `Ø§ÙÙÙÙ: ${name} â ${size}`,
+            cooldownActive: (time) => `ØªÙ ØªØ¹ÙÙÙ Ø§ÙØ®Ø¯ÙØ© ÙØªÙØ§Ø¯Ù Ø§ÙØ¶ØºØ· Ø¹ÙÙ Ø§ÙØ³ÙØ±ÙØ±. ÙÙÙÙÙ Ø§ÙØ±ÙØ¹ ÙØ¬Ø¯Ø¯Ø§Ù Ø¨Ø¹Ø¯: ${time}`,
+            cooldownEnded: "ÙÙÙÙÙ Ø§ÙØ¢Ù Ø±ÙØ¹ ÙÙØ¯ÙÙ Ø¢Ø®Ø±."
         }
     };
     
     let currentLang = 'ar';
-    const langEnBtn = document.getElementById('lang-en');
-    const langArBtn = document.getElementById('lang-ar');
+    let countdownInterval = null;
     
     function setLanguage(lang) {
         currentLang = lang;
-        const elements = document.querySelectorAll('[data-translate]');
-        elements.forEach(el => {
+        document.querySelectorAll('[data-translate]').forEach(el => {
             const key = el.getAttribute('data-translate');
             if (translations[lang][key]) {
-                el.innerHTML = translations[lang][key];
+                el.innerHTML = typeof translations[lang][key] === 'function' ? translations[lang][key]('', '') : translations[lang][key];
             }
         });
         
         document.documentElement.lang = lang;
         document.documentElement.dir = lang === 'ar' ? 'rtl' : 'ltr';
-
         localStorage.setItem('preferredLanguage', lang);
         
         langEnBtn.classList.toggle('active', lang === 'en');
         langArBtn.classList.toggle('active', lang === 'ar');
+        
+        if (!fileInput.files[0] && !localStorage.getItem('cooldownEndTime')) {
+             info.textContent = translations[currentLang].fileInfoDefault;
+        }
     }
 
+    // --- Cooldown and UI Management Logic ---
+
+    function disableUpload() {
+        processBtn.disabled = true;
+        drop.style.pointerEvents = 'none';
+        drop.style.opacity = '0.5';
+        fileInput.disabled = true;
+    }
+
+    function enableUpload() {
+        processBtn.disabled = !fileInput.files[0];
+        drop.style.pointerEvents = 'auto';
+        drop.style.opacity = '1';
+        fileInput.disabled = false;
+        localStorage.removeItem('cooldownEndTime');
+        status.textContent = translations[currentLang].cooldownEnded;
+        info.textContent = translations[currentLang].fileInfoDefault;
+        fileInput.value = ''; // Clear file input
+    }
+    
+    function startCooldownTimer(endTime) {
+        disableUpload();
+        if(countdownInterval) clearInterval(countdownInterval);
+
+        countdownInterval = setInterval(() => {
+            const now = Date.now();
+            const remaining = endTime - now;
+
+            if (remaining <= 0) {
+                clearInterval(countdownInterval);
+                enableUpload();
+                return;
+            }
+
+            const minutes = Math.floor((remaining / 1000) / 60);
+            const seconds = Math.floor((remaining / 1000) % 60);
+            const timeString = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+            
+            status.textContent = translations[currentLang].cooldownActive(timeString);
+            info.textContent = ''; // Hide file info during cooldown
+        }, 1000);
+    }
+
+
+    // --- Event Listeners and Initial Setup ---
+    
     langEnBtn.addEventListener('click', () => setLanguage('en'));
     langArBtn.addEventListener('click', () => setLanguage('ar'));
+    
+    drop.addEventListener('click', () => fileInput.click());
+    drop.addEventListener('dragover', e => e.preventDefault());
+    drop.addEventListener('drop', e => {
+      e.preventDefault();
+      fileInput.files = e.dataTransfer.files;
+      updateInfo();
+    });
+    
+    function updateInfo(){
+      const f = fileInput.files[0];
+      status.textContent = '';
+      if(!f){ 
+        info.textContent = translations[currentLang].fileInfoDefault;
+        processBtn.disabled = true;
+        return;
+      }
+      info.textContent = translations[currentLang].fileInfoSelected(f.name, mb(f.size));
+      processBtn.disabled = false;
+    }
+    
+    fileInput.addEventListener('change', updateInfo);
+    
+    processBtn.addEventListener('click', () => {
+      const f = fileInput.files[0]; if(!f) return;
+      status.textContent = translations[currentLang].statusUploading;
+      bar.classList.remove('running'); bar.style.width='0%';
+      processBtn.disabled = true;
+      const fd = new FormData(); fd.append('file', f);
+      const xhr = new XMLHttpRequest();
+      xhr.open('POST', '/process', true);
+      xhr.responseType = 'blob';
+      xhr.upload.onprogress = e => {
+        if(e.lengthComputable){ bar.style.width = Math.round((e.loaded/e.total)*100) + '%'; }
+      };
+      xhr.onreadystatechange = () => {
+        if (xhr.readyState === XMLHttpRequest.HEADERS_RECEIVED){
+          status.textContent = translations[currentLang].statusEnhancing;
+          bar.classList.add('running');
+        }
+      };
+      xhr.onload = () => {
+        bar.classList.remove('running');
+        if (xhr.status === 200) {
+          status.textContent = translations[currentLang].statusDone;
+          const blob = xhr.response, url = URL.createObjectURL(blob);
+          const a = document.createElement('a');
+          a.href = url; a.download = 'output.mp4'; document.body.appendChild(a); a.click();
+          URL.revokeObjectURL(url); a.remove();
 
+          // --- START COOLDOWN ---
+          const cooldownDuration = 30 * 60 * 1000; // 30 minutes in milliseconds
+          const endTime = Date.now() + cooldownDuration;
+          localStorage.setItem('cooldownEndTime', endTime);
+          startCooldownTimer(endTime);
+          // --- END COOLDOWN ---
+
+        } else {
+          status.textContent = translations[currentLang].statusError;
+          updateInfo(); // Re-enable button if file is still selected
+        }
+      };
+      xhr.onerror = () => { 
+        bar.classList.remove('running');
+        status.textContent = translations[currentLang].statusConnectionError;
+        updateInfo(); // Re-enable button if file is still selected
+      };
+      xhr.send(fd);
+    });
+
+    // --- On Page Load ---
     document.addEventListener('DOMContentLoaded', () => {
         const savedLang = localStorage.getItem('preferredLanguage') || 'ar';
         setLanguage(savedLang);
 
-        // --- NEW MODAL LOGIC ---
-        const modal = document.getElementById('welcome-modal');
-        const closeModalBtn = document.getElementById('modal-close');
-        
-        const showModal = () => {
-            modal.classList.add('show');
-        };
-
-        const hideModal = () => {
-            modal.classList.remove('show');
-        };
-
-        // Show modal only if it hasn't been shown before
-        if (!localStorage.getItem('welcomeModalShown')) {
-            setTimeout(showModal, 1000); // Show after a 1-second delay
-            localStorage.setItem('welcomeModalShown', 'true');
-        }
-        
-        closeModalBtn.addEventListener('click', hideModal);
-        modal.addEventListener('click', (e) => {
-            if (e.target === modal) {
-                hideModal();
+        const cooldownEndTime = localStorage.getItem('cooldownEndTime');
+        if (cooldownEndTime) {
+            const endTime = parseInt(cooldownEndTime, 10);
+            if (endTime > Date.now()) {
+                startCooldownTimer(endTime);
+            } else {
+                localStorage.removeItem('cooldownEndTime'); // Clean up expired timer
             }
-        });
+        }
     });
   </script>
 
