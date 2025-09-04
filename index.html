@@ -542,7 +542,7 @@
     
     processBtn.addEventListener('click', () => {
       const f = fileInput.files[0]; if(!f) return;
-      status.textContent = "Uploadingâ¦";
+      status.textContent = "Uploading";
       bar.classList.remove('running'); bar.style.width='0%';
       processBtn.disabled = true;
       fileInput.disabled = true; // Disable file input during upload
@@ -558,7 +558,7 @@
       };
       xhr.onreadystatechange = () => {
         if (xhr.readyState === XMLHttpRequest.HEADERS_RECEIVED){
-          status.textContent = "Enhancing videoâ¦";
+          status.textContent = "Enhancing video 🩷";
           bar.classList.add('running');
         }
       };
