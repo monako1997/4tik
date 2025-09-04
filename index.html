@@ -24,7 +24,8 @@
     .topbar{
       position:sticky; top:0; width:100%;
       display:flex; justify-content:center; align-items:center;
-      padding:14px 24px; backdrop-filter:saturate(140%) blur(6px);
+      padding:14px 24px;
+      backdrop-filter:saturate(140%) blur(6px);
       background:linear-gradient(180deg, rgba(10,11,18,.65), rgba(10,11,18,0));
       z-index:10;
     }
@@ -85,8 +86,8 @@
     }
     .upload{
       position:relative; border-radius:16px; padding:28px; text-align:center; cursor:pointer;
-      background:rgba(255,255,255,.02); border:2px dashed #314055; overflow:hidden; isolation:isolate;
-      transition: opacity 0.3s ease;
+      background:rgba(255,255,255,.02); border:2px dashed #314055; overflow:hidden;
+      isolation:isolate;
     }
     .upload::before{
       content:""; position:absolute; inset:-2px; z-index:-1; border-radius:18px;
@@ -98,16 +99,19 @@
       background:linear-gradient(90deg,var(--c1),var(--c2)); -webkit-background-clip:text; background-clip:text; color:transparent;
     }
     .hint{margin-top:6px; color:var(--muted); font-size:14px}
-    .row{display:flex; gap:10px; align-items:center; flex-wrap:wrap; margin-top:14px; min-height: 80px; flex-direction: column; justify-content: center;}
+    .row{display:flex; gap:10px; align-items:center; flex-wrap:wrap; margin-top:14px; min-height: 80px; flex-direction: column;
+      justify-content: center;}
     .bar-wrap{height:14px; background:#0a0f1a; border:1px solid var(--line); border-radius:999px; overflow:hidden}
-    .bar{height:100%; width:0%; border-radius:999px; background:linear-gradient(90deg,var(--c2),var(--c1)); transition:width .12s}
+    .bar{height:100%; width:0%; border-radius:999px; background:linear-gradient(90deg,var(--c2),var(--c1));
+      transition:width .12s}
     .bar.running{
       animation:slide 1.1s linear infinite;
       background:linear-gradient(90deg, transparent 0%, rgba(255,255,255,.15) 50%, transparent 100%);
       width:40%;
     }
     @keyframes slide { from { margin-inline-start:-40% } to { margin-inline-start:100% } }
-    .status{font-size:14px; color:var(--muted)}
+    .status{font-size:14px;
+      color:var(--muted)}
     .text-section { text-align: center; }
     .card-title {
       font-size: 24px;
@@ -120,7 +124,8 @@
       color: var(--muted);
       font-size: 16px;
       line-height: 1.8;
-      max-width: 600px; margin: 0 auto 20px;
+      max-width: 600px;
+      margin: 0 auto 20px;
     }
     .how-to-section ol {
       display: inline-block;
@@ -201,7 +206,8 @@
     }
     .button::after {
       content: "";
-      position: absolute; top: 50%;
+      position: absolute;
+      top: 50%;
       left: 50%;
       transform: translate(-50%, -50%);
       width: 100%;
@@ -229,7 +235,8 @@
     .button .dots_border {
       --size_border: calc(100% + 2px);
       overflow: hidden;
-      position: absolute; top: 50%;
+      position: absolute;
+      top: 50%;
       left: 50%;
       transform: translate(-50%, -50%);
       width: var(--size_border);
@@ -335,7 +342,8 @@
     }
     .socials-container {
       width: 100%;
-      display: flex; justify-content: center;
+      display: flex;
+      justify-content: center;
       align-items: center;
       gap: 15px;
       padding-top: 20px;
@@ -435,7 +443,8 @@
         text-align: center;
     }
     .tiktok-follow-btn:hover {
-        background-color: #e41e45; /* A slightly darker shade */
+        background-color: #e41e45;
+        /* A slightly darker shade */
         border-color: #e41e45;
         transform: scale(1.03);
     }
@@ -447,7 +456,8 @@
   <svg style="position: absolute; width: 0; height: 0;">
     <filter width="300%" x="-100%" height="300%" y="-100%" id="unopaq"><feColorMatrix values="1 0 0 0 0 0 1 0 0 0 0 0 1 0 0 0 0 0 9 0"></feColorMatrix></filter>
     <filter width="300%" x="-100%" height="300%" y="-100%" id="unopaq2"><feColorMatrix values="1 0 0 0 0 0 1 0 0 0 0 0 1 0 0 0 0 0 3 0"></feColorMatrix></filter>
-    <filter width="300%" x="-100%" height="300%" y="-100%" id="unopaq3"><feColorMatrix values="1 0 0 0.2 0 0 1 0 0.2 0 0 0 1 0.2 0 0 0 0 2 0"></feColorMatrix></filter>
+    <filter width="300%" x="-100%" height="300%" y="-100%" id="unopaq3"><feColorMatrix values="1 0 0 0.2 0 0 1 0 0.2 0 0 0 1 0.2 0 0 0 0 
+2 0"></feColorMatrix></filter>
   </svg>
 
   <div class="lang-switcher">
@@ -466,17 +476,21 @@
         <div class="u-title" data-translate="uploadVideo">رفع فيديو</div>
         <div id="fileInfo" class="hint" data-translate="dragDrop">اسحب المقطع هنا أو اضغط للاختيار</div>
       </div>
+      
       <div class="row">
         <button class="button" id="process" disabled>
             <div class="dots_border"></div>
             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" class="sparkle">
-              <path class="path" stroke-linejoin="round" stroke-linecap="round" stroke="black" fill="black" d="M14.187 8.096L15 5.25L15.813 8.096C16.0231 8.83114 16.4171 9.50062 16.9577 10.0413C17.4984 10.5819 18.1679 10.9759 18.903 11.186L21.75 12L18.904 12.813C18.1689 13.0231 17.4994 13.4171 16.9587 13.9577C16.4181 14.4984 16.0241 15.1679 15.814 15.903L15 18.75L14.187 15.904C13.9769 15.1689 13.5829 14.4994 13.0423 13.9587C12.5016 13.4181 11.8321 13.0241 11.097 12.814L8.25 12L11.096 11.187C11.8311 10.9769 12.5006 10.5829 13.0413 10.0423C13.5819 9.50162 13.9759 8.83214 14.186 8.097L14.187 8.096Z"></path>
+              <path class="path" stroke-linejoin="round" stroke-linecap="round" stroke="black" fill="black" d="M14.187 8.096L15 5.25L15.813 8.096C16.0231 8.83114 16.4171 9.50062 16.9577 10.0413C17.4984 10.5819 18.1679 10.9759 18.903 11.186L21.75 12L18.904 12.813C18.1689 13.0231 17.4994 13.4171 16.9587 13.9577C16.4181 14.4984 16.0241 15.1679 15.814 15.903L15 18.75L14.187 15.904C13.9769 15.1689 13.5829 14.4994 13.0423 13.9587C12.5016 13.4181 11.8321 13.0241 
+11.097 12.814L8.25 12L11.096 11.187C11.8311 10.9769 12.5006 10.5829 13.0413 10.0423C13.5819 9.50162 13.9759 8.83214 14.186 8.097L14.187 8.096Z"></path>
               <path class="path" stroke-linejoin="round" stroke-linecap="round" stroke="black" fill="black" d="M6 14.25L5.741 15.285C5.59267 15.8785 5.28579 16.4206 4.85319 16.8532C4.42059 17.2858 3.87853 17.5927 3.285 17.741L2.25 18L3.285 18.259C3.87853 18.4073 4.42059 18.7142 4.85319 19.1468C5.28579 19.5794 5.59267 20.1215 5.741 20.715L6 21.75L6.259 20.715C6.40725 20.1216 6.71398 19.5796 7.14639 19.147C7.5788 18.7144 8.12065 18.4075 8.714 18.259L9.75 18L8.714 17.741C8.12065 17.5925 7.5788 17.2856 7.14639 16.853C6.71398 16.4204 6.40725 15.8784 6.259 15.285L6 14.25Z"></path>
-              <path class="path" stroke-linejoin="round" stroke-linecap="round" stroke="black" fill="black" d="M6.5 4L6.303 4.5915C6.24777 4.75718 6.15472 4.90774 6.03123 5.03123C5.90774 5.15472 5.75718 5.24777 5.5915 5.303L5 5.5L5.5915 5.697C5.75718 5.75223 5.90774 5.84528 6.03123 5.96877C6.15472 6.09226 6.24777 6.24282 6.303 6.4085L6.5 7L6.697 6.4085C6.75223 6.24282 6.84528 6.09226 6.96877 5.96877C7.09226 5.84528 7.24282 5.75223 7.4085 5.697L8 5.5L7.4085 5.303C7.24282 5.24777 7.09226 5.15472 6.96877 5.03123C6.84528 4.90774 6.75223 4.75718 6.697 4.5915L6.5 4Z"></path>
+              <path class="path" stroke-linejoin="round" 
+stroke-linecap="round" stroke="black" fill="black" d="M6.5 4L6.303 4.5915C6.24777 4.75718 6.15472 4.90774 6.03123 5.03123C5.90774 5.15472 5.75718 5.24777 5.5915 5.303L5 5.5L5.5915 5.697C5.75718 5.75223 5.90774 5.84528 6.03123 5.96877C6.15472 6.09226 6.24777 6.24282 6.303 6.4085L6.5 7L6.697 6.4085C6.75223 6.24282 6.84528 6.09226 6.96877 5.96877C7.09226 5.84528 7.24282 5.75223 7.4085 5.697L8 5.5L7.4085 5.303C7.24282 5.24777 7.09226 5.15472 6.96877 5.03123C6.84528 4.90774 6.75223 4.75718 6.697 4.5915L6.5 4Z"></path>
             </svg>
             <span class="text_button" data-translate="process">معالجة</span>
         </button>
         <div id="status" class="status"></div>
+    
       </div>
       <div class="bar-wrap" style="margin-top:12px">
         <div id="bar" class="bar"></div>
@@ -489,6 +503,7 @@
         <ol>
           <li data-translate="step1">ارفع الفديو لايقل عن 100 ميقا.</li>
           <li data-translate="step2">اضغط على زر معالجة ليتم تحسين الفديو.</li>
+  
           <li data-translate="step3">بعد اكتمال المعالجة حمل الفديو.</li>
           <li data-translate="step4">افتح تطبيق Tiktok قم بنشر المقطع واجعله خاص ليس للعام.</li>
           <li data-translate="step5">بعد الانتهاء من الرفع يمكنك الان تغييره للعامة.</li>
@@ -498,17 +513,22 @@
     </section>
 
     <section id="4tik-tool-card" class="card text-section animated-entry">
-      <div class="card-inner-content">
+   
+       <div class="card-inner-content">
         <h2 class="card-title">4Tik tool</h2>
         <p class="card-text" data-translate="toolDescription">يمكنك تحميل برنامج 4Tik pro لتحسين ورفع جودة الفديو لمنصة تكتوك لي اجهزة الكمبيوتر</p>
-        <div class="row" style="margin-top: 0; min-height: initial;">
+        <div class="row" style="margin-top: 0;
+min-height: initial;">
             <button class="button" onclick="window.open('http://4tik.nekoweb.org', '_blank')">
                 <div class="dots_border"></div>
                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" class="sparkle">
-                  <path class="path" stroke-linejoin="round" stroke-linecap="round" stroke="black" fill="black" d="M14.187 8.096L15 5.25L15.813 8.096C16.0231 8.83114 16.4171 9.50062 16.9577 10.0413C17.4984 10.5819 18.1679 10.9759 18.903 11.186L21.75 12L18.904 12.813C18.1689 13.0231 17.4994 13.4171 16.9587 13.9577C16.4181 14.4984 16.0241 15.1679 15.814 15.903L15 18.75L14.187 15.904C13.9769 15.1689 13.5829 14.4994 13.0423 13.9587C12.5016 13.4181 11.8321 13.0241 11.097 12.814L8.25 12L11.096 11.187C11.8311 10.9769 12.5006 10.5829 13.0413 10.0423C13.5819 9.50162 13.9759 8.83214 14.186 8.097L14.187 8.096Z"></path>
-                  <path class="path" stroke-linejoin="round" stroke-linecap="round" stroke="black" fill="black" d="M6 14.25L5.741 15.285C5.59267 15.8785 5.28579 16.4206 4.85319 16.8532C4.42059 17.2858 3.87853 17.5927 3.285 17.741L2.25 18L3.285 18.259C3.87853 18.4073 4.42059 18.7142 4.85319 19.1468C5.28579 19.5794 5.59267 20.1215 5.741 20.715L6 21.75L6.259 20.715C6.40725 20.1216 6.71398 19.5796 7.14639 19.147C7.5788 18.7144 8.12065 18.4075 8.714 18.259L9.75 18L8.714 17.741C8.12065 17.5925 7.5788 17.2856 7.14639 16.853C6.71398 16.4204 6.40725 15.8784 6.259 15.285L6 14.25Z"></path>
+                  <path class="path" stroke-linejoin="round" stroke-linecap="round" stroke="black" fill="black" d="M14.187 8.096L15 5.25L15.813 8.096C16.0231 8.83114 16.4171 9.50062 16.9577 10.0413C17.4984 10.5819 18.1679 10.9759 18.903 11.186L21.75 12L18.904 12.813C18.1689 13.0231 17.4994 13.4171 16.9587 
+13.9577C16.4181 14.4984 16.0241 15.1679 15.814 15.903L15 18.75L14.187 15.904C13.9769 15.1689 13.5829 14.4994 13.0423 13.9587C12.5016 13.4181 11.8321 13.0241 11.097 12.814L8.25 12L11.096 11.187C11.8311 10.9769 12.5006 10.5829 13.0413 10.0423C13.5819 9.50162 13.9759 8.83214 14.186 8.097L14.187 8.096Z"></path>
+                  <path class="path" stroke-linejoin="round" stroke-linecap="round" stroke="black" fill="black" d="M6 14.25L5.741 15.285C5.59267 15.8785 5.28579 16.4206 4.85319 16.8532C4.42059 17.2858 3.87853 17.5927 3.285 17.741L2.25 18L3.285 18.259C3.87853 18.4073 4.42059 18.7142 4.85319 19.1468C5.28579 19.5794 5.59267 20.1215 5.741 20.715L6 21.75L6.259 20.715C6.40725 20.1216 6.71398 19.5796 7.14639 19.147C7.5788 18.7144 8.12065 18.4075 8.714 18.259L9.75 18L8.714 17.741C8.12065 17.5925 7.5788 17.2856 7.14639 16.853C6.71398 16.4204 6.40725 
+15.8784 6.259 15.285L6 14.25Z"></path>
                   <path class="path" stroke-linejoin="round" stroke-linecap="round" stroke="black" fill="black" d="M6.5 4L6.303 4.5915C6.24777 4.75718 6.15472 4.90774 6.03123 5.03123C5.90774 5.15472 5.75718 5.24777 5.5915 5.303L5 5.5L5.5915 5.697C5.75718 5.75223 5.90774 5.84528 6.03123 5.96877C6.15472 6.09226 6.24777 6.24282 6.303 6.4085L6.5 7L6.697 6.4085C6.75223 6.24282 6.84528 6.09226 6.96877 5.96877C7.09226 5.84528 7.24282 5.75223 7.4085 5.697L8 5.5L7.4085 5.303C7.24282 5.24777 7.09226 5.15472 6.96877 5.03123C6.84528 4.90774 6.75223 4.75718 6.697 4.5915L6.5 4Z"></path>
                 </svg>
+        
                 <span class="text_button" data-translate="download">تحميل</span>
             </button>
         </div>
@@ -520,21 +540,24 @@
         <h2 class="card-title" data-translate="rateExperience">يرجى تقييم تجربتك</h2>
         <p class="card-text" data-translate="helpUs">لمساعدتنا على خدمتك بشكل أفضل</p>
         <div class="rating-stars-container">
-           <input value="star-5" name="star" id="star-5" type="radio" />
+          
+         <input value="star-5" name="star" id="star-5" type="radio" />
           <label for="star-5" class="star-label">
             <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
               <path d="M12,17.27L18.18,21L16.54,13.97L22,9.24L14.81,8.62L12,2L9.19,8.62L2,9.24L7.45,13.97L5.82,21L12,17.27Z" pathLength="360"></path>
             </svg>
            </label>
           <input value="star-4" name="star" id="star-4" type="radio" />
-          <label for="star-4" class="star-label">
+          <label 
+for="star-4" class="star-label">
             <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
               <path d="M12,17.27L18.18,21L16.54,13.97L22,9.24L14.81,8.62L12,2L9.19,8.62L2,9.24L7.45,13.97L5.82,21L12,17.27Z" pathLength="360"></path>
              </svg>
           </label>
           <input value="star-3" name="star" id="star-3" type="radio" />
           <label for="star-3" class="star-label">
-            <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+            <svg viewBox="0 0 24 
+24" xmlns="http://www.w3.org/2000/svg">
               <path d="M12,17.27L18.18,21L16.54,13.97L22,9.24L14.81,8.62L12,2L9.19,8.62L2,9.24L7.45,13.97L5.82,21L12,17.27Z" pathLength="360"></path>
            </svg>
           </label>
@@ -542,32 +565,38 @@
           <label for="star-2" class="star-label">
             <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
               <path d="M12,17.27L18.18,21L16.54,13.97L22,9.24L14.81,8.62L12,2L9.19,8.62L2,9.24L7.45,13.97L5.82,21L12,17.27Z" pathLength="360"></path>
-            </svg>
+  
+           </svg>
           </label>
           <input value="star-1" name="star" id="star-1" type="radio" />
           <label for="star-1" class="star-label">
             <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
               <path d="M12,17.27L18.18,21L16.54,13.97L22,9.24L14.81,8.62L12,2L9.19,8.62L2,9.24L7.45,13.97L5.82,21L12,17.27Z" pathLength="360"></path>
             </svg>
+        
           </label>
         </div>
         <div class="socials-container">
           <a class="social-button" href="https://www.tiktok.com/@queen_iy" target="_blank" rel="noopener noreferrer">
             <svg viewBox="0 0 448 512" xmlns="http://www.w3.org/2000/svg">
               <path d="M448 209.9a210.1 210.1 0 0 1 -122.8-39.3V349.4A162.6 162.6 0 1 1 185 188.3V278.2a74.6 74.6 0 1 0 52.2 71.2V0l88 0a121.2 121.2 0 0 0 122.8 122.8V209.9z"></path>
-            </svg>
+         
+           </svg>
           </a>
           <a class="social-button" href="https://www.instagram.com/asleyaito" target="_blank" rel="noopener noreferrer">
             <svg viewBox="0 0 448 512" xmlns="http://www.w3.org/2000/svg">
-              <path d="M224.1 141c-63.6 0-114.9 51.3-114.9 114.9s51.3 114.9 114.9 114.9S339 319.5 339 255.9 287.7 141 224.1 141zm0 189.6c-41.1 0-74.7-33.5-74.7-74.7s33.5-74.7 74.7-74.7 74.7 33.5 74.7 74.7-33.6 74.7-74.7 74.7zm146.4-194.3c0 14.9-12 26.8-26.8 26.8-14.9 0-26.8-12-26.8-26.8s12-26.8 26.8-26.8 26.8 12 26.8 26.8zm76.1 27.2c-1.7-35.9-9.9-67.7-36.2-93.9-26.2-26.2-58-34.4-93.9-36.2-37-2.1-147.9-2.1-184.9 0-35.8 1.7-67.6 9.9-93.9 36.1s-34.4 58-36.2 93.9c-2.1 37-2.1 147.9 0 184.9 1.7 35.9 9.9 67.7 36.2 93.9s58 34.4 93.9 36.2c37 2.1 147.9 2.1 184.9 0 35.9-1.7 67.7-9.9 93.9-36.2 26.2-26.2 34.4-58 36.2-93.9 2.1-37 2.1-147.8 0-184.8zM398.8 388c-7.8 19.6-22.9 34.7-42.6 42.6-29.5 11.7-99.5 9-132.1 9s-102.7 2.6-132.1-9c-19.6-7.8-34.7-22.9-42.6-42.6-11.7-29.5-9-99.5-9-132.1s-2.6-102.7 9-132.1c7.8-19.6 22.9-34.7 42.6-42.6 29.5-11.7 99.5-9 132.1-9s102.7-2.6 132.1 9c19.6 7.8 34.7 22.9 42.6 42.6 11.7 29.5 9 99.5 9 132.1s2.7 102.7-9 132.1z"></path>
+              <path d="M224.1 141c-63.6 0-114.9 51.3-114.9 114.9s51.3 114.9 114.9 114.9S339 319.5 339 255.9 287.7 141 224.1 141zm0 189.6c-41.1 0-74.7-33.5-74.7-74.7s33.5-74.7 74.7-74.7 74.7 33.5 74.7 74.7-33.6 74.7-74.7 74.7zm146.4-194.3c0 14.9-12 26.8-26.8 26.8-14.9 0-26.8-12-26.8-26.8s12-26.8 26.8-26.8 26.8 12 26.8 26.8zm76.1 27.2c-1.7-35.9-9.9-67.7-36.2-93.9-26.2-26.2-58-34.4-93.9-36.2-37-2.1-147.9-2.1-184.9 0-35.8 1.7-67.6 9.9-93.9 36.1s-34.4 58-36.2 93.9c-2.1 
+37-2.1 147.9 0 184.9 1.7 35.9 9.9 67.7 36.2 93.9s58 34.4 93.9 36.2c37 2.1 147.9 2.1 184.9 0 35.9-1.7 67.7-9.9 93.9-36.2 26.2-26.2 34.4-58 36.2-93.9 2.1-37 2.1-147.8 0-184.8zM398.8 388c-7.8 19.6-22.9 34.7-42.6 42.6-29.5 11.7-99.5 9-132.1 9s-102.7 2.6-132.1-9c-19.6-7.8-34.7-22.9-42.6-42.6-11.7-29.5-9-99.5-9-132.1s-2.6-102.7 9-132.1c7.8-19.6 22.9-34.7 42.6-42.6 29.5-11.7 99.5-9 132.1-9s102.7-2.6 132.1 9c19.6 7.8 34.7 22.9 42.6 42.6 11.7 29.5 9 99.5 9 132.1s2.7 102.7-9 132.1z"></path>
              </svg>
           </a>
           <a class="social-button" href="http://4tik.nekoweb.org" target="_blank" rel="noopener noreferrer">
+       
             <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" fill="currentColor">
                 <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 17.93c-3.95-.49-7-3.85-7-7.93 0-.62.08-1.21.21-1.79L9 15v1c0 1.1.9 2 2 2v1.93zm6.9-2.54c-.26-.81-1-1.39-1.9-1.39h-1v-3c0-.55-.45-1-1-1H8v-2h2c.55 0 1-.45 1-1V7h2c1.1 0 2-.9 2-2v-.41c2.93 1.19 5 4.06 5 7.41 0 2.08-.8 3.97-2.1 5.39z"></path>
             </svg>
           </a>
         </div>
+      
       </div>
     </section>
     
@@ -576,7 +605,8 @@
         <h2 class="card-title" data-translate="developerTitle">مطورة الموقع</h2>
         <img src="https://p16-sign-va.tiktokcdn.com/tos-maliva-avt-0068/36fb03fab8355da6669fd8cae7a7f798~tplv-tiktokx-cropcenter:100:100.jpeg?dr=14579&refresh_token=8ad9e565&x-expires=1757070000&x-signature=wpnqJ%2FmnIsukl%2FcguiIlKitRKhQ%3D&t=4d5b0474&ps=13740610&shp=a5d48078&shcp=81f88b70&idc=maliva" alt="queen_iy TikTok Profile" class="developer-avatar">
         <p class="card-text" data-translate="developerText">تابعوني على تيك توك للمزيد من التحديثات!</p>
-        <div class="row" style="margin-top: 16px; min-height: initial;">
+        <div class="row" style="margin-top: 16px;
+min-height: initial;">
             <a href="https://www.tiktok.com/@queen_iy" target="_blank" rel="noopener noreferrer" class="tiktok-follow-btn" data-translate="followButton">
                 متابعة
             </a>
@@ -587,7 +617,8 @@
     <section id="visitor-counter-card" class="card text-section animated-entry">
       <div class="card-inner-content">
         <h2 class="card-title" data-translate="visitorStats">إحصائيات الزوار</h2>
-        <script type='text/javascript' id='mapmyvisitors' src='httpshttps://mapmyvisitors.com/map.js?cl=ffffff&w=167&t=tt&d=meZlgvBGIrbRPp-0UKc1lAfXYPXslsuznPtsEddaIZ4&ct=ffffff'></script>
+        <script 
+type='text/javascript' id='mapmyvisitors' src='https://mapmyvisitors.com/map.js?cl=ffffff&w=167&t=tt&d=meZlgvBGIrbRPp-0UKc1lAfXYPXslsuznPtsEddaIZ4&ct=ffffff'></script>
       </div>
     </section>
     
@@ -598,21 +629,12 @@
   </footer>
 
   <script>
-    const drop = document.getElementById('drop');
-    const fileInput = document.getElementById('file');
-    const info = document.getElementById('fileInfo');
-    const processBtn = document.getElementById('process');
-    const bar = document.getElementById('bar');
-    const status = document.getElementById('status');
-    const langEnBtn = document.getElementById('lang-en');
-    const langArBtn = document.getElementById('lang-ar');
-    const mb = n => (n/1024/1024).toFixed(2)+' MB';
-    
     // --- Translation and Language Switching Logic ---
     const translations = {
         en: {
             uploadVideo: "Upload Video",
             dragDrop: "Drag & drop your video here, or click to select",
+ 
             process: "Process",
             howToUse: "How to Use",
             step1: "1. Upload a video of at least 100MB.",
@@ -626,20 +648,22 @@
             developerTitle: "About the Developer",
             developerText: "Follow me on TikTok for more updates!",
             followButton: "Follow",
+     
             visitorStats: "Visitor Stats",
             rateExperience: "Please Rate Your Experience",
             helpUs: "To help us serve you better",
             footer: "Made by Manal <span class=\"heart\">❤️</span>",
+            // Dynamic status messages
             statusUploading: "Uploading…",
+            
             statusEnhancing: "Enhancing video…",
             statusDone: "Processing complete — download will start now",
             statusError: "An error occurred, please try again.",
             statusConnectionError: "Connection failed.",
             fileInfoDefault: "Drag & drop your video here, or click to select",
-            fileInfoSelected: (name, size) => `File: ${name} — ${size}`,
-            cooldownActive: (time) => `Service suspended to prevent server overload. You can upload again in: ${time}`,
-            cooldownEnded: "You can now upload another video."
-        },
+            fileInfoSelected: (name, size) => `File: ${name} — ${size}`
+      
+          },
         ar: {
             uploadVideo: "رفع فيديو",
             dragDrop: "اسحب المقطع هنا أو اضغط للاختيار",
@@ -655,107 +679,80 @@
             download: "تحميل",
             developerTitle: "مطورة الموقع",
             developerText: "بدعمكم نـستمر 🩷!",
+  
             followButton: "متابعة",
             visitorStats: "إحصائيات الزوار",
             rateExperience: "يرجى تقييم تجربتك",
             helpUs: "لمساعدتنا على خدمتك بشكل أفضل",
             footer: "made by manal <span class=\"heart\">❤️</span>",
+            // Dynamic status messages
+           
             statusUploading: "جارِ الرفع…",
             statusEnhancing: "جارِ تحسين الفيديو...",
             statusDone: "تمّت المعالجة — يبدأ التنزيل الآن",
             statusError: "حدث خطأ، حاول مجددًا.",
             statusConnectionError: "تعذّر الاتصال.",
             fileInfoDefault: "اسحب المقطع هنا أو اضغط للاختيار",
-            fileInfoSelected: (name, size) => `الملف: ${name} — ${size}`,
-            cooldownActive: (time) => `تم تعليق الخدمة لتفادي الضغط على السيرفر. يمكنك الرفع مجدداً بعد: ${time}`,
-            cooldownEnded: "يمكنك الآن رفع فيديو آخر."
+            fileInfoSelected: (name, size) => 
+`الملف: ${name} — ${size}`
         }
     };
     
     let currentLang = 'ar';
-    let countdownInterval = null;
+    const langEnBtn = document.getElementById('lang-en');
+    const langArBtn = document.getElementById('lang-ar');
     
     function setLanguage(lang) {
         currentLang = lang;
-        document.querySelectorAll('[data-translate]').forEach(el => {
+        const elements = document.querySelectorAll('[data-translate]');
+        elements.forEach(el => {
             const key = el.getAttribute('data-translate');
             if (translations[lang][key]) {
-                el.innerHTML = typeof translations[lang][key] === 'function' ? translations[lang][key]('', '') : translations[lang][key];
+                el.innerHTML = translations[lang][key];
             }
         });
-        
         document.documentElement.lang = lang;
         document.documentElement.dir = lang === 'ar' ? 'rtl' : 'ltr';
+
         localStorage.setItem('preferredLanguage', lang);
-        
+        // Update active button
         langEnBtn.classList.toggle('active', lang === 'en');
         langArBtn.classList.toggle('active', lang === 'ar');
-        
-        if (!fileInput.files[0] && !localStorage.getItem('cooldownEndTime')) {
+        // Update file info text if no file is selected
+        if (!fileInput.files[0]) {
              info.textContent = translations[currentLang].fileInfoDefault;
         }
     }
 
-    // --- Cooldown and UI Management Logic ---
-
-    function disableUpload() {
-        processBtn.disabled = true;
-        drop.style.pointerEvents = 'none';
-        drop.style.opacity = '0.5';
-        fileInput.disabled = true;
-    }
-
-    function enableUpload() {
-        processBtn.disabled = !fileInput.files[0];
-        drop.style.pointerEvents = 'auto';
-        drop.style.opacity = '1';
-        fileInput.disabled = false;
-        localStorage.removeItem('cooldownEndTime');
-        status.textContent = translations[currentLang].cooldownEnded;
-        info.textContent = translations[currentLang].fileInfoDefault;
-        fileInput.value = ''; // Clear file input
-    }
-    
-    function startCooldownTimer(endTime) {
-        disableUpload();
-        if(countdownInterval) clearInterval(countdownInterval);
-
-        countdownInterval = setInterval(() => {
-            const now = Date.now();
-            const remaining = endTime - now;
-
-            if (remaining <= 0) {
-                clearInterval(countdownInterval);
-                enableUpload();
-                return;
-            }
-
-            const minutes = Math.floor((remaining / 1000) / 60);
-            const seconds = Math.floor((remaining / 1000) % 60);
-            const timeString = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
-            
-            status.textContent = translations[currentLang].cooldownActive(timeString);
-            info.textContent = ''; // Hide file info during cooldown
-        }, 1000);
-    }
-
-
-    // --- Event Listeners and Initial Setup ---
-    
     langEnBtn.addEventListener('click', () => setLanguage('en'));
     langArBtn.addEventListener('click', () => setLanguage('ar'));
+    document.addEventListener('DOMContentLoaded', () => {
+        const savedLang = localStorage.getItem('preferredLanguage') || 'ar';
+        setLanguage(savedLang);
+    });
     
-    drop.addEventListener('click', () => fileInput.click());
-    drop.addEventListener('dragover', e => e.preventDefault());
+    // --- Original File Processing Logic (Modified for translation) ---
+    const drop = document.getElementById('drop');
+    const fileInput = document.getElementById('file');
+    const info = document.getElementById('fileInfo');
+    const processBtn = document.getElementById('process');
+    const bar = document.getElementById('bar');
+    const status = document.getElementById('status');
+    const mb = n => (n/1024/1024).toFixed(2)+' MB';
+
+    drop.addEventListener('click', () => {
+      fileInput.click();
+    });
+    drop.addEventListener('dragover', e => { e.preventDefault(); });
     drop.addEventListener('drop', e => {
       e.preventDefault();
       fileInput.files = e.dataTransfer.files;
       updateInfo();
     });
-    
     function updateInfo(){
       const f = fileInput.files[0];
       status.textContent = '';
+      // Clear status on new file selection
       if(!f){ 
         info.textContent = translations[currentLang].fileInfoDefault;
         processBtn.disabled = true;
@@ -767,68 +764,174 @@
     
     fileInput.addEventListener('change', updateInfo);
     
-    processBtn.addEventListener('click', () => {
-      const f = fileInput.files[0]; if(!f) return;
-      status.textContent = translations[currentLang].statusUploading;
-      bar.classList.remove('running'); bar.style.width='0%';
-      processBtn.disabled = true;
-      const fd = new FormData(); fd.append('file', f);
-      const xhr = new XMLHttpRequest();
-      xhr.open('POST', '/process', true);
-      xhr.responseType = 'blob';
-      xhr.upload.onprogress = e => {
-        if(e.lengthComputable){ bar.style.width = Math.round((e.loaded/e.total)*100) + '%'; }
-      };
-      xhr.onreadystatechange = () => {
-        if (xhr.readyState === XMLHttpRequest.HEADERS_RECEIVED){
-          status.textContent = translations[currentLang].statusEnhancing;
-          bar.classList.add('running');
-        }
-      };
-      xhr.onload = () => {
-        bar.classList.remove('running');
-        if (xhr.status === 200) {
-          status.textContent = translations[currentLang].statusDone;
-          const blob = xhr.response, url = URL.createObjectURL(blob);
-          const a = document.createElement('a');
-          a.href = url; a.download = 'output.mp4'; document.body.appendChild(a); a.click();
-          URL.revokeObjectURL(url); a.remove();
+    // --- NEW: Usage Limit and Cooldown Logic ---
 
-          // --- START COOLDOWN ---
-          const cooldownDuration = 30 * 600 * 1000; // 30 minutes in milliseconds
-          const endTime = Date.now() + cooldownDuration;
-          localStorage.setItem('cooldownEndTime', endTime);
-          startCooldownTimer(endTime);
-          // --- END COOLDOWN ---
+    // 1. Include FingerprintJS library
+    const fpScript = document.createElement('script');
+    fpScript.src = 'https://cdn.jsdelivr.net/npm/@fingerprintjs/fingerprintjs@3/dist/fp.min.js';
+    fpScript.onload = () => {
+        // 2. Initialize FingerprintJS and Usage Control
+        initUsageControl();
+    };
+    document.head.appendChild(fpScript);
 
-        } else {
-          status.textContent = translations[currentLang].statusError;
-          updateInfo(); // Re-enable button if file is still selected
-        }
-      };
-      xhr.onerror = () => { 
-        bar.classList.remove('running');
-        status.textContent = translations[currentLang].statusConnectionError;
-        updateInfo(); // Re-enable button if file is still selected
-      };
-      xhr.send(fd);
-    });
+    let usageDB;
 
-    // --- On Page Load ---
-    document.addEventListener('DOMContentLoaded', () => {
-        const savedLang = localStorage.getItem('preferredLanguage') || 'ar';
-        setLanguage(savedLang);
+    function initUsageControl() {
+        const dbRequest = indexedDB.open("usage_db", 1);
 
-        const cooldownEndTime = localStorage.getItem('cooldownEndTime');
-        if (cooldownEndTime) {
-            const endTime = parseInt(cooldownEndTime, 10);
-            if (endTime > Date.now()) {
-                startCooldownTimer(endTime);
-            } else {
-                localStorage.removeItem('cooldownEndTime'); // Clean up expired timer
+        dbRequest.onupgradeneeded = function(event) {
+            const db = event.target.result;
+            const objectStore = db.createObjectStore("users", { keyPath: "fingerprint" });
+            objectStore.createIndex("lastUpload", "lastUpload", { unique: false });
+        };
+
+        dbRequest.onsuccess = function(event) {
+            usageDB = event.target.result;
+            checkUserStatus();
+        };
+
+        dbRequest.onerror = function(event) {
+            console.error("IndexedDB error:", event.target.errorCode);
+        };
+    }
+
+    async function checkUserStatus() {
+        const fp = await FingerprintJS.load();
+        const result = await fp.get();
+        const visitorId = result.visitorId;
+
+        if (!usageDB) return;
+        const transaction = usageDB.transaction(["users"], "readonly");
+        const objectStore = transaction.objectStore("users");
+        const request = objectStore.get(visitorId);
+
+        request.onsuccess = function(event) {
+            const userData = event.target.result;
+            if (userData) {
+                const now = Date.now();
+                const thirtyMinutes = 30 * 60 * 1000;
+                
+                // Reset daily count if the last upload was on a different day
+                const isSameDay = new Date(now).toDateString() === new Date(userData.lastUpload).toDateString();
+
+                if (isSameDay && userData.uploadCount >= 3) {
+                    disableUpload("لقد وصلت إلى حدك اليومي (3 فيديوهات).");
+                    return;
+                }
+                
+                if (now - userData.lastUpload < thirtyMinutes) {
+                    const remainingTime = thirtyMinutes - (now - userData.lastUpload);
+                    disableUploadWithTimer(remainingTime);
+                    return;
+                }
             }
-        }
+            // If user is OK, the button state is handled by updateInfo()
+        };
+        request.onerror = function(event) {
+            console.error("Error fetching user data from IndexedDB:", event.target.errorCode);
+        };
+    }
+
+    function disableUpload(message) {
+        processBtn.disabled = true;
+        status.textContent = message;
+    }
+
+    function disableUploadWithTimer(remainingTime) {
+        processBtn.disabled = true;
+        let timer = remainingTime;
+
+        const intervalId = setInterval(() => {
+            if (timer <= 0) {
+                clearInterval(intervalId);
+                status.textContent = "يمكنك الآن رفع فيديو آخر.";
+                if (fileInput.files[0]) processBtn.disabled = false;
+            } else {
+                const minutes = Math.floor(timer / 60000);
+                const seconds = ((timer % 60000) / 1000).toFixed(0);
+                status.textContent = `يرجى الانتظار ${minutes}:${seconds < 10 ? '0' : ''}${seconds} قبل الرفع التالي.`;
+                timer -= 1000;
+            }
+        }, 1000);
+    }
+    
+    async function updateUserRecord(visitorId) {
+        if (!usageDB) return;
+        const transaction = usageDB.transaction(["users"], "readwrite");
+        const objectStore = transaction.objectStore("users");
+        const request = objectStore.get(visitorId);
+
+        request.onsuccess = function(event) {
+            const userData = event.target.result;
+            const now = Date.now();
+
+            if (userData) {
+                const isSameDay = new Date(now).toDateString() === new Date(userData.lastUpload).toDateString();
+                const newUploadCount = isSameDay ? userData.uploadCount + 1 : 1;
+                
+                objectStore.put({ fingerprint: visitorId, lastUpload: now, uploadCount: newUploadCount });
+            } else {
+                objectStore.add({ fingerprint: visitorId, lastUpload: now, uploadCount: 1 });
+            }
+        };
+        
+        request.onerror = function(event) {
+            console.error("Error updating user data in IndexedDB:", event.target.errorCode);
+        };
+    }
+
+    processBtn.addEventListener('click', async () => {
+        const f = fileInput.files[0]; if(!f) return;
+        
+        // --- Added for usage tracking ---
+        const fp = await FingerprintJS.load();
+        const result = await fp.get();
+        const visitorId = result.visitorId;
+        await updateUserRecord(visitorId);
+        // ---------------------------------
+      
+        status.textContent = translations[currentLang].statusUploading;
+        bar.classList.remove('running'); bar.style.width='0%';
+        const fd = new FormData(); fd.append('file', f);
+        const xhr = new XMLHttpRequest();
+        xhr.open('POST', '/process', true);
+        xhr.responseType = 'blob';
+        xhr.upload.onprogress = e => {
+            if(e.lengthComputable){ bar.style.width = Math.round((e.loaded/e.total)*100) + '%'; }
+        };
+   
+        xhr.onreadystatechange = () => {
+            if (xhr.readyState === XMLHttpRequest.HEADERS_RECEIVED){
+                status.textContent = translations[currentLang].statusEnhancing;
+                bar.classList.add('running');
+            }
+        };
+        xhr.onload = () => {
+            bar.classList.remove('running');
+            if (xhr.status === 200) {
+                status.textContent = translations[currentLang].statusDone;
+    
+                const blob = xhr.response, url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = 'output.mp4'; document.body.appendChild(a); a.click();
+                URL.revokeObjectURL(url); a.remove();
+                
+                // Start cooldown timer after successful download
+                disableUploadWithTimer(30 * 60 * 1000);
+
+            } else {
+                status.textContent = translations[currentLang].statusError;
+            }
+        };
+        xhr.onerror = () => { 
+            bar.classList.remove('running');
+            status.textContent = translations[currentLang].statusConnectionError;
+        };
+        xhr.send(fd);
     });
+
   </script>
 
 </body>
