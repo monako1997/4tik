@@ -194,7 +194,7 @@
         if (xhr.status === 200) {
           status.textContent = 'تمّت المعالجة — يبدأ التنزيل الآن';
           const blob = xhr.response, url = URL.createObjectURL(blob);
-          const a = document.createElement('a'); a.href = url; a.download = 'output.mp4'; document.body.appendChild(a); a.click();
+          const a = document.createElement('a'); a.href = url; a.download = 'video4tik.mp4'; document.body.appendChild(a); a.click();
           URL.revokeObjectURL(url); a.remove();
           setTimeout(() => { drop.style.pointerEvents='auto'; drop.style.opacity='1'; fileInput.disabled=false; fileInput.value=''; updateInfo(); }, 800);
         } else {
