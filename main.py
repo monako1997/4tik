@@ -6,14 +6,14 @@ import json
 from datetime import datetime, timedelta
 from pathlib import Path
 from fastapi import FastAPI, UploadFile, File, HTTPException, Request
-from fastapi.responses import HTMLResponse, FileResponse, JSONResponse
+from fastapi.responses import HTMLResponse, FileResponse
 
 # إخفاء واجهات التوثيق الافتراضية
 app = FastAPI(docs_url=None, redoc_url=None, openapi_url=None)
 
 BASE = Path(__file__).resolve().parent
 WORK = BASE / "work"
-LOG_FILE = BASE / "ip_log.json"
+LOG_FILE = BASE / "ip_log.json" # ملف لتسجيل عناوين IP
 WORK.mkdir(exist_ok=True)
 
 # الحد الأقصى لحجم الفيديو (100MB)
@@ -22,7 +22,7 @@ MAX_SIZE = 100 * 1024 * 1024
 WAIT_DURATION = timedelta(hours=24)
 
 def read_ip_log():
-    """قراءة سجل عناوين IP من الملف"""
+    """قراءة سجل عناوين IP من الملف. إذا لم يكن موجودًا، يتم إرجاع قاموس فارغ."""
     if not LOG_FILE.exists():
         return {}
     with open(LOG_FILE, "r") as f:
@@ -32,7 +32,7 @@ def read_ip_log():
             return {}
 
 def write_ip_log(data):
-    """كتابة سجل عناوين IP إلى الملف"""
+    """كتابة سجل عناوين IP إلى الملف."""
     with open(LOG_FILE, "w") as f:
         json.dump(data, f, indent=4)
 
@@ -55,6 +55,7 @@ def run_silent(cmd: list[str]) -> bool:
 
 @app.post("/process")
 async def process(request: Request, file: UploadFile = File(...)):
+    # --- بداية منطق تحديد المعدل ---
     client_ip = request.client.host
     ip_log = read_ip_log()
 
@@ -64,17 +65,20 @@ async def process(request: Request, file: UploadFile = File(...)):
             remaining_time = (last_upload_time + WAIT_DURATION) - datetime.now()
             hours, remainder = divmod(remaining_time.seconds, 3600)
             minutes, _ = divmod(remainder, 60)
+            
+            # إرسال خطأ مخصص للواجهة الأمامية
             error_message = f"لقد استنفدت حدك اليومي. يرجى المحاولة مرة أخرى بعد {hours} ساعة و {minutes} دقيقة."
             raise HTTPException(status_code=429, detail=error_message)
+    # --- نهاية منطق تحديد المعدل ---
 
     # التحقق من حجم الملف
     contents = await file.read()
     if len(contents) > MAX_SIZE:
         raise HTTPException(status_code=400, detail="⚠️ الملف أكبر من 100MB")
-    await file.seek(0)  # إعادة المؤشر للبداية بعد القراءة
+    await file.seek(0)
 
     uid = uuid.uuid4().hex
-    in_path = WORK / f"in_{uid}.mp4"
+    in_path  = WORK / f"in_{uid}.mp4"
     out_path = WORK / f"out_{uid}.mp4"
 
     try:
@@ -97,15 +101,16 @@ async def process(request: Request, file: UploadFile = File(...)):
         if not ok or not out_path.exists():
             raise HTTPException(status_code=500, detail="تعذر إتمام المعالجة، حاول مجددًا.")
 
-        # تحديث سجل IP بعد المعالجة الناجحة
+        # --- تحديث السجل فقط بعد النجاح ---
         ip_log[client_ip] = datetime.now().isoformat()
         write_ip_log(ip_log)
+        # ------------------------------------
 
-        # إرجاع الملف الناتج للتنزيل
+        # إرجاع الملف الناتج للتنزيل مع حذفه من الخادم بعد الانتهاء
         headers = {"Content-Disposition": 'attachment; filename="4tik.mp4"'}
         return FileResponse(out_path, media_type="video/mp4", headers=headers, background=os.remove(out_path))
 
     finally:
-        # تنظيف الملف الأصلي
+        # تنظيف الملف الأصلي في كل الحالات
         if in_path.exists():
             os.remove(in_path)
