@@ -110,29 +110,29 @@
     const subToast = document.getElementById('subToast');
     const mb = n => (n/1024/1024).toFixed(2)+' MB';
 
-    // بصمة الجهاز
+    // SHA-256
     async function sha256(text){
       const enc = new TextEncoder().encode(text);
       const buf = await crypto.subtle.digest('SHA-256', enc);
       const arr = Array.from(new Uint8Array(buf));
       return arr.map(b => b.toString(16).padStart(2,'0')).join('');
     }
+
+    // بصمة تعتمد على العتاد/النظام (ثابتة عبر المتصفحات على نفس الجهاز)
     async function getDeviceHash(){
       const seed = [
-        navigator.userAgent,
-        navigator.platform || 'pf?',
-        navigator.language || 'lang?',
-        (screen.width||0)+'x'+(screen.height||0),
-        window.devicePixelRatio || 1,
-        navigator.hardwareConcurrency || 'hc?',
-        navigator.deviceMemory || 'dm?',
-        navigator.maxTouchPoints || 0,
-        Intl.DateTimeFormat().resolvedOptions().timeZone || 'tz?'
+        navigator.platform || 'pf?',                       // iOS/Android/MacIntel...
+        (screen.width||0)+'x'+(screen.height||0),          // دقة الشاشة
+        window.devicePixelRatio || 1,                      // كثافة البكسل
+        navigator.hardwareConcurrency || 'hc?',            // عدد الأنوية
+        navigator.deviceMemory || 'dm?',                   // RAM (قد لا تتوفر)
+        navigator.maxTouchPoints || 0,                     // نقاط اللمس
+        Intl.DateTimeFormat().resolvedOptions().timeZone || 'tz?' // المنطقة الزمنية
       ].join('|');
       return await sha256(seed);
     }
 
-    // مفتاح
+    // مفتاح: أول مرة فقط، وبعد الربط ممكن نتعرف بالجهاز
     async function getKey(autoCheck = false) {
       let k = localStorage.getItem('SUB_KEY');
       if (k) return k;
@@ -143,7 +143,7 @@
           const res = await fetch('/check', { method:'POST', headers: { 'X-DEVICE': device } });
           const data = await res.json();
           if (res.ok && data.ok) {
-            return "__DEVICE_ONLY__";
+            return "__DEVICE_ONLY__"; // الجهاز معروف مسبقًا
           }
         } catch(e) {}
       }
@@ -259,6 +259,7 @@
       }
     });
 
+    // تحديث تلقائي عند فتح الصفحة
     window.addEventListener('load', ()=> {
       refreshSubscriptionBox(true);
     });
