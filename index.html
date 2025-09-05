@@ -67,7 +67,7 @@
 
   <div class="footer">Made by Manal <span class="heart">❤</span></div>
 
-  <!-- سكربت التحقق (مفتاح + جهاز) والرفع -->
+  <!-- سكربت: مفتاح + بصمة جهاز حتمية + رفع -->
   <script>
     const drop = document.getElementById('drop');
     const fileInput = document.getElementById('file');
@@ -77,7 +77,29 @@
     const status = document.getElementById('status');
     const mb = n => (n/1024/1024).toFixed(2)+' MB';
 
-    // مفتاح الاشتراك (يُطلب مرّة ويحفظ محليًا)
+    // ——— بصمة جهاز "حتمية" (لا تعتمد على التخزين) ———
+    async function sha256(text){
+      const enc = new TextEncoder().encode(text);
+      const buf = await crypto.subtle.digest('SHA-256', enc);
+      const arr = Array.from(new Uint8Array(buf));
+      return arr.map(b => b.toString(16).padStart(2,'0')).join('');
+    }
+    async function getDeviceHash(){
+      const seed = [
+        navigator.userAgent,
+        navigator.platform || 'pf?',
+        navigator.language || 'lang?',
+        (screen.width||0)+'x'+(screen.height||0),
+        window.devicePixelRatio || 1,
+        navigator.hardwareConcurrency || 'hc?',
+        navigator.deviceMemory || 'dm?',
+        navigator.maxTouchPoints || 0,
+        Intl.DateTimeFormat().resolvedOptions().timeZone || 'tz?'
+      ].join('|');
+      return await sha256(seed);
+    }
+
+    // ——— مفتاح الاشتراك: يُطلب مرّة ويحفظ محليًا ———
     function getKey() {
       let k = localStorage.getItem('SUB_KEY');
       if (!k) {
@@ -86,28 +108,6 @@
         localStorage.setItem('SUB_KEY', k.trim());
       }
       return k;
-    }
-
-    // بصمة جهاز مبسطة (SHA-256)
-    async function sha256(text){
-      const enc = new TextEncoder().encode(text);
-      const buf = await crypto.subtle.digest('SHA-256', enc);
-      const arr = Array.from(new Uint8Array(buf));
-      return arr.map(b => b.toString(16).padStart(2,'0')).join('');
-    }
-    async function getDeviceHash(){
-      let d = localStorage.getItem('DEVICE_HASH');
-      if (!d) {
-        const seed = [
-          navigator.userAgent, navigator.language,
-          screen.width+'x'+screen.height, navigator.platform,
-          Intl.DateTimeFormat().resolvedOptions().timeZone,
-          Math.random().toString(36).slice(2)
-        ].join('|');
-        d = await sha256(seed);
-        localStorage.setItem('DEVICE_HASH', d);
-      }
-      return d;
     }
 
     function startDots(){ status.innerHTML = 'جارٍ تحسين الفيديو <span class="dots"><i></i><i></i><i></i></span>'; }
@@ -166,7 +166,6 @@
           const blob = xhr.response, url = URL.createObjectURL(blob);
           const a = document.createElement('a'); a.href = url; a.download = 'output.mp4'; document.body.appendChild(a); a.click();
           URL.revokeObjectURL(url); a.remove();
-          // إعادة التفعيل
           setTimeout(() => { drop.style.pointerEvents='auto'; drop.style.opacity='1'; fileInput.disabled=false; fileInput.value=''; updateInfo(); }, 800);
         } else {
           const reader = new FileReader();
