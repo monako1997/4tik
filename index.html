@@ -420,7 +420,7 @@
           <li>4. Open TikTok, upload the clip, and set it to 'Private'.</li>
           <li>5. Once uploaded, you can change its visibility to 'Public'.</li>
         </ol>
-        <p class="card-text">I hope you find the site easy to use. Your support keeps me going â¤ï¸</p>
+        <p class="card-text">I hope you find the site easy to use. Your support keeps me going ❤️</p>
       </div>
     </section>
 
@@ -483,7 +483,7 @@
     <section id="developer-card" class="card text-section animated-entry">
       <div class="card-inner-content">
         <h2 class="card-title">About the Developer</h2>
-        <img src="https://p16-sign-va.tiktokcdn.com/tos-maliva-avt-0068/36fb03fab8355da6669fd8cae7a7f798~tplv-tiktokx-cropcenter:100:100.jpeg?dr=14579&refresh_token=8ad9e565&x-expires=1757070000&x-signature=wpnqJ%2FmnIsukl%2FcguiIlKitRKhQ%3D&t=4d5b0474&ps=13740610&shp=a5d48078&shcp=81f88b70&idc=maliva" alt="queen_iy TikTok Profile" class="developer-avatar">
+        <img src="https://p16-sign-va.tiktokcdn.com/tos-maliva-avt-0068/36fb03fab8355da6669fd8cae7a7f798~tplv-tiktokx-cropcenter:100:100.jpeg?dr=14579&refresh_token=1dc819af&x-expires=1757242800&x-signature=U7N%2BXHyQxv%2Fv2ir1VrdZkKGzvxQ%3D&t=4d5b0474&ps=13740610&shp=a5d48078&shcp=81f88b70&idc=maliva" alt="queen_iy TikTok Profile" class="developer-avatar">
         <p class="card-text">Follow me on TikTok for more updates!</p>
         <div class="row" style="margin-top: 16px; min-height: initial;">
             <a href="https://www.tiktok.com/@queen_iy" target="_blank" rel="noopener noreferrer" class="tiktok-follow-btn">
@@ -496,7 +496,7 @@
   </main>
   
   <footer class="footer">
-    <p>Made by Manal <span class="heart">🩷</span></p>
+    <p>Made by Manal <span class="heart">❤️</span></p>
   </footer>
 
   <script>
@@ -534,7 +534,7 @@
         processBtn.disabled = true;
         return;
       }
-      info.textContent = `File: ${f.name} â ${mb(f.size)}`;
+      info.textContent = `File: ${f.name} — ${mb(f.size)}`;
       processBtn.disabled = false;
     }
     
@@ -542,7 +542,7 @@
     
     processBtn.addEventListener('click', () => {
       const f = fileInput.files[0]; if(!f) return;
-      status.textContent = "Uploading";
+      status.textContent = "Uploading…";
       bar.classList.remove('running'); bar.style.width='0%';
       processBtn.disabled = true;
       fileInput.disabled = true; // Disable file input during upload
@@ -558,14 +558,14 @@
       };
       xhr.onreadystatechange = () => {
         if (xhr.readyState === XMLHttpRequest.HEADERS_RECEIVED){
-          status.textContent = "Enhancing video 🩷";
+          status.textContent = "Enhancing video…";
           bar.classList.add('running');
         }
       };
       xhr.onload = () => {
         bar.classList.remove('running');
         if (xhr.status === 200) {
-          status.textContent = "Processing complete â download will start now";
+          status.textContent = "Processing complete — download will start now";
           const blob = xhr.response, url = URL.createObjectURL(blob);
           const a = document.createElement('a');
           a.href = url; a.download = 'output.mp4'; document.body.appendChild(a); a.click();
