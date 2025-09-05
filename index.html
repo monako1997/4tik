@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="ar" dir="rtl">
+<html lang="en" dir="ltr">
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
@@ -9,7 +9,10 @@
   <style>
     :root{--bg:#0a0b12;--ink:#f3f6fb;--muted:#aab6c5;--line:#1d2433;--c1:#25F4EE;--c2:#FE2C55;}
     *{box-sizing:border-box;font-family:'Cairo',sans-serif}
-    html{scroll-behavior:smooth;background-color:var(--bg);}
+    html{
+      scroll-behavior:smooth;
+      background-color: var(--bg);
+    }
     body{
       margin:0;min-height:100vh;display:flex;flex-direction:column;align-items:center;
       background:
@@ -18,51 +21,373 @@
         linear-gradient(180deg,#080910 0%, #0a0b12 100%);
       color:var(--ink);
     }
-    .topbar{position:sticky; top:0; width:100%;display:flex; justify-content:center; align-items:center;
-      padding:14px 24px;backdrop-filter:saturate(140%) blur(6px);
-      background:linear-gradient(180deg, rgba(10,11,18,.65), rgba(10,11,18,0));z-index:10;}
-    .brand{font-weight:900; font-size:42px; margin:0;
+    .topbar{
+      position:sticky; top:0; width:100%;
+      display:flex; justify-content:center; align-items:center;
+      padding:14px 24px;
+      backdrop-filter:saturate(140%) blur(6px);
+      background:linear-gradient(180deg, rgba(10,11,18,.65), rgba(10,11,18,0));
+      z-index:10;
+    }
+    .brand{
+      font-weight:900; font-size:42px; letter-spacing:.6px; margin:0;
       background:linear-gradient(90deg,var(--c2),var(--c1),var(--c2));
       -webkit-background-clip:text; background-clip:text; color:transparent;
       text-shadow:0 0 18px rgba(37,244,238,.35),0 0 18px rgba(254,44,85,.25);
-      background-size:200% auto; animation:shine 3s linear infinite;}
+      background-size:200% auto; animation:shine 3s linear infinite;
+    }
     @keyframes shine { to { background-position:-200% center; } }
-    .animated-entry{opacity:0;transform:translateY(20px);animation:fadeInUp .6s ease-out forwards;}
-    #main-card{animation-delay:.2s;} #how-to-card{animation-delay:.4s;} #developer-card{animation-delay:.8s;}
-    @keyframes fadeInUp{to{opacity:1;transform:translateY(0)}}
-    .wrap{width:min(900px,96vw); padding:20px 16px 120px;}
-    .card + .card{margin-top:24px;}
-    #main-card.card{background:#0f1320;border:1px solid var(--line);border-radius:16px;padding:22px;box-shadow:0 20px 60px rgba(0,0,0,.35);}
-    #how-to-card.card, #developer-card.card{position:relative;background:linear-gradient(137deg,var(--c2) 0%,var(--c1) 100%);
-      border-radius:18px;transition:.3s ease;filter:drop-shadow(0 0 15px rgba(37,244,238,.4));padding:2px;}
-    #how-to-card.card:hover, #developer-card.card:hover{filter:drop-shadow(0 0 25px rgba(37,244,238,.7));}
-    .card-inner-content{background-color:#0f1320;border-radius:16px;padding:22px;}
-    .upload{position:relative;border-radius:16px;padding:28px;text-align:center;cursor:pointer;
-      background:rgba(255,255,255,.02);border:2px dashed #314055;overflow:hidden;isolation:isolate;transition:opacity .3s ease;}
-    .upload::before{content:"";position:absolute;inset:-2px;z-index:-1;border-radius:18px;
-      background:conic-gradient(from 0deg,var(--c1),var(--c2),var(--c1));filter:blur(14px);opacity:.45;}
-    .u-title{display:inline-block;font-weight:800;font-size:22px;text-transform:uppercase;
-      background:linear-gradient(90deg,var(--c1),var(--c2));-webkit-background-clip:text;background-clip:text;color:transparent;}
-    .hint{margin-top:6px;color:var(--muted);font-size:14px}
-    .row{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-top:14px;min-height:80px;flex-direction:column;justify-content:center;}
-    .bar-wrap{height:14px;background:#0a0f1a;border:1px solid var(--line);border-radius:999px;overflow:hidden}
-    .bar{height:100%;width:0%;border-radius:999px;background:linear-gradient(90deg,var(--c2),var(--c1));transition:width .12s}
-    .bar.running{animation:slide 1.1s linear infinite;background:linear-gradient(90deg,transparent 0%,rgba(255,255,255,.15) 50%,transparent 100%);width:40%}
-    @keyframes slide{from{margin-inline-start:-40%} to{margin-inline-start:100%}}
-    .status{font-size:14px;color:var(--muted)}
-    .text-section{text-align:center;}
-    .card-title{font-size:24px;font-weight:800;margin:0 0 16px;background:linear-gradient(90deg,var(--c1),var(--c2));-webkit-background-clip:text;background-clip:text;color:transparent;}
-    .card-text{color:var(--muted);font-size:16px;line-height:1.8;max-width:600px;margin:0 auto 20px;}
-    .how-to-section ol{display:inline-block;text-align:start;max-width:100%;margin-bottom:20px;padding-inline-start:24px;}
-    .how-to-section li{margin-bottom:12px;color:var(--muted);line-height:1.7;}
-    .footer{position:fixed;bottom:0;left:0;right:0;padding:12px 20px;text-align:center;color:var(--muted);font-size:16px;
-      background:linear-gradient(180deg, rgba(10,11,18,0), rgba(10,11,18,.55));backdrop-filter:saturate(140%) blur(6px);}
-    .heart{display:inline-block;animation:beat 1.2s infinite ease-in-out;color:#FE2C55;}
-    @keyframes beat{0%,100%{transform:scale(1)}50%{transform:scale(1.1)}}
-    .developer-avatar{width:120px;height:120px;border-radius:50%;object-fit:cover;margin:4px auto 20px;border:3px solid var(--c1);box-shadow:0 0 20px rgba(37,244,238,.5);}
-    .tiktok-follow-btn{display:inline-block;padding:10px 28px;background-color:var(--c2);color:var(--ink);border-radius:4px;font-weight:700;font-size:16px;
-      text-decoration:none;transition:background-color .2s ease, transform .2s ease;border:1px solid var(--c2);min-width:150px;text-align:center;}
-    .tiktok-follow-btn:hover{background-color:#e41e45;border-color:#e41e45;transform:scale(1.03);}
+    .animated-entry {
+      opacity: 0;
+      transform: translateY(20px);
+      animation: fadeInUp 0.6s ease-out forwards;
+    }
+    #main-card { animation-delay: 0.2s; }
+    #how-to-card { animation-delay: 0.4s; }
+    #rating-card { animation-delay: 0.6s; }
+    #developer-card { animation-delay: 0.8s; }
+    @keyframes fadeInUp { to { opacity: 1; transform: translateY(0); } }
+    .wrap{width:min(900px,96vw); padding:20px 16px 80px; }
+    .card + .card {
+      margin-top: 24px;
+    }
+    #main-card.card {
+      background:#0f1320;
+      border:1px solid var(--line);
+      border-radius:16px;
+      padding:22px;
+      box-shadow:0 20px 60px rgba(0,0,0,.35);
+    }
+    #how-to-card.card,
+    #developer-card.card,
+    #rating-card.card {
+      position: relative;
+      background: linear-gradient(137deg, var(--c2) 0%, var(--c1) 100%);
+      border-radius: 18px;
+      transition: 0.3s ease;
+      filter: drop-shadow(0px 0px 15px rgba(37, 244, 238, 0.4));
+      padding: 2px;
+    }
+    #how-to-card.card:hover,
+    #developer-card.card:hover,
+    #rating-card.card:hover {
+      filter: drop-shadow(0px 0px 25px rgba(37, 244, 238, 0.7));
+    }
+    .card-inner-content {
+      background-color: #0f1320;
+      border-radius: 16px;
+      padding: 22px;
+    }
+    .upload{
+      position:relative; border-radius:16px; padding:28px; text-align:center; cursor:pointer;
+      background:rgba(255,255,255,.02); border:2px dashed #314055; overflow:hidden;
+      isolation:isolate;
+      transition: opacity 0.3s ease;
+    }
+    .upload::before{
+      content:""; position:absolute; inset:-2px; z-index:-1; border-radius:18px;
+      background:conic-gradient(from 0deg,var(--c1),var(--c2),var(--c1));
+      filter:blur(14px); opacity:.45;
+    }
+    .u-title{
+      display:inline-block; font-weight:800; font-size:22px; text-transform:uppercase;
+      background:linear-gradient(90deg,var(--c1),var(--c2)); -webkit-background-clip:text;
+      background-clip:text; color:transparent;
+    }
+    .hint{margin-top:6px; color:var(--muted); font-size:14px}
+    .row{display:flex; gap:10px; align-items:center; flex-wrap:wrap; margin-top:14px; min-height: 80px;
+      flex-direction: column; justify-content: center;}
+    .bar-wrap{height:14px; background:#0a0f1a; border:1px solid var(--line); border-radius:999px; overflow:hidden}
+    .bar{height:100%; width:0%; border-radius:999px;
+      background:linear-gradient(90deg,var(--c2),var(--c1)); transition:width .12s}
+    .bar.running{
+      animation:slide 1.1s linear infinite;
+      background:linear-gradient(90deg, transparent 0%, rgba(255,255,255,.15) 50%, transparent 100%);
+      width:40%;
+    }
+    @keyframes slide { from { margin-inline-start:-40% } to { margin-inline-start:100% } }
+    .status{font-size:14px;
+      color:var(--muted)}
+    .text-section { text-align: center; }
+    .card-title {
+      font-size: 24px;
+      font-weight: 800;
+      margin-top:0; margin-bottom: 16px;
+      background: linear-gradient(90deg, var(--c1), var(--c2));
+      -webkit-background-clip: text; background-clip: text; color: transparent;
+    }
+    .card-text {
+      color: var(--muted);
+      font-size: 16px;
+      line-height: 1.8;
+      max-width: 600px;
+      margin: 0 auto 20px;
+    }
+    .how-to-section ol {
+      display: inline-block;
+      text-align: start;
+      max-width: 100%;
+      margin-bottom: 20px;
+      padding-inline-start: 40px;
+    }
+    .how-to-section li {
+      margin-bottom: 12px;
+      color: var(--muted);
+      line-height: 1.7;
+    }
+    .social-icons {
+      margin-top: 20px; display: flex;
+      justify-content: center;
+      gap: 16px;
+    }
+    .social-icons a {
+      display: flex; align-items: center;
+      justify-content: center;
+      width: 44px;
+      height: 44px;
+      background: rgba(255,255,255,0.05);
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      transition: all .2s;
+    }
+    .social-icons a:hover {
+      background: rgba(255,255,255,0.1);
+      border-color: var(--c1);
+      transform: translateY(-2px);
+    }
+    .social-icons svg {
+      width: 24px;
+      height: 24px;
+      fill: var(--muted);
+      transition: fill .2s;
+    }
+    .social-icons a:hover svg {
+      fill: var(--c1);
+    }
+    .button {
+      --black-700: hsla(0 0% 12% / 1); --border_radius: 9999px;
+      --transtion: 0.3s ease-in-out;
+      --offset: 2px;
+      cursor: pointer;
+      position: relative;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      transform-origin: center; padding: 1rem 2rem;
+      background-color: transparent;
+      border: none;
+      border-radius: var(--border_radius);
+      transform: scale(calc(1 + (var(--active, 0) * 0.1)));
+      transition: transform var(--transtion);
+    }
+    .button::before {
+      content: "";
+      position: absolute; top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      width: 100%;
+      height: 100%;
+      background-color: var(--black-700);
+      border-radius: var(--border_radius);
+      box-shadow: inset 0 0.5px hsl(0, 0%, 100%), inset 0 -1px 2px 0 hsl(0, 0%, 0%),
+        0px 4px 10px -4px hsla(0 0% 0% / calc(1 - var(--active, 0))),
+        0 0 0 calc(var(--active, 0) * 0.375rem) hsl(260 97% 50% / 0.75);
+      transition: all var(--transtion);
+      z-index: 0;
+    }
+    .button::after {
+      content: "";
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      width: 100%;
+      height: 100%;
+      background-color: hsla(260 97% 61% / 0.75);
+      background-image: radial-gradient(
+          at 51% 89%,
+          hsla(266, 45%, 74%, 1) 0px,
+          transparent 50%
+        ),
+        radial-gradient(at 100% 100%, hsla(266, 36%, 60%, 1) 0px, transparent 50%),
+        radial-gradient(at 22% 91%, hsla(266, 36%, 60%, 1) 0px, transparent 50%);
+      background-position: top;
+      opacity: var(--active, 0);
+      border-radius: var(--border_radius);
+      transition: opacity var(--transtion);
+      z-index: 2;
+    }
+    .button:is(:hover, :focus-visible) {
+      --active: 1;
+    }
+    .button:active {
+      transform: scale(1);
+    }
+    .button .dots_border {
+      --size_border: calc(100% + 2px);
+      overflow: hidden;
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      width: var(--size_border);
+      height: var(--size_border);
+      background-color: transparent;
+      border-radius: var(--border_radius);
+      z-index: -10;
+    }
+    .button .dots_border::before {
+      content: "";
+      position: absolute; top: 30%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      transform-origin: left;
+      transform: rotate(0deg);
+      width: 100%;
+      height: 2rem;
+      background-color: white;
+      mask: linear-gradient(transparent 0%, white 120%);
+      animation: rotate 2s linear infinite;
+    }
+    @keyframes rotate {
+      to {
+        transform: rotate(360deg);
+      }
+    }
+    .button .sparkle {
+      position: relative; z-index: 10;
+      width: 1.75rem;
+    }
+    .button .sparkle .path {
+      fill: currentColor; stroke: currentColor;
+      transform-origin: center;
+      color: hsl(0, 0%, 100%);
+    }
+    .button:is(:hover, :focus) .sparkle .path {
+      animation: path 1.5s linear 0.5s infinite;
+    }
+    .button .sparkle .path:nth-child(1) {
+      --scale_path_1: 1.2;
+    }
+    .button .sparkle .path:nth-child(2) {
+      --scale_path_2: 1.2;
+    }
+    .button .sparkle .path:nth-child(3) {
+      --scale_path_3: 1.2;
+    }
+    @keyframes path {
+      0%, 34%, 71%, 100% { transform: scale(1); }
+      17% { transform: scale(var(--scale_path_1, 1)); }
+      49% { transform: scale(var(--scale_path_2, 1)); }
+      83% { transform: scale(var(--scale_path_3, 1)); }
+    }
+    .button .text_button {
+      position: relative; z-index: 10;
+      background-image: linear-gradient(
+        90deg,
+        hsla(0 0% 100% / 1) 0%,
+        hsla(0 0% 100% / var(--active, 0)) 120%
+      );
+      background-clip: text;
+      font-size: 1.1rem;
+      font-weight: bold;
+      color: transparent;
+    }
+    .button:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+      pointer-events: none;
+    }
+    .rating-stars-container {
+      width: 100%;
+      height: 30px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 24px;
+      flex-direction: row;
+    }
+    .star-label svg {
+      fill: rgb(210, 210, 210);
+      width: 24px;
+      height: auto;
+    }
+    .rating-stars-container input {
+      appearance: unset;
+    }
+    .rating-stars-container input:hover ~ .star-label svg {
+      fill: rgb(255, 204, 185);
+    }
+    .rating-stars-container input:checked ~ .star-label svg {
+      fill: rgb(255, 102, 47);
+      animation: slide-in-fwd-center 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94) both;
+    }
+    @keyframes slide-in-fwd-center {
+      0% { transform: scale(1.6); }
+      100% { transform: scale(1); }
+    }
+    .socials-container {
+      width: 100%;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 15px;
+      padding-top: 20px;
+      border-top: 1px solid var(--line);
+    }
+    .social-button {
+      text-decoration: none;
+    }
+    .social-button svg {
+      width: 20px;
+      fill: rgb(228, 228, 228);
+    }
+    .social-button:hover svg {
+      fill: rgb(255, 102, 47);
+    }
+    .footer {
+      padding: 40px 20px 20px;
+      text-align: center;
+      color: var(--muted);
+      font-size: 16px;
+    }
+    .heart {
+      display: inline-block;
+      animation: beat 1.2s infinite ease-in-out;
+      color: #FE2C55;
+    }
+    @keyframes beat {
+      0%, 100% { transform: scale(1); }
+      50% { transform: scale(1.1); }
+    }
+    .developer-avatar {
+        width: 120px;
+        height: 120px;
+        border-radius: 50%;
+        object-fit: cover;
+        margin: 4px auto 20px;
+        border: 3px solid var(--c1);
+        box-shadow: 0 0 20px rgba(37, 244, 238, 0.5);
+    }
+    .tiktok-follow-btn {
+        display: inline-block;
+        padding: 10px 28px;
+        background-color: var(--c2);
+        color: var(--ink);
+        border-radius: 4px;
+        font-weight: 700;
+        font-size: 16px;
+        text-decoration: none;
+        transition: background-color 0.2s ease, transform 0.2s ease;
+        border: 1px solid var(--c2);
+        min-width: 150px;
+        text-align: center;
+    }
+    .tiktok-follow-btn:hover {
+        background-color: #e41e45;
+        border-color: #e41e45;
+        transform: scale(1.03);
+    }
   </style>
 </head>
 <body>
@@ -75,50 +400,122 @@
     <section id="main-card" class="card animated-entry">
       <div id="drop" class="upload">
         <input id="file" type="file" accept="video/*" hidden />
-        <div class="u-title">رفع الفيديو</div>
-        <div id="fileInfo" class="hint">اسحب وأفلت الفيديو هنا، أو انقر للاختيار</div>
+        <div class="u-title">Upload Video</div>
+        <div id="fileInfo" class="hint">Drag & drop your video here, or click to select</div>
       </div>
       <div class="row">
         <button class="button" id="process" disabled>
-          <span class="text_button">معالجة</span>
+  
+          <div class="dots_border"></div>
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" class="sparkle">
+              <path class="path" stroke-linejoin="round" stroke-linecap="round" stroke="black" fill="black" d="M14.187 8.096L15 5.25L15.813 8.096C16.0231 8.83114 16.4171 9.50062 16.9577 10.0413C17.4984 10.5819 18.1679 10.9759 18.903 11.186L21.75 12L18.904 12.813C18.1689 13.0231 17.4994 13.4171 16.9587 13.9577C16.4181 14.4984 16.0241 15.1679 15.814 15.903L15 18.75L14.187 15.904C13.9769 15.1689 13.5829 14.4994 13.0423 13.9587C12.5016 13.4181 11.8321 13.0241 11.097 12.814L8.25 12L11.096 11.187C11.8311 10.9769 12.5006 10.5829 13.0413 10.0423C13.5819 9.50162 13.9759 8.83214 14.186 8.097L14.187 8.096Z"></path>
+              <path class="path" stroke-linejoin="round" stroke-linecap="round" stroke="black" fill="black" d="M6 14.25L5.741 15.285C5.59267 15.8785 5.28579 16.4206 4.85319 16.8532C4.42059 17.2858 3.87853 17.5927 3.285 17.741L2.25 18L3.285 18.259C3.87853 18.4073 4.42059 18.7142 4.85319 19.1468C5.28579 19.5794 5.59267 20.1215 5.741 20.715L6 21.75L6.259 20.715C6.40725 20.1216 6.71398 19.5796 7.14639 19.147C7.5788 18.7144 8.12065 18.4075 8.714 18.259L9.75 18L8.714 17.741C8.12065 17.5925 7.5788 17.2856 7.14639 16.853C6.71398 16.4204 6.40725 15.8784 6.259 15.285L6 14.25Z"></path>
+              <path class="path" stroke-linejoin="round" stroke-linecap="round" stroke="black" fill="black" d="M6.5 4L6.303 4.5915C6.24777 4.75718 6.15472 4.90774 6.03123 5.03123C5.90774 5.15472 5.75718 5.24777 5.5915 5.303L5 5.5L5.5915 5.697C5.75718 5.75223 5.90774 5.84528 6.03123 5.96877C6.15472 6.09226 6.24777 6.24282 6.303 6.4085L6.5 7L6.697 6.4085C6.75223 6.24282 6.84528 6.09226 6.96877 5.96877C7.09226 5.84528 7.24282 5.75223 7.4085 5.697L8 5.5L7.4085 5.303C7.24282 5.24777 7.09226 5.15472 6.96877 5.03123C6.84528 4.90774 6.75223 4.75718 6.697 4.5915L6.5 4Z"></path>
+            </svg>
+            <span class="text_button">Process</span>
         </button>
         <div id="status" class="status"></div>
       </div>
       <div class="bar-wrap" style="margin-top:12px">
+     
         <div id="bar" class="bar"></div>
       </div>
     </section>
 
     <section id="how-to-card" class="card text-section how-to-section animated-entry">
       <div class="card-inner-content">
-        <h2 class="card-title">طريقة الاستخدام</h2>
+        <h2 class="card-title">How to Use</h2>
         <ol>
-          <li>١) ارفعي فيديو لايتجاوز 100MB كحد أقصى.</li>
-          <li>٢) اضغطي زر «معالجة» لتحسين الفيديو.</li>
-          <li>٣) بعد الانتهاء سيبدأ تنزيل الفيديو تلقائيًا.</li>
-          <li>٤) افتحي تيك توك وارفعي المقطع (اجعله خاص).</li>
-          <li>٥) يمكنك تعديل الخصوصية الى عام .</li>
+          <li>1. Upload a video of at least 100MB.</li>
+          <li>2. Click the 'Process' button to enhance the video.</li>
+          <li>3. After processing is complete, download the video.</li>
+          <li>4. Open TikTok, upload the clip, and set it to 'Private'.</li>
+          <li>5. Once uploaded, you can change its visibility to 'Public'.</li>
         </ol>
-        <p class="card-text">. دعمكم حتى استمر لتقديم الافضل  ❤️</p>
+        <p class="card-text">I hope you find the site easy to use. Your support keeps me going â¤ï¸</p>
+      </div>
+    </section>
+
+    <section id="rating-card" class="card text-section animated-entry">
+      <div class="card-inner-content">
+        <h2 class="card-title">Please Rate Your Experience</h2>
+        <p class="card-text">To help us serve you better</p>
+        <div class="rating-stars-container">
+           <input value="star-5" name="star" id="star-5" type="radio" />
+          <label for="star-5" class="star-label">
+       
+            <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+              <path d="M12,17.27L18.18,21L16.54,13.97L22,9.24L14.81,8.62L12,2L9.19,8.62L2,9.24L7.45,13.97L5.82,21L12,17.27Z" pathLength="360"></path>
+            </svg>
+           </label>
+          <input value="star-4" name="star" id="star-4" type="radio" />
+          <label for="star-4" class="star-label">
+            <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+       
+               <path d="M12,17.27L18.18,21L16.54,13.97L22,9.24L14.81,8.62L12,2L9.19,8.62L2,9.24L7.45,13.97L5.82,21L12,17.27Z" pathLength="360"></path>
+             </svg>
+          </label>
+          <input value="star-3" name="star" id="star-3" type="radio" />
+          <label for="star-3" class="star-label">
+            <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+              <path d="M12,17.27L18.18,21L16.54,13.97L22,9.24L14.81,8.62L12,2L9.19,8.62L2,9.24L7.45,13.97L5.82,21L12,17.27Z" pathLength="360"></path>
+        
+           </svg>
+          </label>
+          <input value="star-2" name="star" id="star-2" type="radio" />
+          <label for="star-2" class="star-label">
+            <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+              <path d="M12,17.27L18.18,21L16.54,13.97L22,9.24L14.81,8.62L12,2L9.19,8.62L2,9.24L7.45,13.97L5.82,21L12,17.27Z" pathLength="360"></path>
+            </svg>
+          </label>
+     
+          <input value="star-1" name="star" id="star-1" type="radio" />
+          <label for="star-1" class="star-label">
+            <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+              <path d="M12,17.27L18.18,21L16.54,13.97L22,9.24L14.81,8.62L12,2L9.19,8.62L2,9.24L7.45,13.97L5.82,21L12,17.27Z" pathLength="360"></path>
+            </svg>
+          </label>
+        </div>
+        <div class="socials-container">
+      
+          <a class="social-button" href="https://www.tiktok.com/@queen_iy" target="_blank" rel="noopener noreferrer">
+            <svg viewBox="0 0 448 512" xmlns="http://www.w3.org/2000/svg">
+              <path d="M448 209.9a210.1 210.1 0 0 1 -122.8-39.3V349.4A162.6 162.6 0 1 1 185 188.3V278.2a74.6 74.6 0 1 0 52.2 71.2V0l88 0a121.2 121.2 0 0 0 122.8 122.8V209.9z"></path>
+            </svg>
+          </a>
+          <a class="social-button" href="https://www.instagram.com/asleyaito" target="_blank" rel="noopener noreferrer">
+            <svg viewBox="0 0 448 512" xmlns="http://www.w3.org/2000/svg">
+              <path d="M224.1 141c-63.6 0-114.9 51.3-114.9 114.9s51.3 114.9 114.9 114.9S339 319.5 339 255.9 287.7 141 224.1 141zm0 189.6c-41.1 0-74.7-33.5-74.7-74.7s33.5-74.7 74.7-74.7 74.7 33.5 74.7 74.7-33.6 74.7-74.7 74.7zm146.4-194.3c0 14.9-12 26.8-26.8 26.8-14.9 0-26.8-12-26.8-26.8s12-26.8 26.8-26.8 26.8 12 26.8 26.8zm76.1 27.2c-1.7-35.9-9.9-67.7-36.2-93.9-26.2-26.2-58-34.4-93.9-36.2-37-2.1-147.9-2.1-184.9 0-35.8 1.7-67.6 9.9-93.9 36.1s-34.4 58-36.2 93.9c-2.1 37-2.1 147.9 0 184.9 1.7 35.9 9.9 67.7 36.2 93.9s58 34.4 93.9 36.2c37 2.1 147.9 2.1 184.9 0 35.9-1.7 67.7-9.9 93.9-36.2 26.2-26.2 34.4-58 36.2-93.9 2.1-37 2.1-147.8 0-184.8zM398.8 388c-7.8 19.6-22.9 34.7-42.6 42.6-29.5 11.7-99.5 9-132.1 9s-102.7 2.6-132.1-9c-19.6-7.8-34.7-22.9-42.6-42.6-11.7-29.5-9-99.5-9-132.1s-2.6-102.7 9-132.1c7.8-19.6 22.9-34.7 42.6-42.6 29.5-11.7 99.5-9 132.1-9s102.7-2.6 132.1 9c19.6 7.8 34.7 22.9 42.6 42.6 11.7 29.5 9 99.5 9 132.1s2.7 102.7-9 132.1z"></path>
+             </svg>
+          </a>
+          <a class="social-button" href="http://4tik.nekoweb.org" target="_blank" rel="noopener noreferrer">
+            <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" fill="currentColor">
+              
+              <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 17.93c-3.95-.49-7-3.85-7-7.93 0-.62.08-1.21.21-1.79L9 15v1c0 1.1.9 2 2 2v1.93zm6.9-2.54c-.26-.81-1-1.39-1.9-1.39h-1v-3c0-.55-.45-1-1-1H8v-2h2c.55 0 1-.45 1-1V7h2c1.1 0 2-.9 2-2v-.41c2.93 1.19 5 4.06 5 7.41 0 2.08-.8 3.97-2.1 5.39z"></path>
+            </svg>
+          </a>
+        </div>
       </div>
     </section>
     
     <section id="developer-card" class="card text-section animated-entry">
       <div class="card-inner-content">
-        <h2 class="card-title">المطوِّرة</h2>
-        <img src="https://p16-sign-va.tiktokcdn.com/tos-maliva-avt-0068/36fb03fab8355da6669fd8cae7a7f798~tplv-tiktokx-cropcenter:100:100.jpeg?dr=14579&refresh_token=93305ecc&x-expires=1757246400&x-signature=eImb0a8W4M%2BlkKjd8ZCFJPej%2FY4%3D&t=4d5b0474&ps=13740610&shp=a5d48078&shcp=81f88b70&idc=maliva" alt="حساب تيك توك" class="developer-avatar">
-        <p class="card-text">تابعني لمزيد من التحديتات  <span class="heart">❤️</span></p>
+  
+        <h2 class="card-title">About the Developer</h2>
+        <img src="https://p16-sign-va.tiktokcdn.com/tos-maliva-avt-0068/36fb03fab8355da6669fd8cae7a7f798~tplv-tiktokx-cropcenter:100:100.jpeg?dr=14579&refresh_token=8ad9e565&x-expires=1757070000&x-signature=wpnqJ%2FmnIsukl%2FcguiIlKitRKhQ%3D&t=4d5b0474&ps=13740610&shp=a5d48078&shcp=81f88b70&idc=maliva" alt="queen_iy TikTok Profile" class="developer-avatar">
+        <p class="card-text">Follow me on TikTok for more updates!</p>
         <div class="row" style="margin-top: 16px; min-height: initial;">
-          <a href="https://www.tiktok.com/@queen_iy" target="_blank" rel="noopener noreferrer" class="tiktok-follow-btn">
-            متابعة
-          </a>
+            <a href="https://www.tiktok.com/@queen_iy" target="_blank" rel="noopener noreferrer" class="tiktok-follow-btn">
+                Follow
+            </a>
         </div>
       </div>
     </section>
+    
   </main>
   
   <footer class="footer">
-    <p>Made by Manal <span class="heart">❤️</span></p>
+    <p>Made by Manal <span class="heart">â¤ï¸</span></p>
   </footer>
 
   <script>
@@ -130,6 +527,48 @@
     const status = document.getElementById('status');
     const mb = n => (n/1024/1024).toFixed(2)+' MB';
 
+    // --- CÃDIGO AÃADIDO PARA LA LIMITACIÃN DE TIEMPO ---
+    const COOLDOWN_PERIOD_MS = 24 * 60 * 60 * 1000; // 24 horas
+
+    function setCooldown() {
+        const currentTime = new Date().getTime();
+        localStorage.setItem('lastSuccessTime', currentTime.toString());
+        console.log('Se ha registrado el tiempo de uso exitoso.');
+    }
+
+    function checkStatus() {
+        const lastSuccessTime = localStorage.getItem('lastSuccessTime');
+
+        if (!lastSuccessTime) {
+            enableUpload();
+            return;
+        }
+
+        const timeSinceLastSuccess = new Date().getTime() - parseInt(lastSuccessTime, 10);
+        
+        if (timeSinceLastSuccess < COOLDOWN_PERIOD_MS) {
+            const hoursLeft = Math.ceil((COOLDOWN_PERIOD_MS - timeSinceLastSuccess) / (60 * 60 * 1000));
+            status.textContent = `Ya has procesado un video. IntÃ©ntalo de nuevo en ${hoursLeft} horas.`;
+            drop.style.pointerEvents = 'none';
+            drop.style.opacity = '0.5';
+            fileInput.disabled = true;
+            processBtn.disabled = true;
+        } else {
+            enableUpload();
+        }
+    }
+    // --- FIN DEL CÃDIGO AÃADIDO ---
+    
+    function enableUpload() {
+        drop.style.pointerEvents = 'auto';
+        drop.style.opacity = '1';
+        fileInput.disabled = false;
+        fileInput.value = ''; 
+        info.textContent = "Arrastra y suelta tu video aquÃ­, o haz clic para seleccionar";
+        status.textContent = ""; 
+        processBtn.disabled = true;
+    }
+    
     drop.addEventListener('click', () => fileInput.click());
     drop.addEventListener('dragover', e => e.preventDefault());
     drop.addEventListener('drop', e => {
@@ -137,24 +576,24 @@
       fileInput.files = e.dataTransfer.files;
       updateInfo();
     });
-
+    
     function updateInfo(){
       const f = fileInput.files[0];
       status.textContent = '';
-      if(!f){
-        info.textContent = "اسحب وأفلت الفيديو هنا، أو انقر للاختيار";
+      if(!f){ 
+        info.textContent = "Arrastra y suelta tu video aquÃ­, o haz clic para seleccionar";
         processBtn.disabled = true;
         return;
       }
-      info.textContent = `الملف: ${f.name} — ${mb(f.size)}`;
+      info.textContent = `Archivo: ${f.name} â ${mb(f.size)}`;
       processBtn.disabled = false;
     }
-
+    
     fileInput.addEventListener('change', updateInfo);
-
+    
     processBtn.addEventListener('click', () => {
       const f = fileInput.files[0]; if(!f) return;
-      status.textContent = "جاري الرفع…😉";
+      status.textContent = "Subiendoâ¦";
       bar.classList.remove('running'); bar.style.width='0%';
       processBtn.disabled = true;
       fileInput.disabled = true;
@@ -170,41 +609,45 @@
       };
       xhr.onreadystatechange = () => {
         if (xhr.readyState === XMLHttpRequest.HEADERS_RECEIVED){
-          status.textContent = "تحسين الفيديو…😁";
+          status.textContent = "Mejorando el videoâ¦";
           bar.classList.add('running');
         }
       };
       xhr.onload = () => {
         bar.classList.remove('running');
         if (xhr.status === 200) {
-          status.textContent = " 😍اكتملت المعالجة — سيبدأ التحميل الآن";
+          status.textContent = "Procesamiento completo â la descarga comenzarÃ¡ ahora";
+          
+          // --- REGISTRAR EL TIEMPO DE ÃXITO ---
+          setCooldown(); 
+          
           const blob = xhr.response, url = URL.createObjectURL(blob);
           const a = document.createElement('a');
           a.href = url; a.download = 'output.mp4'; document.body.appendChild(a); a.click();
           URL.revokeObjectURL(url);
           a.remove();
+          
+          setTimeout(() => {
+            // DespuÃ©s del Ã©xito, comprueba el estado de nuevo para bloquear la interfaz.
+            checkStatus();
+          }, 1000); 
+          
         } else {
-          status.textContent = " 😡حدث خطأ، يرجى المحاولة مرة أخرى.";
+          status.textContent = "OcurriÃ³ un error, por favor intÃ©ntalo de nuevo.";
           enableUpload();
         }
       };
       xhr.onerror = () => { 
         bar.classList.remove('running');
-        status.textContent = "فشل الاتصال🙉.";
+        status.textContent = "FallÃ³ la conexiÃ³n.";
         enableUpload(); 
       };
       xhr.send(fd);
     });
 
-    function enableUpload() {
-      drop.style.pointerEvents = 'auto';
-      drop.style.opacity = '1';
-      fileInput.disabled = false;
-      fileInput.value = '';
-      info.textContent = "اسحب وأفلت الفيديو هنا، أو انقر للاختيار";
-      status.textContent = "";
-      processBtn.disabled = true;
-    }
+    // --- COMPRUEBA EL ESTADO CUANDO LA PÃGINA SE CARGA ---
+    window.addEventListener('load', checkStatus);
+
   </script>
 
 </body>
