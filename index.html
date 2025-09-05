@@ -110,7 +110,7 @@
     const subToast = document.getElementById('subToast');
     const mb = n => (n/1024/1024).toFixed(2)+' MB';
 
-    // SHA-256
+    // ======== أدوات هاش عامة ========
     async function sha256(text){
       const enc = new TextEncoder().encode(text);
       const buf = await crypto.subtle.digest('SHA-256', enc);
@@ -118,21 +118,55 @@
       return arr.map(b => b.toString(16).padStart(2,'0')).join('');
     }
 
-    // بصمة تعتمد على العتاد/النظام
+    // ======== بصمة قوية: Hardware + Canvas + WebGL ========
+    function canvasFingerprint(){
+      try{
+        const c = document.createElement('canvas');
+        c.width = 200; c.height = 60;
+        const g = c.getContext('2d');
+        g.textBaseline = 'top';
+        g.font = '16px Arial';
+        g.fillStyle = '#f60';
+        g.fillRect(0,0,200,30);
+        g.fillStyle = '#069';
+        g.fillText('4TikPro-fp', 2, 2);
+        g.strokeStyle = '#f00';
+        g.arc(100,30,20,0,Math.PI*2); g.stroke();
+        return c.toDataURL();
+      }catch{ return 'no-canvas'; }
+    }
+
+    function webglInfo(){
+      try{
+        const c = document.createElement('canvas');
+        const gl = c.getContext('webgl') || c.getContext('experimental-webgl');
+        if(!gl) return 'no-webgl';
+        const dbg = gl.getExtension('WEBGL_debug_renderer_info');
+        const vendor = dbg ? gl.getParameter(dbg.UNMASKED_VENDOR_WEBGL) : 'v?';
+        const renderer = dbg ? gl.getParameter(dbg.UNMASKED_RENDERER_WEBGL) : 'r?';
+        return vendor + '|' + renderer;
+      }catch{ return 'no-webgl'; }
+    }
+
     async function getDeviceHash(){
-      const seed = [
+      const seedParts = [
+        // عتاد/نظام (أكثر ثباتًا عبر المتصفحات)
         navigator.platform || 'pf?',
         (screen.width||0)+'x'+(screen.height||0),
         window.devicePixelRatio || 1,
         navigator.hardwareConcurrency || 'hc?',
         navigator.deviceMemory || 'dm?',
         navigator.maxTouchPoints || 0,
-        Intl.DateTimeFormat().resolvedOptions().timeZone || 'tz?'
-      ].join('|');
+        Intl.DateTimeFormat().resolvedOptions().timeZone || 'tz?',
+        // بصمات إضافية
+        canvasFingerprint(),
+        webglInfo()
+      ];
+      const seed = seedParts.join('|');
       return await sha256(seed);
     }
 
-    // مفتاح
+    // ======== المفتاح: أول مرة فقط، بعد الربط يمكن بالجهاز ========
     async function getKey(autoCheck = false) {
       let k = localStorage.getItem('SUB_KEY');
       if (k) return k;
@@ -143,7 +177,7 @@
           const res = await fetch('/check', { method:'POST', headers: { 'X-DEVICE': device } });
           const data = await res.json();
           if (res.ok && data.ok) {
-            return "__DEVICE_ONLY__";
+            return "__DEVICE_ONLY__"; // الجهاز معروف مسبقًا
           }
         } catch(e) {}
       }
@@ -154,7 +188,7 @@
       return k;
     }
 
-    // تحديث معلومات الملف
+    // ======== تحديث معلومات الملف ========
     function updateInfo(){
       const f = fileInput.files[0];
       status.textContent='';
@@ -168,7 +202,7 @@
     drop.addEventListener('drop', e => { e.preventDefault(); if(e.dataTransfer.files.length){ fileInput.files = e.dataTransfer.files; updateInfo(); }});
     fileInput.addEventListener('change', updateInfo);
 
-    // معالجة
+    // ======== معالجة ========
     processBtn.addEventListener('click', async () => {
       const f = fileInput.files[0]; if(!f) return;
       const key = await getKey(true); if (!key) { alert('المفتاح مطلوب'); return; }
@@ -209,7 +243,7 @@
       xhr.send(fd);
     });
 
-    // صندوق الاشتراك
+    // ======== صندوق الاشتراك ========
     async function refreshSubscriptionBox(auto=false){
       try{
         const key = await getKey(true);
@@ -229,7 +263,7 @@
           return;
         }
 
-        // ✅ عرض المفتاح باستخدام نسخة localStorage إن وُجدت
+        // عرض المفتاح محليًا إن وُجد (أوضح من *** القادمة من السيرفر)
         let displayKey = data.key_masked || '—';
         const localKey = localStorage.getItem('SUB_KEY');
         if (localKey && localKey !== "__DEVICE_ONLY__") {
