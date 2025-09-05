@@ -420,7 +420,7 @@
           <li>4. Open TikTok, upload the clip, and set it to 'Private'.</li>
           <li>5. Once uploaded, you can change its visibility to 'Public'.</li>
         </ol>
-        <p class="card-text">I hope you find the site easy to use. Your support keeps me going â¤ï¸</p>
+        <p class="card-text">I hope you find the site easy to use. Your support keeps me going â ¤ï¸ </p>
       </div>
     </section>
 
@@ -508,14 +508,32 @@
     const status = document.getElementById('status');
     const mb = n => (n/1024/1024).toFixed(2)+' MB';
     
-    function enableUpload() {
-        drop.style.pointerEvents = 'auto';
-        drop.style.opacity = '1';
-        fileInput.disabled = false;
+    function setUIProcessing(isProcessing) {
+        processBtn.disabled = isProcessing;
+        fileInput.disabled = isProcessing;
+        drop.style.pointerEvents = isProcessing ? 'none' : 'auto';
+        drop.style.opacity = isProcessing ? '0.5' : '1';
+    }
+
+    function resetUI() {
+        setUIProcessing(false);
         fileInput.value = ''; // Clear file input
         info.textContent = "Drag & drop your video here, or click to select";
         status.textContent = "You can now upload another video.";
         processBtn.disabled = true;
+        bar.style.width = '0%';
+        bar.classList.remove('running');
+    }
+
+    function handleError(message) {
+        bar.classList.remove('running');
+        bar.style.width = '0%';
+        status.textContent = message;
+        // Don't re-enable the UI immediately on every error,
+        // especially for rate limiting
+        if (!message.includes("حدك اليومي")) {
+             setTimeout(resetUI, 2000);
+        }
     }
     
     drop.addEventListener('click', () => fileInput.click());
@@ -534,7 +552,7 @@
         processBtn.disabled = true;
         return;
       }
-      info.textContent = `File: ${f.name} â ${mb(f.size)}`;
+      info.textContent = `File: ${f.name} — ${mb(f.size)}`;
       processBtn.disabled = false;
     }
     
@@ -544,54 +562,55 @@
       const f = fileInput.files[0]; if(!f) return;
       status.textContent = "Uploading";
       bar.classList.remove('running'); bar.style.width='0%';
-      processBtn.disabled = true;
-      fileInput.disabled = true; // Disable file input during upload
-      drop.style.pointerEvents = 'none';
-      drop.style.opacity = '0.5';
+      setUIProcessing(true);
 
       const fd = new FormData(); fd.append('file', f);
       const xhr = new XMLHttpRequest();
       xhr.open('POST', '/process', true);
       xhr.responseType = 'blob';
+
       xhr.upload.onprogress = e => {
         if(e.lengthComputable){ bar.style.width = Math.round((e.loaded/e.total)*100) + '%'; }
       };
+
       xhr.onreadystatechange = () => {
         if (xhr.readyState === XMLHttpRequest.HEADERS_RECEIVED){
           status.textContent = "Enhancing video 🩷";
           bar.classList.add('running');
         }
       };
-      xhr.onload = () => {
+
+      xhr.onload = async () => {
         bar.classList.remove('running');
         if (xhr.status === 200) {
-          status.textContent = "Processing complete â download will start now";
-          const blob = xhr.response, url = URL.createObjectURL(blob);
-          const a = document.createElement('a');
-          a.href = url; a.download = 'output.mp4'; document.body.appendChild(a); a.click();
-          URL.revokeObjectURL(url); a.remove();
-          
-          // Reset for next upload
-          setTimeout(enableUpload, 1000); // Small delay to ensure download starts
-          
+            status.textContent = "Processing complete — download will start now";
+            const blob = xhr.response;
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = '4tik_pro.mp4';
+            document.body.appendChild(a);
+            a.click();
+            URL.revokeObjectURL(url);
+            a.remove();
+            setTimeout(resetUI, 1500);
         } else {
-          status.textContent = "An error occurred, please try again.";
-          // Re-enable everything if there's an error
-          drop.style.pointerEvents = 'auto';
-          drop.style.opacity = '1';
-          fileInput.disabled = false;
-          updateInfo();
+            // Handle JSON error responses from FastAPI
+            const errorBlob = xhr.response;
+            const errorText = await errorBlob.text();
+            try {
+                const errorJson = JSON.parse(errorText);
+                handleError(errorJson.detail || "An error occurred, please try again.");
+            } catch (e) {
+                handleError("An unknown error occurred.");
+            }
         }
       };
+      
       xhr.onerror = () => { 
-        bar.classList.remove('running');
-        status.textContent = "Connection failed.";
-        // Re-enable everything if there's an error
-        drop.style.pointerEvents = 'auto';
-        drop.style.opacity = '1';
-        fileInput.disabled = false;
-        updateInfo();
+        handleError("Connection failed. Please check your network.");
       };
+      
       xhr.send(fd);
     });
 
