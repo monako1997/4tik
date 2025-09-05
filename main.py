@@ -5,7 +5,7 @@ from math import ceil
 from fastapi import FastAPI, UploadFile, File, Request
 from fastapi.responses import HTMLResponse, FileResponse, JSONResponse
 
-# نوقف عرض وثائق API
+# لا نعرض وثائق API
 app = FastAPI(docs_url=None, redoc_url=None, openapi_url=None)
 
 BASE = Path(__file__).resolve().parent
@@ -39,6 +39,12 @@ def find_key(data, k):
             return row
     return None
 
+def find_by_device(data, device_hash):
+    for row in data:
+        if (row.get("device_hash") or "") == device_hash:
+            return row
+    return None
+
 def run_silent(cmd: list[str]) -> bool:
     try:
         p = subprocess.run(cmd, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, text=False)
@@ -46,45 +52,75 @@ def run_silent(cmd: list[str]) -> bool:
     except Exception:
         return False
 
-def check_and_bind_device(client_key: str, device_hash: str):
-    """
-    يتحقق من المفتاح وتاريخ الانتهاء، ويربط أول جهاز يستخدم المفتاح.
-    """
-    data = load_db()
-    row = find_key(data, client_key)
-    if not row:
-        return False, "المفتاح غير موجود"
-
-    exp = row.get("expires")
-    try:
-        exp_dt = datetime.fromisoformat(exp.replace("Z", "+00:00"))
-    except Exception:
-        return False, "صيغة تاريخ غير صالحة"
-
-    if utcnow() > exp_dt:
-        return False, "انتهت صلاحية الاشتراك"
-
-    bind = row.get("device_hash") or ""
-    if not bind:
-        # أول استعمال: اربط بالجهاز الحالي
-        row["device_hash"] = device_hash
-        row["last_used"] = utcnow().isoformat()
-        save_db(data)
-        return True, "تم ربط المفتاح بهذا الجهاز"
-    else:
-        if bind != device_hash:
-            return False, "هذا المفتاح مربوط بجهاز آخر"
-        row["last_used"] = utcnow().isoformat()
-        save_db(data)
-        return True, "مسموح"
-
 def mask_key(k: str) -> str:
     if not k: return ""
     if len(k) <= 8: return k
     return k[:4] + "*"*(len(k)-8) + k[-4:]
 
-# ========= المسارات =========
+def parse_exp(exp: str):
+    return datetime.fromisoformat(exp.replace("Z", "+00:00"))
 
+# ========= منطق التحقق =========
+def validate_row(row):
+    """يتحقق فقط من انتهاء الاشتراك."""
+    exp = row.get("expires")
+    try:
+        exp_dt = parse_exp(exp)
+    except Exception:
+        return False, "صيغة تاريخ غير صالحة"
+    if utcnow() > exp_dt:
+        return False, "انتهت صلاحية الاشتراك"
+    return True, None
+
+def bind_if_needed(row, device_hash, data):
+    """يربط الجهاز إن لم يكن مربوطًا بعد؛ وإلا يتحقق من المطابقة."""
+    bound = row.get("device_hash") or ""
+    if not bound:
+        row["device_hash"] = device_hash
+        row["last_used"] = utcnow().isoformat()
+        save_db(data)
+        return True, "تم ربط المفتاح بهذا الجهاز"
+    else:
+        if bound != device_hash:
+            return False, "هذا المفتاح مربوط بجهاز آخر"
+        row["last_used"] = utcnow().isoformat()
+        save_db(data)
+        return True, "مسموح"
+
+def authorize(client_key: str, device_hash: str):
+    """
+    يُرجع (ok, msg, row)
+    - لو client_key مُرسل: نتحقق به ثم نربط/نتحقق من الجهاز.
+    - لو client_key فارغ: نحاول التعرف على الاشتراك عبر device_hash فقط.
+    """
+    if not device_hash:
+        return False, "بصمة الجهاز مطلوبة", None
+
+    data = load_db()
+
+    if client_key:
+        row = find_key(data, client_key)
+        if not row:
+            return False, "المفتاح غير موجود", None
+        ok, msg = validate_row(row)
+        if not ok:
+            return False, msg, None
+        ok, msg = bind_if_needed(row, device_hash, data)
+        return ok, msg, row
+    else:
+        # بدون مفتاح: تعرّف عبر الجهاز فقط (لو مربوط مسبقًا ولم تنتهِ الصلاحية)
+        row = find_by_device(data, device_hash)
+        if not row:
+            return False, "المفتاح مطلوب لأول ربط", None
+        ok, msg = validate_row(row)
+        if not ok:
+            return False, msg, None
+        # تحديث آخر استخدام
+        row["last_used"] = utcnow().isoformat()
+        save_db(data)
+        return True, "معروف بهذا الجهاز", row
+
+# ========= المسارات =========
 @app.get("/", response_class=HTMLResponse)
 def home():
     html_path = BASE / "index.html"
@@ -96,22 +132,15 @@ def home():
 async def check(request: Request):
     client_key = request.headers.get("X-KEY", "")
     device_hash = request.headers.get("X-DEVICE", "")
-    if not client_key or not device_hash:
-        return JSONResponse({"ok": False, "msg": "المعلومات ناقصة"}, status_code=400)
-
-    ok, msg = check_and_bind_device(client_key, device_hash)
+    ok, msg, _row = authorize(client_key, device_hash)
     code = 200 if ok else 401
     return JSONResponse({"ok": ok, "msg": msg}, status_code=code)
 
 @app.post("/process")
 async def process(request: Request, file: UploadFile = File(...)):
-    # تحقّق المفتاح + الجهاز
     client_key = request.headers.get("X-KEY", "")
     device_hash = request.headers.get("X-DEVICE", "")
-    if not client_key or not device_hash:
-        return JSONResponse({"error": "مطلوب المفتاح والجهاز"}, status_code=400)
-
-    ok, msg = check_and_bind_device(client_key, device_hash)
+    ok, msg, row = authorize(client_key, device_hash)
     if not ok:
         return JSONResponse({"error": msg}, status_code=401)
 
@@ -154,14 +183,19 @@ async def me(request: Request):
     device_hash = request.headers.get("X-DEVICE", "")
 
     data = load_db()
-    row = find_key(data, client_key)
+    row = None
+    if client_key:
+        row = find_key(data, client_key)
+    if (row is None) and device_hash:
+        row = find_by_device(data, device_hash)
+
     if not row:
-        return JSONResponse({"error": "المفتاح غير موجود"}, status_code=404)
+        return JSONResponse({"error": "لا يوجد اشتراك مرتبط"}, status_code=404)
 
     # تحقق انتهاء
     exp = row.get("expires")
     try:
-        exp_dt = datetime.fromisoformat(exp.replace("Z", "+00:00"))
+        exp_dt = parse_exp(exp)
     except Exception:
         return JSONResponse({"error": "صيغة تاريخ غير صالحة"}, status_code=500)
 
@@ -169,13 +203,15 @@ async def me(request: Request):
     seconds_left = (exp_dt - now).total_seconds()
     days_left = max(0, ceil(seconds_left / 86400))
 
-    # حالة الربط بدون تعديل قاعدة البيانات
     bound_hash = row.get("device_hash") or ""
     bound = bool(bound_hash)
     bound_to_this_device = (bound_hash == device_hash) if device_hash else False
 
+    # لو وصل المفتاح في الهيدر، نُظهره مقنّعًا؛ غير ذلك نعيد قيمة عامة
+    key_mask = mask_key(row.get("key", "")) if client_key else ("***" if bound else "—")
+
     return JSONResponse({
-        "key_masked": mask_key(client_key),
+        "key_masked": key_mask,
         "expires": exp,
         "days_left": days_left,
         "bound": bound,
