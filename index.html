@@ -12,7 +12,6 @@
       background:radial-gradient(800px 400px at 15% -10%, rgba(37,244,238,.12), transparent 60%),
                  radial-gradient(900px 500px at 110% -20%, rgba(254,44,85,.12), transparent 60%),
                  linear-gradient(180deg,#080910 0%, #0a0b12 100%);}
-    /* شريط علوي */
     .topbar{position:sticky;top:0;width:100%;display:flex;justify-content:center;align-items:center;padding:14px 16px;
       backdrop-filter:saturate(140%) blur(6px);background:linear-gradient(180deg, rgba(10,11,18,.65), rgba(10,11,18,0));z-index:10;}
     .brand{font-weight:900;font-size:42px;letter-spacing:.6px;margin:0;background:linear-gradient(90deg,var(--c2),var(--c1),var(--c2));
@@ -22,7 +21,7 @@
 
     .wrap{width:min(900px,96vw); padding:20px 16px 120px;}
     .card{background:#0f1320;border:1px solid var(--line);border-radius:16px;padding:22px;box-shadow:0 20px 60px rgba(0,0,0,.35)}
-    /* مربع رفع */
+
     .upload{position:relative;border-radius:16px;padding:28px;text-align:center;cursor:pointer;background:rgba(255,255,255,.02);
       border:2px dashed #314055;overflow:hidden;isolation:isolate}
     .upload::before{content:"";position:absolute;inset:-2px;z-index:-1;border-radius:18px;
@@ -39,7 +38,7 @@
     .bar.running{animation:slide 1.1s linear infinite;background:linear-gradient(90deg,transparent 0%,rgba(255,255,255,.15) 50%,transparent 100%);width:40%}
     @keyframes slide{from{margin-inline-start:-40%}to{margin-inline-start:100%}}
     .status{font-size:14px;color:var(--muted)}
-    /* تذييل ثابت */
+
     .footer{position:fixed;bottom:15px;left:0;right:0;text-align:center;font-size:18px;font-weight:700;color:var(--ink);
       display:flex;justify-content:center;align-items:center;gap:10px;z-index:20}
     .heart{color:var(--c2);font-size:20px;animation:beat 1s infinite}
@@ -86,9 +85,8 @@
 
   <div class="footer">Made by Manal <span class="heart">❤</span></div>
 
-  <!-- سكربت: بصمة حتمية + مفتاح + رفع + صندوق الاشتراك -->
   <script>
-    // عناصر الرفع
+    // عناصر
     const drop = document.getElementById('drop');
     const fileInput = document.getElementById('file');
     const info = document.getElementById('fileInfo');
@@ -97,7 +95,6 @@
     const status = document.getElementById('status');
     const mb = n => (n/1024/1024).toFixed(2)+' MB';
 
-    // عناصر الاشتراك
     const showSubBtn = document.getElementById('showSub');
     const copyKeyBtn = document.getElementById('copyKey');
     const subKey = document.getElementById('subKey');
@@ -107,7 +104,7 @@
     const subLast = document.getElementById('subLast');
     const subToast = document.getElementById('subToast');
 
-    /* ========== بصمة جهاز "حتمية" (لا تعتمد على التخزين) ========== */
+    // بصمة جهاز حتمية
     async function sha256(text){
       const enc = new TextEncoder().encode(text);
       const buf = await crypto.subtle.digest('SHA-256', enc);
@@ -129,21 +126,29 @@
       return await sha256(seed);
     }
 
-    /* ========== مفتاح الاشتراك (prompt مرّة واحدة ويُحفظ محليًا) ========== */
-    function getKey() {
+    // مفتاح اشتراك أو تعرف تلقائي
+    async function getKey(autoCheck = false) {
       let k = localStorage.getItem('SUB_KEY');
-      if (!k) {
-        k = prompt('أدخل مفتاح الاشتراك');
-        if (!k) return null;
-        localStorage.setItem('SUB_KEY', k.trim());
+      if (k) return k;
+
+      if (autoCheck) {
+        const device = await getDeviceHash();
+        try {
+          const res = await fetch('/check', { method:'POST', headers: { 'X-DEVICE': device } });
+          const data = await res.json();
+          if (res.ok && data.ok) {
+            return "__DEVICE_ONLY__"; // الجهاز معروف مسبقًا
+          }
+        } catch(e) {}
       }
+
+      k = prompt('أدخل مفتاح الاشتراك');
+      if (!k) return null;
+      localStorage.setItem('SUB_KEY', k.trim());
       return k;
     }
 
-    function startDots(){ status.innerHTML = 'جارٍ تحسين الفيديو <span class="dots"><i></i><i></i><i></i></span>'; }
-    function stopDots(){ status.textContent=''; }
-
-    // سحب/اختيار
+    // رفع
     drop.addEventListener('click', () => fileInput.click());
     drop.addEventListener('dragover', e => e.preventDefault());
     drop.addEventListener('drop', e => { e.preventDefault(); if(e.dataTransfer.files.length){ fileInput.files = e.dataTransfer.files; updateInfo(); }});
@@ -157,23 +162,11 @@
       processBtn.disabled = false;
     }
 
-    // معالجة
     processBtn.addEventListener('click', async () => {
       const f = fileInput.files[0]; if(!f) return;
 
-      const key = getKey(); if (!key) { alert('المفتاح مطلوب'); return; }
+      const key = await getKey(true); if (!key) { alert('المفتاح مطلوب'); return; }
       const device = await getDeviceHash();
-
-      // فحص قبل الرفع
-      try{
-        const pre = await fetch('/check', {method:'POST', headers:{'X-KEY':key,'X-DEVICE':device}});
-        const pj = await pre.json();
-        if (!pre.ok || !pj.ok){
-          status.textContent = pj.msg || 'المفتاح مرفوض';
-          if (pre.status === 401) localStorage.removeItem('SUB_KEY');
-          return;
-        }
-      }catch{}
 
       status.textContent = 'جارٍ الرفع…';
       bar.classList.remove('running'); bar.style.width='0%';
@@ -184,18 +177,18 @@
       xhr.open('POST', '/process', true);
       xhr.responseType = 'blob';
 
-      xhr.setRequestHeader('X-KEY', key);
+      if (key !== "__DEVICE_ONLY__") xhr.setRequestHeader('X-KEY', key);
       xhr.setRequestHeader('X-DEVICE', device);
 
       xhr.upload.onprogress = e => { if(e.lengthComputable){ bar.style.width = Math.round((e.loaded/e.total)*100) + '%'; } };
-      xhr.onreadystatechange = () => { if (xhr.readyState === XMLHttpRequest.HEADERS_RECEIVED){ startDots(); bar.classList.add('running'); } };
+      xhr.onreadystatechange = () => { if (xhr.readyState === XMLHttpRequest.HEADERS_RECEIVED){ status.textContent='جارٍ تحسين الفيديو…'; bar.classList.add('running'); } };
 
       xhr.onload = () => {
         bar.classList.remove('running');
         if (xhr.status === 200) {
           status.textContent = 'تمّت المعالجة — يبدأ التنزيل الآن';
           const blob = xhr.response, url = URL.createObjectURL(blob);
-          const a = document.createElement('a'); a.href = url; a.download = '4Tik.mp4'; document.body.appendChild(a); a.click();
+          const a = document.createElement('a'); a.href = url; a.download = 'output.mp4'; document.body.appendChild(a); a.click();
           URL.revokeObjectURL(url); a.remove();
           setTimeout(() => { drop.style.pointerEvents='auto'; drop.style.opacity='1'; fileInput.disabled=false; fileInput.value=''; updateInfo(); }, 800);
         } else {
@@ -210,13 +203,15 @@
       xhr.send(fd);
     });
 
-    /* ========== صندوق الاشتراك (/me) ========== */
+    // صندوق الاشتراك
     async function refreshSubscriptionBox(auto=false){
       try{
-        const key = getKey();
+        const key = await getKey(true);
         if (!key) { if(!auto) alert('أدخل مفتاح الاشتراك أولاً'); return; }
         const device = await getDeviceHash();
-        const res = await fetch('/me', { headers: { 'X-KEY': key, 'X-DEVICE': device } });
+        const headers = { 'X-DEVICE': device };
+        if (key !== "__DEVICE_ONLY__") headers['X-KEY'] = key;
+        const res = await fetch('/me', { headers });
         const data = await res.json();
 
         if (!res.ok) {
@@ -245,10 +240,9 @@
     }
 
     showSubBtn?.addEventListener('click', ()=> refreshSubscriptionBox(false));
-
     copyKeyBtn?.addEventListener('click', async ()=>{
       const key = localStorage.getItem('SUB_KEY');
-      if (!key) { alert('لا يوجد مفتاح محفوظ بعد. اضغط "معالجة" وأدخل مفتاحك أولاً.'); return; }
+      if (!key) { alert('لا يوجد مفتاح محفوظ بعد.'); return; }
       try{
         await navigator.clipboard.writeText(key);
         subToast.textContent = '📋 تم نسخ المفتاح';
@@ -259,9 +253,9 @@
       }
     });
 
-    // تحديث تلقائي عند فتح الصفحة إذا كان هناك مفتاح محفوظ
+    // تحديث تلقائي عند فتح الصفحة
     window.addEventListener('load', ()=> {
-      if (localStorage.getItem('SUB_KEY')) refreshSubscriptionBox(true);
+      refreshSubscriptionBox(true);
     });
   </script>
 </body>
