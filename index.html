@@ -118,21 +118,21 @@
       return arr.map(b => b.toString(16).padStart(2,'0')).join('');
     }
 
-    // بصمة تعتمد على العتاد/النظام (ثابتة عبر المتصفحات على نفس الجهاز)
+    // بصمة تعتمد على العتاد/النظام
     async function getDeviceHash(){
       const seed = [
-        navigator.platform || 'pf?',                       // iOS/Android/MacIntel...
-        (screen.width||0)+'x'+(screen.height||0),          // دقة الشاشة
-        window.devicePixelRatio || 1,                      // كثافة البكسل
-        navigator.hardwareConcurrency || 'hc?',            // عدد الأنوية
-        navigator.deviceMemory || 'dm?',                   // RAM (قد لا تتوفر)
-        navigator.maxTouchPoints || 0,                     // نقاط اللمس
-        Intl.DateTimeFormat().resolvedOptions().timeZone || 'tz?' // المنطقة الزمنية
+        navigator.platform || 'pf?',
+        (screen.width||0)+'x'+(screen.height||0),
+        window.devicePixelRatio || 1,
+        navigator.hardwareConcurrency || 'hc?',
+        navigator.deviceMemory || 'dm?',
+        navigator.maxTouchPoints || 0,
+        Intl.DateTimeFormat().resolvedOptions().timeZone || 'tz?'
       ].join('|');
       return await sha256(seed);
     }
 
-    // مفتاح: أول مرة فقط، وبعد الربط ممكن نتعرف بالجهاز
+    // مفتاح
     async function getKey(autoCheck = false) {
       let k = localStorage.getItem('SUB_KEY');
       if (k) return k;
@@ -143,7 +143,7 @@
           const res = await fetch('/check', { method:'POST', headers: { 'X-DEVICE': device } });
           const data = await res.json();
           if (res.ok && data.ok) {
-            return "__DEVICE_ONLY__"; // الجهاز معروف مسبقًا
+            return "__DEVICE_ONLY__";
           }
         } catch(e) {}
       }
@@ -194,7 +194,7 @@
         if (xhr.status === 200) {
           status.textContent = 'تمّت المعالجة — يبدأ التنزيل الآن';
           const blob = xhr.response, url = URL.createObjectURL(blob);
-          const a = document.createElement('a'); a.href = url; a.download = 'video4tik.mp4'; document.body.appendChild(a); a.click();
+          const a = document.createElement('a'); a.href = url; a.download = 'output.mp4'; document.body.appendChild(a); a.click();
           URL.revokeObjectURL(url); a.remove();
           setTimeout(() => { drop.style.pointerEvents='auto'; drop.style.opacity='1'; fileInput.disabled=false; fileInput.value=''; updateInfo(); }, 800);
         } else {
@@ -229,12 +229,20 @@
           return;
         }
 
-        subKey.textContent = data.key_masked || '—';
+        // ✅ عرض المفتاح باستخدام نسخة localStorage إن وُجدت
+        let displayKey = data.key_masked || '—';
+        const localKey = localStorage.getItem('SUB_KEY');
+        if (localKey && localKey !== "__DEVICE_ONLY__") {
+          displayKey = localKey.substring(0,4) + "****" + localKey.slice(-4);
+        }
+        subKey.textContent = displayKey;
+
         subExp.textContent = data.expires || '—';
         subDays.textContent = (data.days_left ?? '—');
         if (data.bound === false) subBind.textContent = 'غير مربوط بعد';
         else subBind.textContent = data.bound_to_this_device ? 'مربوط بهذا الجهاز' : 'مربوط بجهاز آخر';
         subLast.textContent = data.last_used ? data.last_used : '—';
+
         if(!auto){
           subToast.textContent = '✅ تم تحديث معلومات الاشتراك';
           setTimeout(()=> subToast.textContent = '', 2000);
