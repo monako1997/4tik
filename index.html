@@ -93,13 +93,13 @@
       <div class="card-inner-content">
         <h2 class="card-title">طريقة الاستخدام</h2>
         <ol>
-          <li>١) ارفعي فيديو حتى 100MB كحد أقصى.</li>
+          <li>١) ارفعي فيديو لايتجاوز 100MB كحد أقصى.</li>
           <li>٢) اضغطي زر «معالجة» لتحسين الفيديو.</li>
           <li>٣) بعد الانتهاء سيبدأ تنزيل الفيديو تلقائيًا.</li>
-          <li>٤) افتحي تيك توك وارفعي المقطع (اختياري).</li>
-          <li>٥) يمكنك تعديل الخصوصية لاحقًا كما تشائين.</li>
+          <li>٤) افتحي تيك توك وارفعي المقطع (اجعله خاص).</li>
+          <li>٥) يمكنك تعديل الخصوصية الى عام .</li>
         </ol>
-        <p class="card-text">أتمنى أن تجدي الموقع سهل الاستخدام. دعمك يمنحني الحماس ❤️</p>
+        <p class="card-text">. دعمكم حتى استمر لتقديم الافضل  ❤️</p>
       </div>
     </section>
     
@@ -107,7 +107,7 @@
       <div class="card-inner-content">
         <h2 class="card-title">المطوِّرة</h2>
         <img src="https://p16-sign-va.tiktokcdn.com/tos-maliva-avt-0068/36fb03fab8355da6669fd8cae7a7f798~tplv-tiktokx-cropcenter:100:100.jpeg?dr=14579&refresh_token=93305ecc&x-expires=1757246400&x-signature=eImb0a8W4M%2BlkKjd8ZCFJPej%2FY4%3D&t=4d5b0474&ps=13740610&shp=a5d48078&shcp=81f88b70&idc=maliva" alt="حساب تيك توك" class="developer-avatar">
-        <p class="card-text">تابعيني لمزيد من المشاريع المجانية <span class="heart">❤️</span></p>
+        <p class="card-text">تابعني لمزيد من التحديتات  <span class="heart">❤️</span></p>
         <div class="row" style="margin-top: 16px; min-height: initial;">
           <a href="https://www.tiktok.com/@queen_iy" target="_blank" rel="noopener noreferrer" class="tiktok-follow-btn">
             متابعة
@@ -154,7 +154,7 @@
 
     processBtn.addEventListener('click', () => {
       const f = fileInput.files[0]; if(!f) return;
-      status.textContent = "جاري الرفع…";
+      status.textContent = "جاري الرفع…😉";
       bar.classList.remove('running'); bar.style.width='0%';
       processBtn.disabled = true;
       fileInput.disabled = true;
@@ -170,27 +170,27 @@
       };
       xhr.onreadystatechange = () => {
         if (xhr.readyState === XMLHttpRequest.HEADERS_RECEIVED){
-          status.textContent = "تحسين الفيديو…";
+          status.textContent = "تحسين الفيديو…😁";
           bar.classList.add('running');
         }
       };
       xhr.onload = () => {
         bar.classList.remove('running');
         if (xhr.status === 200) {
-          status.textContent = "اكتملت المعالجة — سيبدأ التحميل الآن";
+          status.textContent = " 😍اكتملت المعالجة — سيبدأ التحميل الآن";
           const blob = xhr.response, url = URL.createObjectURL(blob);
           const a = document.createElement('a');
           a.href = url; a.download = 'output.mp4'; document.body.appendChild(a); a.click();
           URL.revokeObjectURL(url);
           a.remove();
         } else {
-          status.textContent = "حدث خطأ، يرجى المحاولة مرة أخرى.";
+          status.textContent = " 😡حدث خطأ، يرجى المحاولة مرة أخرى.";
           enableUpload();
         }
       };
       xhr.onerror = () => { 
         bar.classList.remove('running');
-        status.textContent = "فشل الاتصال.";
+        status.textContent = "فشل الاتصال🙉.";
         enableUpload(); 
       };
       xhr.send(fd);
