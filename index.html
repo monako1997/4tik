@@ -42,6 +42,39 @@
     @keyframes beat{0%,20%,40%,60%,80%,100%{transform:scale(1)}10%,30%,50%,70%,90%{transform:scale(1.3)}}
     ul.guide{padding:0 20px;margin:0;line-height:1.8}
     ul.guide li{margin-bottom:6px;color:var(--muted)}
+
+    /* ==== المودال ==== */
+    .modal {
+      position: fixed; inset: 0;
+      background: rgba(0,0,0,0.7);
+      display: none; justify-content: center; align-items: center;
+      z-index: 100;
+    }
+    .modal-content {
+      background: #0f1320;
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      padding: 30px;
+      text-align: center;
+      width: 90%; max-width: 400px;
+      box-shadow: 0 20px 40px rgba(0,0,0,0.5);
+    }
+    .modal-content h2 {margin-top:0; color: var(--c1);}
+    .modal-content input {
+      width: 100%; padding: 12px; margin: 15px 0;
+      border-radius: 8px; border: 1px solid #314055;
+      font-size: 16px; text-align: center;
+    }
+    .modal-content button {
+      width: 100%;
+      padding: 12px;
+      border: none;
+      border-radius: 8px;
+      font-weight: bold;
+      background: linear-gradient(90deg,var(--c2),var(--c1));
+      color: #0a0b12;
+      cursor: pointer;
+    }
   </style>
 </head>
 <body>
@@ -81,6 +114,16 @@
 
   <div class="footer">Made by Manal <span class="heart">❤</span></div>
 
+  <!-- نافذة الترحيب -->
+  <div id="welcomeModal" class="modal">
+    <div class="modal-content">
+      <h2>🎉 أهلاً بك في 4Tik Pro</h2>
+      <p>من فضلك أدخل مفتاح الاشتراك للمتابعة:</p>
+      <input id="keyInput" type="text" placeholder="أدخل المفتاح هنا" />
+      <button id="loginBtn">Login</button>
+    </div>
+  </div>
+
   <script>
     const drop = document.getElementById('drop');
     const fileInput = document.getElementById('file');
@@ -96,6 +139,9 @@
     const subBind = document.getElementById('subBind');
     const subLast = document.getElementById('subLast');
     const subToast = document.getElementById('subToast');
+    const welcomeModal = document.getElementById("welcomeModal");
+    const keyInput = document.getElementById("keyInput");
+    const loginBtn = document.getElementById("loginBtn");
 
     const mb = n => (n/1024/1024).toFixed(2)+' MB';
 
@@ -105,7 +151,6 @@
       const buf = await crypto.subtle.digest('SHA-256', enc);
       return Array.from(new Uint8Array(buf)).map(b=>b.toString(16).padStart(2,"0")).join("");
     }
-
     function canvasFingerprint(){
       try{
         const c=document.createElement("canvas"); c.width=200;c.height=60;
@@ -116,7 +161,6 @@
         return c.toDataURL();
       }catch{return "no-canvas";}
     }
-
     function webglInfo(){
       try{
         const c=document.createElement("canvas");
@@ -128,7 +172,6 @@
         return vendor+"|"+renderer;
       }catch{return "no-webgl";}
     }
-
     async function getDeviceHash(){
       const parts=[
         navigator.platform||"pf?",
@@ -152,26 +195,16 @@
       info.textContent=`الملف: ${f.name} — ${mb(f.size)}`;
       processBtn.disabled=false;
     }
-
     drop.addEventListener("click",()=>fileInput.click());
     drop.addEventListener("dragover",e=>e.preventDefault());
     drop.addEventListener("drop",e=>{e.preventDefault(); if(e.dataTransfer.files.length){ fileInput.files=e.dataTransfer.files; updateInfo(); }});
     fileInput.addEventListener("change",updateInfo);
 
-    // ======= جلب المفتاح =======
-    async function getKey(){
-      let k=localStorage.getItem("SUB_KEY");
-      if(k) return k;
-      k=prompt("أدخل مفتاح الاشتراك");
-      if(!k) return null;
-      localStorage.setItem("SUB_KEY",k.trim());
-      return k;
-    }
-
     // ======= معالجة =======
+    async function getKey(){ return localStorage.getItem("SUB_KEY"); }
     processBtn.addEventListener("click",async()=>{
       const f=fileInput.files[0]; if(!f) return;
-      const key=await getKey(); if(!key){alert("المفتاح مطلوب"); return;}
+      const key=await getKey(); if(!key){welcomeModal.style.display="flex"; return;}
       const device=await getDeviceHash();
 
       status.textContent="جارٍ الرفع…";
@@ -236,13 +269,12 @@
         setTimeout(()=>subToast.textContent="",2000);
       }catch{ subToast.textContent="تعذر جلب معلومات الاشتراك"; setTimeout(()=>subToast.textContent="",2000); }
     }
-
     showSubBtn?.addEventListener("click",refreshSubscriptionBox);
     copyKeyBtn?.addEventListener("click",async()=>{
       const key=localStorage.getItem("SUB_KEY");
       if(!key){alert("لا يوجد مفتاح محفوظ بعد.");return;}
       try{await navigator.clipboard.writeText(key); subToast.textContent="📋 تم نسخ المفتاح"; setTimeout(()=>subToast.textContent="",2000);}
-      catch{ subToast.textContent="تعذر النسخ، انسخه يدويًا."; setTimeout(()=>subToast.textContent="",2000);}
+      catch{ subToast.textContent="تعذر النسخ، انسخه يدوياً."; setTimeout(()=>subToast.textContent="",2000);}
     });
 
     // ======= تحقق عند فتح الصفحة =======
@@ -251,14 +283,4 @@
       try{
         const res=await fetch("/check",{headers:{"X-DEVICE":device}});
         if(res.ok){
-          refreshSubscriptionBox();
-        }else{
-          console.log("هذا جهاز جديد، سيُطلب المفتاح عند الاستخدام.");
-        }
-      }catch(e){
-        console.log("تعذر الاتصال بالسيرفر للتحقق من الجهاز.");
-      }
-    });
-  </script>
-</body>
-</html>
+          welcomeModal.style
