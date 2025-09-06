@@ -507,15 +507,88 @@
     const bar = document.getElementById('bar');
     const status = document.getElementById('status');
     const mb = n => (n/1024/1024).toFixed(2)+' MB';
+
+    // === Daily Limit Additions (START) ===
+    const DAILY_LIMIT = 1;
+
+    function hash32(str){
+      let h = 0x811c9dc5 >>> 0; // FNV-1a base
+      for (let i = 0; i < str.length; i++){
+        h ^= str.charCodeAt(i);
+        h = (h + (h<<1) + (h<<4) + (h<<7) + (h<<8) + (h<<24)) >>> 0;
+      }
+      return ('00000000' + h.toString(16)).slice(-8);
+    }
+    function getDeviceId(){
+      const tz = Intl.DateTimeFormat().resolvedOptions().timeZone || '';
+      const parts = [
+        navigator.userAgent || '',
+        navigator.language || '',
+        navigator.platform || '',
+        navigator.vendor || '',
+        screen.width + 'x' + screen.height + 'x' + screen.colorDepth,
+        (navigator.hardwareConcurrency || 0).toString(),
+        (navigator.deviceMemory || 0).toString(),
+        tz
+      ].join('||');
+      return hash32(parts);
+    }
+    const DEVICE_ID = getDeviceId();
+    const STORAGE_KEY = '4tik_quota_v1::' + DEVICE_ID;
+
+    function todayStr(){
+      const d = new Date();
+      const y = d.getFullYear();
+      const m = String(d.getMonth()+1).padStart(2,'0');
+      const day = String(d.getDate()).padStart(2,'0');
+      return `${y}-${m}-${day}`;
+    }
+    function readQuota(){
+      try { return JSON.parse(localStorage.getItem(STORAGE_KEY)) || null; }
+      catch { return null; }
+    }
+    function usedUpToday(){
+      const q = readQuota();
+      return q && q.date === todayStr() && (q.count || 0) >= DAILY_LIMIT;
+    }
+    function recordSuccessfulUse(){
+      const t = todayStr();
+      const q = readQuota();
+      const next = (!q || q.date !== t) ? {date: t, count: 1} : {date: t, count: (q.count || 0)+1};
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(next));
+    }
+    function lockUploadUI(message){
+      drop.style.pointerEvents = 'none';
+      drop.style.opacity = '0.5';
+      fileInput.disabled = true;
+      processBtn.disabled = true;
+      info.textContent = message || "Daily limit reached for this device. Please come back tomorrow.";
+    }
+    function unlockUploadUI(){
+      drop.style.pointerEvents = 'auto';
+      drop.style.opacity = '1';
+      fileInput.disabled = false;
+      fileInput.value = '';
+      info.textContent = "Drag & drop your video here, or click to select";
+      processBtn.disabled = true;
+    }
+    function checkAndApplyQuota(){
+      if (usedUpToday()){
+        lockUploadUI("Daily limit reached for this device. Please come back tomorrow.");
+        status.textContent = "";
+      } else {
+        unlockUploadUI();
+      }
+    }
+    window.addEventListener('storage', (e) => {
+      if (e.key === STORAGE_KEY) checkAndApplyQuota();
+    });
+    // === Daily Limit Additions (END) ===
     
     function enableUpload() {
-        drop.style.pointerEvents = 'auto';
-        drop.style.opacity = '1';
-        fileInput.disabled = false;
-        fileInput.value = ''; // Clear file input
-        info.textContent = "Drag & drop your video here, or click to select";
+        // (modified to respect the daily limit)
+        checkAndApplyQuota();
         status.textContent = "You can now upload another video.";
-        processBtn.disabled = true;
     }
     
     drop.addEventListener('click', () => fileInput.click());
@@ -535,12 +608,17 @@
         return;
       }
       info.textContent = `File: ${f.name} â ${mb(f.size)}`;
-      processBtn.disabled = false;
+      // respect quota: don't enable the button if used up
+      processBtn.disabled = usedUpToday();
     }
     
     fileInput.addEventListener('change', updateInfo);
     
     processBtn.addEventListener('click', () => {
+      if (usedUpToday()){
+        status.textContent = "Daily limit reached for this device. Please come back tomorrow.";
+        return;
+      }
       const f = fileInput.files[0]; if(!f) return;
       status.textContent = "Uploading";
       bar.classList.remove('running'); bar.style.width='0%';
@@ -570,9 +648,10 @@
           const a = document.createElement('a');
           a.href = url; a.download = 'output.mp4'; document.body.appendChild(a); a.click();
           URL.revokeObjectURL(url); a.remove();
-          
-          // Reset for next upload
-          setTimeout(enableUpload, 1000); // Small delay to ensure download starts
+
+          // === Daily Limit Additions ===
+          recordSuccessfulUse();
+          setTimeout(() => { checkAndApplyQuota(); }, 1000);
           
         } else {
           status.textContent = "An error occurred, please try again.";
@@ -595,6 +674,8 @@
       xhr.send(fd);
     });
 
+    // Apply quota immediately on load
+    checkAndApplyQuota();
   </script>
 
 </body>
