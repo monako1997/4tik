@@ -10,37 +10,42 @@
     *{box-sizing:border-box;font-family:'Cairo',sans-serif}
     body{margin:0;min-height:100vh;display:flex;flex-direction:column;align-items:center;color:var(--ink);
       background:linear-gradient(180deg,#080910 0%,#0a0b12 100%);}
-    .topbar{position:sticky;top:0;width:100%;text-align:center;padding:14px;background:#0f1320;z-index:10}
-    .brand{font-weight:900;font-size:34px;background:linear-gradient(90deg,var(--c2),var(--c1));
+    .topbar{text-align:center;padding:14px;background:#0f1320;}
+    .brand{font-weight:900;font-size:30px;background:linear-gradient(90deg,var(--c2),var(--c1));
       -webkit-background-clip:text;background-clip:text;color:transparent}
-    .wrap{width:min(800px,95%);padding:20px 16px 120px}
+    .wrap{width:min(800px,95%);padding:20px}
     .card{background:#0f1320;border:1px solid var(--line);border-radius:16px;padding:20px;margin-bottom:16px}
+    .row{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-top:12px}
+    input,button{padding:10px;border-radius:8px;border:1px solid var(--line)}
+    button{cursor:pointer;font-weight:700;background:linear-gradient(90deg,var(--c2),var(--c1));color:#0a0b12;border:0}
     .upload{border:2px dashed #314055;border-radius:16px;padding:30px;text-align:center;cursor:pointer}
-    .u-title{font-weight:700;font-size:18px;color:var(--c1)}
-    .hint{margin-top:6px;color:var(--muted);font-size:14px}
-    .row{display:flex;gap:10px;align-items:center;margin-top:14px;flex-wrap:wrap}
-    button{padding:10px 20px;border:0;border-radius:10px;font-weight:700;cursor:pointer;
-      background:linear-gradient(90deg,var(--c2),var(--c1));color:#0a0b12}
     .bar-wrap{height:12px;background:#0a0f1a;border:1px solid var(--line);border-radius:999px;overflow:hidden;margin-top:10px}
     .bar{height:100%;width:0;background:linear-gradient(90deg,var(--c2),var(--c1));transition:width .2s}
-    .footer{position:fixed;bottom:10px;left:0;right:0;text-align:center;font-size:16px;color:var(--ink)}
+    .footer{margin-top:auto;padding:10px;text-align:center;color:var(--ink)}
     .heart{color:var(--c2);animation:beat 1s infinite}
     @keyframes beat{0%,20%,40%,60%,80%,100%{transform:scale(1)}10%,30%,50%,70%,90%{transform:scale(1.3)}}
-    /* مودال */
-    .modal{position:fixed;inset:0;background:rgba(0,0,0,.7);display:flex;justify-content:center;align-items:center;z-index:999}
-    .modal-box{background:#0f1320;padding:20px;border-radius:12px;width:300px;text-align:center}
-    .modal-box input{width:100%;padding:10px;border-radius:8px;border:1px solid var(--line);margin-bottom:12px}
   </style>
 </head>
 <body>
   <header class="topbar"><h1 class="brand">4Tik Pro</h1></header>
 
   <main class="wrap">
+    <!-- إدخال المفتاح -->
+    <section class="card">
+      <h3>🔑 أدخل مفتاح الاشتراك</h3>
+      <div class="row">
+        <input id="keyInput" placeholder="أدخل المفتاح هنا" style="flex:1">
+        <button id="loginBtn">تأكيد</button>
+      </div>
+      <div id="loginMsg" style="font-size:13px;color:var(--muted);margin-top:8px"></div>
+    </section>
+
+    <!-- رفع الفيديو -->
     <section class="card">
       <div id="drop" class="upload">
         <input id="file" type="file" accept="video/*" hidden>
-        <div class="u-title">📤 رفع الفيديو</div>
-        <div id="fileInfo" class="hint">اسحب الملف هنا أو اضغط للاختيار</div>
+        <div>📤 اسحب الملف هنا أو اضغط للاختيار</div>
+        <div id="fileInfo" style="color:var(--muted);font-size:14px"></div>
       </div>
       <div class="row">
         <button id="process" disabled>معالجة</button>
@@ -49,23 +54,14 @@
       <div class="bar-wrap"><div id="bar" class="bar"></div></div>
     </section>
 
+    <!-- الاشتراك -->
     <section class="card">
-      <button id="showSub">📋 اشتراكي</button>
+      <button id="showSub">📋 تفاصيل الاشتراك</button>
       <div id="subBox" style="margin-top:10px;font-size:14px;color:var(--muted)"></div>
     </section>
   </main>
 
   <div class="footer">Made by Manal <span class="heart">❤</span></div>
-
-  <!-- مودال طلب المفتاح -->
-  <div id="modal" class="modal" style="display:none">
-    <div class="modal-box">
-      <h3>أدخل مفتاح الاشتراك</h3>
-      <input id="keyInput" placeholder="أدخل المفتاح هنا">
-      <button id="loginBtn">تأكيد</button>
-      <div id="loginMsg" style="font-size:13px;color:var(--muted);margin-top:8px"></div>
-    </div>
-  </div>
 
   <script>
     const fileInput=document.getElementById('file');
@@ -76,64 +72,44 @@
     const status=document.getElementById('status');
     const showSub=document.getElementById('showSub');
     const subBox=document.getElementById('subBox');
-    const modal=document.getElementById('modal');
     const keyInput=document.getElementById('keyInput');
     const loginBtn=document.getElementById('loginBtn');
     const loginMsg=document.getElementById('loginMsg');
 
-    // ====== توليد بصمة جهاز (بسيطة) ======
+    function saveKey(k){ localStorage.setItem("SUB_KEY",k); }
+    function getKey(){ return localStorage.getItem("SUB_KEY"); }
     async function sha256(text){
-      const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(text));
-      return Array.from(new Uint8Array(buf)).map(b=>b.toString(16).padStart(2,'0')).join('');
+      const buf=await crypto.subtle.digest("SHA-256",new TextEncoder().encode(text));
+      return Array.from(new Uint8Array(buf)).map(b=>b.toString(16).padStart(2,"0")).join("");
     }
     async function getDeviceHash(){
-      const seed = navigator.userAgent + "|" + screen.width+"x"+screen.height + "|" + navigator.language;
-      return await sha256(seed);
+      return await sha256(navigator.userAgent+"|"+screen.width+"x"+screen.height);
     }
 
-    // ====== إدارة المفتاح ======
-    function getKey(){ return localStorage.getItem("SUB_KEY"); }
-    function saveKey(k){ localStorage.setItem("SUB_KEY",k); }
-
-    async function ensureKey(){
-      let k = getKey();
-      if(!k){
-        modal.style.display="flex";
-        return null;
-      }
-      return k;
-    }
-
-    loginBtn.onclick=async()=>{
+    loginBtn.onclick=()=>{
       const val=keyInput.value.trim();
       if(!val){loginMsg.textContent="⚠️ أدخل مفتاح";return;}
       saveKey(val);
-      modal.style.display="none";
-      loginMsg.textContent="";
-    }
+      loginMsg.textContent="✅ تم حفظ المفتاح";
+    };
 
-    // ====== تحديث معلومات الملف ======
     function updateInfo(){
       const f=fileInput.files[0];
-      if(!f){info.textContent="اسحب الملف هنا أو اضغط للاختيار";processBtn.disabled=true;return;}
+      if(!f){info.textContent="";processBtn.disabled=true;return;}
       info.textContent=`${f.name} — ${(f.size/1024/1024).toFixed(1)}MB`;
       processBtn.disabled=false;
     }
-
     drop.onclick=()=>fileInput.click();
     drop.ondragover=e=>e.preventDefault();
     drop.ondrop=e=>{e.preventDefault();if(e.dataTransfer.files.length){fileInput.files=e.dataTransfer.files;updateInfo();}}
     fileInput.onchange=updateInfo;
 
-    // ====== معالجة الفيديو ======
     processBtn.onclick=async()=>{
       const f=fileInput.files[0]; if(!f) return;
-      const key=await ensureKey(); if(!key) return;
+      const key=getKey(); if(!key){status.textContent="⚠️ أدخل المفتاح أولاً";return;}
       const device=await getDeviceHash();
 
-      status.textContent="جارٍ الرفع…"; bar.style.width="0";
-      processBtn.disabled=true;
-
+      status.textContent="جارٍ الرفع…"; bar.style.width="0"; processBtn.disabled=true;
       const fd=new FormData(); fd.append("file",f);
       const xhr=new XMLHttpRequest();
       xhr.open("POST","/process",true);
@@ -143,7 +119,7 @@
       xhr.upload.onprogress=e=>{if(e.lengthComputable){bar.style.width=Math.round((e.loaded/e.total)*100)+"%";}};
       xhr.onload=()=>{
         if(xhr.status===200){
-          status.textContent="تمت المعالجة ✅";
+          status.textContent="✅ تمت المعالجة";
           const url=URL.createObjectURL(xhr.response);
           const a=document.createElement("a");a.href=url;a.download="output.mp4";a.click();
           URL.revokeObjectURL(url);
@@ -153,13 +129,12 @@
         }
         processBtn.disabled=false;
       };
-      xhr.onerror=()=>{status.textContent="خطأ اتصال";processBtn.disabled=false;};
+      xhr.onerror=()=>{status.textContent="⚠️ خطأ اتصال";processBtn.disabled=false;};
       xhr.send(fd);
     };
 
-    // ====== عرض الاشتراك ======
     showSub.onclick=async()=>{
-      const key=await ensureKey(); if(!key) return;
+      const key=getKey(); if(!key){subBox.textContent="⚠️ أدخل مفتاح أولاً";return;}
       const device=await getDeviceHash();
       try{
         const res=await fetch("/me",{headers:{"X-KEY":key,"X-DEVICE":device}});
@@ -167,15 +142,13 @@
         if(res.ok){
           subBox.innerHTML=`
             مفتاح: ${data.key_masked}<br>
-            ينتهي في: ${data.expires}<br>
+            ينتهي: ${data.expires}<br>
             الأيام المتبقية: ${data.days_left}<br>
-            حالة الربط: ${data.bound_to_this_device?"✔️ هذا الجهاز":"🔒 جهاز آخر"}<br>
+            الحالة: ${data.bound_to_this_device?"✔️ جهازك":"🔒 جهاز آخر"}<br>
             آخر استخدام: ${data.last_used||"—"}
           `;
-        }else{
-          subBox.textContent=data.error||"خطأ";
-        }
-      }catch(e){subBox.textContent="تعذر الاتصال";}
+        }else{ subBox.textContent=data.error||"خطأ"; }
+      }catch{ subBox.textContent="⚠️ تعذر الاتصال"; }
     };
   </script>
 </body>
