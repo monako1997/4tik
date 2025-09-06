@@ -32,16 +32,26 @@ def now_str():
     return datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S")
 
 # -------- تحميل المفاتيح + الربط --------
-keys = load_json(KEYS_FILE, {})   # يقرأ المفاتيح من keys.json
-binds = load_json(BINDS_FILE, {}) # يُنشأ تلقائيًا إذا غير موجود
+keys = load_json(KEYS_FILE, {})
+binds = load_json(BINDS_FILE, {})
 
 # -------- التحقق --------
 def auth_guard(x_key: str | None, x_device: str | None):
-    if not x_key:
-        return (False, "missing-key", None)
     if not x_device:
         return (False, "missing-device", None)
 
+    # check بدون مفتاح → إذا الجهاز مربوط مسبقًا
+    if not x_key:
+        for k, b in binds.items():
+            if b.get("device") == x_device:
+                exp_dt = datetime.strptime(b["expires"], "%Y-%m-%d %H:%M:%S")
+                if datetime.utcnow() <= exp_dt:
+                    b["last_used"] = now_str()
+                    save_json(BINDS_FILE, binds)
+                    return (True, k, {"expires": b["expires"]})
+        return (False, "missing-key", None)
+
+    # المفتاح موجود؟
     if x_key not in keys:
         return (False, "invalid-key", None)
 
@@ -60,7 +70,7 @@ def auth_guard(x_key: str | None, x_device: str | None):
         save_json(BINDS_FILE, binds)
         return (True, x_key, {"expires": exp.strftime("%Y-%m-%d")})
 
-    # لو مربوط بجهاز آخر
+    # مربوط بجهاز آخر
     if bound["device"] != x_device:
         return (False, "bound-to-other-device", None)
 
@@ -75,6 +85,21 @@ def auth_guard(x_key: str | None, x_device: str | None):
     return (True, x_key, {"expires": bound["expires"]})
 
 # -------- API --------
+@app.get("/check")
+def check(x_device: str | None = Header(None)):
+    if not x_device:
+        return JSONResponse({"ok": False, "error": "missing-device"}, status_code=400)
+
+    for k, b in binds.items():
+        if b.get("device") == x_device:
+            exp_dt = datetime.strptime(b["expires"], "%Y-%m-%d %H:%M:%S")
+            if datetime.utcnow() <= exp_dt:
+                return {"ok": True}
+            return JSONResponse({"ok": False, "error": "expired"}, status_code=401)
+
+    return JSONResponse({"ok": False, "error": "unknown-device"}, status_code=404)
+
+
 @app.get("/me")
 def me(x_key: str | None = Header(None), x_device: str | None = Header(None)):
     ok, code, meta = auth_guard(x_key, x_device)
@@ -96,6 +121,7 @@ def me(x_key: str | None = Header(None), x_device: str | None = Header(None)):
         "bound_to_this_device": (b.get("device") == x_device),
         "last_used": b.get("last_used")
     }
+
 
 @app.post("/process")
 async def process(file: UploadFile, x_key: str | None = Header(None), x_device: str | None = Header(None)):
@@ -120,7 +146,7 @@ async def process(file: UploadFile, x_key: str | None = Header(None), x_device: 
         src_path = src.name
     out_path = src_path.replace(".mp4", "_out.mp4")
 
-    # أمر FFmpeg (استعمل أمرك)
+    # أمر FFmpeg
     cmd = ["ffmpeg", "-y", "-itsscale", "2", "-i", src_path, "-c:v", "copy", "-c:a", "copy", out_path]
     proc = subprocess.run(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     if proc.returncode != 0:
