@@ -11,8 +11,8 @@ WORKDIR /app
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
-# نسخ بقية الملفات (main.py + html وغيره)
+# نسخ بقية الملفات (main.py + index.html وغيره)
 COPY . .
 
-# تشغيل التطبيق باستخدام Gunicorn على المنفذ 8080
-CMD ["gunicorn", "-b", "0.0.0.0:8080", "main:app"]
+# تشغيل التطبيق مباشرة باستخدام Flask
+CMD ["python", "main.py"]
