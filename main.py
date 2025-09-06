@@ -1,74 +1,121 @@
-import os, uuid, shutil, subprocess
-from pathlib import Path
-from fastapi import FastAPI, UploadFile, File, HTTPException
-from fastapi.responses import HTMLResponse, FileResponse, JSONResponse
+import os, json, hashlib, tempfile, subprocess, datetime, threading
+from flask import Flask, request, send_file, Response, abort
 
-# إخفاء واجهات التوثيق الافتراضية
-app = FastAPI(docs_url=None, redoc_url=None, openapi_url=None)
+app = Flask(__name__)
 
-BASE = Path(__file__).resolve().parent
-WORK = BASE / "work"
-WORK.mkdir(exist_ok=True)
+# === DAILY SERVER LIMIT (config) ===
+DAILY_LIMIT = 1                      # مرة واحدة يوميًا
+QUOTA_FILE = 'quota.json'            # ملف صغير لتتبع الاستخدام السيرفري
+PEPPER = 'change-this-pepper'        # سلسلة ثابتة لزيادة أمان التجزئة (عدّليها)
 
-# الحد الأقصى لحجم الفيديو (100MB)
-MAX_SIZE = 100 * 1024 * 1024  
+quota_lock = threading.Lock()
 
-@app.get("/", response_class=HTMLResponse)
-def home():
-    html_path = BASE / "index.html"
-    if not html_path.exists():
-        return HTMLResponse("<h1>index.html غير موجود</h1>", status_code=500)
-    return html_path.read_text(encoding="utf-8")
+def _today_str():
+    return datetime.date.today().isoformat()
 
-def run_silent(cmd: list[str]) -> bool:
-    """تشغيل ffmpeg بصمت"""
+def _client_ip():
+    # يدعم منصات استضافة تمّرر X-Forwarded-For
+    xff = request.headers.get('X-Forwarded-For', '')
+    if xff:
+        # أول IP هو الأقرب للعميل
+        return xff.split(',')[0].strip()
+    return request.remote_addr or '0.0.0.0'
+
+def _fingerprint_for_today():
+    ua = request.headers.get('User-Agent', '')
+    ip = _client_ip()
+    today = _today_str()
+    raw = f"{ip}|{ua}|{today}|{PEPPER}"
+    return hashlib.sha256(raw.encode('utf-8')).hexdigest()
+
+def _read_quota():
+    if not os.path.exists(QUOTA_FILE):
+        return {}
     try:
-        p = subprocess.run(
-            cmd, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, text=False
-        )
-        return p.returncode == 0
+        with open(QUOTA_FILE, 'r', encoding='utf-8') as f:
+            return json.load(f)
     except Exception:
-        return False
+        return {}
 
-@app.post("/process")
-async def process(file: UploadFile = File(...)):
-    # تحقق من حجم الملف
-    contents = await file.read()
-    if len(contents) > MAX_SIZE:
-        raise HTTPException(status_code=400, detail="⚠️ الملف أكبر من 100MB")
-    await file.seek(0)  # إعادة المؤشر للبداية بعد القراءة
-
-    uid = uuid.uuid4().hex
-    in_path  = WORK / f"in_{uid}.mp4"
-    out_path = WORK / f"out_{uid}.mp4"
-
+def _write_quota(data):
+    # كتابة ذرّية لتفادي تلف الملف
+    tmp_fd, tmp_path = tempfile.mkstemp(prefix='quota_', suffix='.json')
     try:
-        # حفظ الملف المؤقت
-        with open(in_path, "wb") as f:
-            shutil.copyfileobj(file.file, f)
-
-        # معالجة الفيديو
-        ok = run_silent([
-            "ffmpeg", "-y",
-            "-itsscale", "2",
-            "-i", str(in_path),
-            "-c:v", "copy",
-            "-c:a", "copy",
-            "-movflags", "+faststart",
-            str(out_path)
-        ])
-
-        if not ok or not out_path.exists():
-            return JSONResponse({"error": "تعذر إتمام المعالجة، حاول مجددًا."}, status_code=500)
-
-        # إرجاع الملف الناتج للتنزيل
-        headers = {"Content-Disposition": 'attachment; filename="4tik.mp4"'}
-        return FileResponse(str(out_path), media_type="video/mp4", headers=headers)
-
+        with os.fdopen(tmp_fd, 'w', encoding='utf-8') as f:
+            json.dump(data, f, ensure_ascii=False)
+        os.replace(tmp_path, QUOTA_FILE)
     finally:
-        # تنظيف
-        try:
-            os.remove(in_path)
-        except:
-            pass
+        if os.path.exists(tmp_path):
+            try: os.remove(tmp_path)
+            except: pass
 
+def _used_up():
+    key = _fingerprint_for_today()
+    with quota_lock:
+        q = _read_quota()
+        return q.get(key, 0) >= DAILY_LIMIT
+
+def _record_success():
+    key = _fingerprint_for_today()
+    with quota_lock:
+        q = _read_quota()
+        q[key] = q.get(key, 0) + 1
+        _write_quota(q)
+
+# ========= FFmpeg processing =========
+def _run_ffmpeg(in_path, out_path):
+    # حسب طلبك: itsscale 2 مع نسخ الفيديو/الصوت كما هو
+    cmd = [
+        'ffmpeg', '-hide_banner', '-y',
+        '-itsscale', '2',
+        '-i', in_path,
+        '-c:v', 'copy',
+        '-c:a', 'copy',
+        out_path
+    ]
+    # شغّل ffmpeg وتحقق من الإرجاع
+    proc = subprocess.run(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    if proc.returncode != 0 or not os.path.exists(out_path):
+        raise RuntimeError(proc.stderr.decode('utf-8', errors='ignore'))
+
+@app.route('/process', methods=['POST'])
+def process_video():
+    # === DAILY SERVER LIMIT: فحص الحد قبل أي معالجة
+    if _used_up():
+        # 429 = Too Many Requests
+        return Response("Daily limit reached for this device. Try again tomorrow.", status=429)
+
+    file = request.files.get('file')
+    if not file:
+        return abort(400, 'No file provided')
+
+    # حفظ مؤقت ثم معالجة
+    with tempfile.TemporaryDirectory() as td:
+        in_path = os.path.join(td, 'input.mp4')
+        out_path = os.path.join(td, 'output.mp4')
+        file.save(in_path)
+
+        try:
+            _run_ffmpeg(in_path, out_path)
+        except Exception as e:
+            return abort(500, 'Processing failed')
+
+        # === DAILY SERVER LIMIT: تسجيل النجاح بعد المعالجة
+        _record_success()
+
+        # إرسال الملف الناتج
+        return send_file(
+            out_path,
+            as_attachment=True,
+            download_name='output.mp4',
+            mimetype='video/mp4'
+        )
+
+@app.route('/', methods=['GET'])
+def root():
+    # اختياري: قد تكون صفحتك index.html تُخدّم عبر static.
+    return Response("OK", status=200)
+
+if __name__ == '__main__':
+    # شغّل الخادم محليًا
+    app.run(host='0.0.0.0', port=int(os.environ.get('PORT', 8080)))
