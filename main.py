@@ -3,44 +3,40 @@ from datetime import datetime, timedelta
 from tempfile import NamedTemporaryFile
 
 from fastapi import FastAPI, UploadFile, Header
-from fastapi.responses import JSONResponse, StreamingResponse, PlainTextResponse, FileResponse
+from fastapi.responses import (
+    JSONResponse, PlainTextResponse, StreamingResponse, FileResponse
+)
 from fastapi.middleware.cors import CORSMiddleware
 
-# =========================
-# إعداد الاتصال بـ Supabase
-# =========================
-DB_HOST = os.getenv("SUPABASE_HOST", "YOUR-HOST.supabase.co")
-DB_NAME = os.getenv("SUPABASE_DB", "postgres")
-DB_USER = os.getenv("SUPABASE_USER", "postgres")
-DB_PASS = os.getenv("SUPABASE_PASSWORD", "YOUR-PASSWORD")
-DB_PORT = int(os.getenv("SUPABASE_PORT", "5432"))
+# ========= إعداد اتصال قاعدة البيانات عبر DATABASE_URL =========
+# مثال القيمة في Koyeb:
+# postgresql://postgres.<PROJECT_REF>:PASSWORD@aws-1-eu-central-1.pooler.supabase.com:6543/postgres
+DATABASE_URL = os.getenv("DATABASE_URL")
+if not DATABASE_URL:
+    raise RuntimeError("ENV DATABASE_URL غير مُعرّف")
 
 def db_connect():
-    return psycopg2.connect(
-        host=DB_HOST,
-        dbname=DB_NAME,
-        user=DB_USER,
-        password=DB_PASS,
-        port=DB_PORT,
-        sslmode="require",
-        cursor_factory=psycopg2.extras.DictCursor
-    )
+    # sslmode=require ضمنيًا في pooler، ويمكن إضافته إن رغبت: + "?sslmode=require"
+    return psycopg2.connect(DATABASE_URL, cursor_factory=psycopg2.extras.DictCursor)
 
 conn = db_connect()
 conn.autocommit = True
 
 def db_cursor():
+    """يعيد cursor صالحًا، ويُعيد الاتصال تلقائياً إذا انقطع."""
     global conn
     try:
         return conn.cursor()
     except Exception:
-        # إعادة الاتصال لو انقطع
-        conn.close()
+        try:
+            conn.close()
+        except Exception:
+            pass
         conn = db_connect()
         conn.autocommit = True
         return conn.cursor()
 
-# إنشاء الجداول إذا لم تكن موجودة
+# إنشاء الجداول إن لم تكن موجودة
 with db_cursor() as cur:
     cur.execute("""
     CREATE TABLE IF NOT EXISTS keys (
@@ -55,24 +51,17 @@ with db_cursor() as cur:
         last_used TIMESTAMP
     );""")
 
-# ===============
-# إعداد التطبيق
-# ===============
-app = FastAPI()
+# =================== إعداد التطبيق ===================
+app = FastAPI(title="4Tik Pro API")
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"], allow_methods=["*"], allow_headers=["*"]
 )
 
-def now():
-    return datetime.utcnow()
+def now(): return datetime.utcnow()
+def fmt(dt: datetime) -> str: return dt.strftime("%Y-%m-%d %H:%M:%S")
 
-def fmt(dt: datetime) -> str:
-    return dt.strftime("%Y-%m-%d %H:%M:%S")
-
-# ===============
-# دوال قاعدة البيانات
-# ===============
+# =================== دوال قاعدة البيانات ===================
 def key_exists(k: str) -> bool:
     with db_cursor() as cur:
         cur.execute("SELECT 1 FROM keys WHERE key=%s LIMIT 1;", (k,))
@@ -102,14 +91,12 @@ def update_last_used(k: str):
     with db_cursor() as cur:
         cur.execute("UPDATE binds SET last_used=%s WHERE key=%s;", (now(), k))
 
-# ===============
-# حارس التحقق
-# ===============
+# =================== حارس التحقق ===================
 def auth_guard(x_key: str | None, x_device: str | None):
     if not x_device:
         return (False, "missing-device", None)
 
-    # لو ما فيه مفتاح: حاول التعرّف بالجهاز فقط
+    # لو بدون مفتاح: حاول التعرّف عبر الجهاز فقط
     if not x_key:
         b = get_bind_by_device(x_device)
         if not b:
@@ -125,25 +112,23 @@ def auth_guard(x_key: str | None, x_device: str | None):
 
     b = get_bind_by_key(x_key)
 
-    # أول استخدام لهذا المفتاح → اربطه بالجهاز وابدأ 30 يوم
+    # أول استخدام → اربط المفتاح بالجهاز وابدأ 30 يوم
     if not b:
         meta = create_bind(x_key, x_device)
         return (True, x_key, meta)
 
-    # المفتاح موجود لكنه مربوط بجهاز آخر
+    # المفتاح مربوط بجهاز آخر
     if b["device"] != x_device:
         return (False, "bound-to-other-device", None)
 
-    # التحقق من الانتهاء
+    # التحقق من انتهاء الاشتراك
     if now() > b["expires"]:
         return (False, "expired", None)
 
     update_last_used(x_key)
     return (True, x_key, {"expires": fmt(b["expires"])})
 
-# ===============
-# المسارات (APIs)
-# ===============
+# =================== المسارات ===================
 @app.get("/check")
 def check(x_device: str | None = Header(None)):
     if not x_device:
@@ -170,12 +155,11 @@ def me(x_key: str | None = Header(None), x_device: str | None = Header(None)):
         }
         return JSONResponse({"error": msgs.get(code, "غير مصرح")}, status_code=401)
 
-    # جلب الربط لعرض معلومات إضافية
     b = get_bind_by_key(code)
     bound_to_this = (b is not None and b["device"] == x_device)
     expires_str = meta["expires"]
-    # حساب الأيام المتبقية (تقريب لأعلى لتظهر 30 في أول يوم)
     exp_dt = datetime.strptime(expires_str, "%Y-%m-%d %H:%M:%S")
+    # تقريب للأعلى حتى يظهر 30 يومًا في أول يوم
     days_left = max(0, int((exp_dt - now()).total_seconds() / 86400 + 0.9999))
 
     return {
@@ -205,18 +189,18 @@ async def process(file: UploadFile, x_key: str | None = Header(None), x_device: 
     if len(content) > 100 * 1024 * 1024:
         return PlainTextResponse("🚫 الحجم أكبر من 100MB", status_code=400)
 
-    # حفظ مؤقت ومعالجة FFmpeg (عدّل الأمر كما يلزمك)
+    # معالجة FFmpeg (عدّل الفلاتر حسب حاجتك)
     with NamedTemporaryFile(delete=False, suffix=".mp4") as src:
         src.write(content)
         src_path = src.name
     out_path = src_path.replace(".mp4", "_out.mp4")
 
-    cmd = ["ffmpeg", "-y", "-itsscale", "2", "-i", src_path, "-c:v", "copy", "-c:a", "copy", out_path]
+    cmd = ["ffmpeg", "-y", "-i", src_path, "-c:v", "copy", "-c:a", "copy", out_path]
     proc = subprocess.run(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     if proc.returncode != 0:
         try:
             os.remove(src_path)
-        except:
+        except Exception:
             pass
         return PlainTextResponse("⚠️ فشل FFmpeg", status_code=500)
 
@@ -230,13 +214,13 @@ async def process(file: UploadFile, x_key: str | None = Header(None), x_device: 
         try:
             os.remove(src_path)
             os.remove(out_path)
-        except:
+        except Exception:
             pass
 
     headers = {"Content-Disposition": 'attachment; filename="output.mp4"'}
     return StreamingResponse(stream_file(), media_type="video/mp4", headers=headers)
 
-# الواجهة
+# خدمة الواجهة
 @app.get("/")
 def root():
     return FileResponse("index.html")
