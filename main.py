@@ -1,104 +1,161 @@
-import os, json, subprocess
+import os, subprocess, psycopg2, psycopg2.extras
 from datetime import datetime, timedelta
+from tempfile import NamedTemporaryFile
+
 from fastapi import FastAPI, UploadFile, Header
 from fastapi.responses import JSONResponse, StreamingResponse, PlainTextResponse, FileResponse
 from fastapi.middleware.cors import CORSMiddleware
-from tempfile import NamedTemporaryFile
 
+# =========================
+# إعداد الاتصال بـ Supabase
+# =========================
+DB_HOST = os.getenv("SUPABASE_HOST", "YOUR-HOST.supabase.co")
+DB_NAME = os.getenv("SUPABASE_DB", "postgres")
+DB_USER = os.getenv("SUPABASE_USER", "postgres")
+DB_PASS = os.getenv("SUPABASE_PASSWORD", "YOUR-PASSWORD")
+DB_PORT = int(os.getenv("SUPABASE_PORT", "5432"))
+
+def db_connect():
+    return psycopg2.connect(
+        host=DB_HOST,
+        dbname=DB_NAME,
+        user=DB_USER,
+        password=DB_PASS,
+        port=DB_PORT,
+        sslmode="require",
+        cursor_factory=psycopg2.extras.DictCursor
+    )
+
+conn = db_connect()
+conn.autocommit = True
+
+def db_cursor():
+    global conn
+    try:
+        return conn.cursor()
+    except Exception:
+        # إعادة الاتصال لو انقطع
+        conn.close()
+        conn = db_connect()
+        conn.autocommit = True
+        return conn.cursor()
+
+# إنشاء الجداول إذا لم تكن موجودة
+with db_cursor() as cur:
+    cur.execute("""
+    CREATE TABLE IF NOT EXISTS keys (
+        key TEXT PRIMARY KEY
+    );""")
+    cur.execute("""
+    CREATE TABLE IF NOT EXISTS binds (
+        key TEXT,
+        device TEXT,
+        start TIMESTAMP,
+        expires TIMESTAMP,
+        last_used TIMESTAMP
+    );""")
+
+# ===============
+# إعداد التطبيق
+# ===============
 app = FastAPI()
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"], allow_methods=["*"], allow_headers=["*"]
 )
 
-# -------- الملفات --------
-KEYS_FILE = "keys.json"
-BINDS_FILE = "binds.json"
+def now():
+    return datetime.utcnow()
 
-def load_json(path, default):
-    try:
-        with open(path, "r", encoding="utf-8") as f:
-            return json.load(f)
-    except:
-        return default
+def fmt(dt: datetime) -> str:
+    return dt.strftime("%Y-%m-%d %H:%M:%S")
 
-def save_json(path, obj):
-    tmp = path + ".tmp"
-    with open(tmp, "w", encoding="utf-8") as f:
-        json.dump(obj, f, ensure_ascii=False, indent=2)
-    os.replace(tmp, path)
+# ===============
+# دوال قاعدة البيانات
+# ===============
+def key_exists(k: str) -> bool:
+    with db_cursor() as cur:
+        cur.execute("SELECT 1 FROM keys WHERE key=%s LIMIT 1;", (k,))
+        return cur.fetchone() is not None
 
-def now_str():
-    return datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S")
+def get_bind_by_key(k: str):
+    with db_cursor() as cur:
+        cur.execute("SELECT * FROM binds WHERE key=%s LIMIT 1;", (k,))
+        return cur.fetchone()
 
-# -------- تحميل المفاتيح + الربط --------
-keys = load_json(KEYS_FILE, {})
-binds = load_json(BINDS_FILE, {})
+def get_bind_by_device(d: str):
+    with db_cursor() as cur:
+        cur.execute("SELECT * FROM binds WHERE device=%s LIMIT 1;", (d,))
+        return cur.fetchone()
 
-# -------- التحقق --------
+def create_bind(k: str, d: str):
+    start = now()
+    exp = start + timedelta(days=30)
+    with db_cursor() as cur:
+        cur.execute(
+            "INSERT INTO binds (key, device, start, expires, last_used) VALUES (%s,%s,%s,%s,%s);",
+            (k, d, start, exp, start)
+        )
+    return {"expires": fmt(exp)}
+
+def update_last_used(k: str):
+    with db_cursor() as cur:
+        cur.execute("UPDATE binds SET last_used=%s WHERE key=%s;", (now(), k))
+
+# ===============
+# حارس التحقق
+# ===============
 def auth_guard(x_key: str | None, x_device: str | None):
     if not x_device:
         return (False, "missing-device", None)
 
-    # check بدون مفتاح → إذا الجهاز مربوط مسبقًا
+    # لو ما فيه مفتاح: حاول التعرّف بالجهاز فقط
     if not x_key:
-        for k, b in binds.items():
-            if b.get("device") == x_device:
-                exp_dt = datetime.strptime(b["expires"], "%Y-%m-%d %H:%M:%S")
-                if datetime.utcnow() <= exp_dt:
-                    b["last_used"] = now_str()
-                    save_json(BINDS_FILE, binds)
-                    return (True, k, {"expires": b["expires"]})
-        return (False, "missing-key", None)
+        b = get_bind_by_device(x_device)
+        if not b:
+            return (False, "missing-key", None)
+        if now() > b["expires"]:
+            return (False, "expired", None)
+        update_last_used(b["key"])
+        return (True, b["key"], {"expires": fmt(b["expires"])})
 
-    # المفتاح موجود؟
-    if x_key not in keys:
+    # يوجد مفتاح
+    if not key_exists(x_key):
         return (False, "invalid-key", None)
 
-    bound = binds.get(x_key)
+    b = get_bind_by_key(x_key)
 
-    # أول استخدام → يبدأ العد 30 يوم
-    if not bound:
-        start = datetime.utcnow()
-        exp = start + timedelta(days=30)
-        binds[x_key] = {
-            "device": x_device,
-            "start": start.strftime("%Y-%m-%d %H:%M:%S"),
-            "expires": exp.strftime("%Y-%m-%d %H:%M:%S"),
-            "last_used": now_str()
-        }
-        save_json(BINDS_FILE, binds)
-        return (True, x_key, {"expires": exp.strftime("%Y-%m-%d")})
+    # أول استخدام لهذا المفتاح → اربطه بالجهاز وابدأ 30 يوم
+    if not b:
+        meta = create_bind(x_key, x_device)
+        return (True, x_key, meta)
 
-    # مربوط بجهاز آخر
-    if bound["device"] != x_device:
+    # المفتاح موجود لكنه مربوط بجهاز آخر
+    if b["device"] != x_device:
         return (False, "bound-to-other-device", None)
 
-    # تحقق من الانتهاء
-    exp_dt = datetime.strptime(bound["expires"], "%Y-%m-%d %H:%M:%S")
-    if datetime.utcnow() > exp_dt:
+    # التحقق من الانتهاء
+    if now() > b["expires"]:
         return (False, "expired", None)
 
-    # مفتاح صالح
-    bound["last_used"] = now_str()
-    save_json(BINDS_FILE, binds)
-    return (True, x_key, {"expires": bound["expires"]})
+    update_last_used(x_key)
+    return (True, x_key, {"expires": fmt(b["expires"])})
 
-# -------- API --------
+# ===============
+# المسارات (APIs)
+# ===============
 @app.get("/check")
 def check(x_device: str | None = Header(None)):
     if not x_device:
         return JSONResponse({"ok": False, "error": "missing-device"}, status_code=400)
 
-    for k, b in binds.items():
-        if b.get("device") == x_device:
-            exp_dt = datetime.strptime(b["expires"], "%Y-%m-%d %H:%M:%S")
-            if datetime.utcnow() <= exp_dt:
-                return {"ok": True}
-            return JSONResponse({"ok": False, "error": "expired"}, status_code=401)
-
-    return JSONResponse({"ok": False, "error": "unknown-device"}, status_code=404)
-
+    b = get_bind_by_device(x_device)
+    if not b:
+        return JSONResponse({"ok": False, "error": "unknown-device"}, status_code=404)
+    if now() > b["expires"]:
+        return JSONResponse({"ok": False, "error": "expired"}, status_code=401)
+    update_last_used(b["key"])
+    return {"ok": True}
 
 @app.get("/me")
 def me(x_key: str | None = Header(None), x_device: str | None = Header(None)):
@@ -113,15 +170,22 @@ def me(x_key: str | None = Header(None), x_device: str | None = Header(None)):
         }
         return JSONResponse({"error": msgs.get(code, "غير مصرح")}, status_code=401)
 
-    b = binds.get(code, {})
+    # جلب الربط لعرض معلومات إضافية
+    b = get_bind_by_key(code)
+    bound_to_this = (b is not None and b["device"] == x_device)
+    expires_str = meta["expires"]
+    # حساب الأيام المتبقية (تقريب لأعلى لتظهر 30 في أول يوم)
+    exp_dt = datetime.strptime(expires_str, "%Y-%m-%d %H:%M:%S")
+    days_left = max(0, int((exp_dt - now()).total_seconds() / 86400 + 0.9999))
+
     return {
         "key_masked": code[:4] + "****",
-        "expires": meta["expires"],
-        "bound": True,
-        "bound_to_this_device": (b.get("device") == x_device),
-        "last_used": b.get("last_used")
+        "expires": expires_str,
+        "days_left": days_left,
+        "bound": b is not None,
+        "bound_to_this_device": bound_to_this,
+        "last_used": fmt(b["last_used"]) if b and b["last_used"] else None
     }
-
 
 @app.post("/process")
 async def process(file: UploadFile, x_key: str | None = Header(None), x_device: str | None = Header(None)):
@@ -136,25 +200,32 @@ async def process(file: UploadFile, x_key: str | None = Header(None), x_device: 
         }
         return PlainTextResponse(msgs.get(code, "غير مصرح"), status_code=401)
 
-    # تحقق الحجم ≤ 100MB
+    # حد الحجم 100MB
     content = await file.read()
     if len(content) > 100 * 1024 * 1024:
         return PlainTextResponse("🚫 الحجم أكبر من 100MB", status_code=400)
 
+    # حفظ مؤقت ومعالجة FFmpeg (عدّل الأمر كما يلزمك)
     with NamedTemporaryFile(delete=False, suffix=".mp4") as src:
         src.write(content)
         src_path = src.name
     out_path = src_path.replace(".mp4", "_out.mp4")
 
-    # أمر FFmpeg
     cmd = ["ffmpeg", "-y", "-itsscale", "2", "-i", src_path, "-c:v", "copy", "-c:a", "copy", out_path]
     proc = subprocess.run(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     if proc.returncode != 0:
+        try:
+            os.remove(src_path)
+        except:
+            pass
         return PlainTextResponse("⚠️ فشل FFmpeg", status_code=500)
 
-    def iterfile():
+    def stream_file():
         with open(out_path, "rb") as f:
-            while chunk := f.read(1024 * 1024):
+            while True:
+                chunk = f.read(1024 * 1024)
+                if not chunk:
+                    break
                 yield chunk
         try:
             os.remove(src_path)
@@ -162,10 +233,10 @@ async def process(file: UploadFile, x_key: str | None = Header(None), x_device: 
         except:
             pass
 
-    headers = {"Content-Disposition": 'attachment; filename=\"output.mp4\"'}
-    return StreamingResponse(iterfile(), media_type="video/mp4", headers=headers)
+    headers = {"Content-Disposition": 'attachment; filename="output.mp4"'}
+    return StreamingResponse(stream_file(), media_type="video/mp4", headers=headers)
 
-# -------- الواجهة --------
+# الواجهة
 @app.get("/")
 def root():
     return FileResponse("index.html")
