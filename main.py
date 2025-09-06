@@ -1,107 +1,74 @@
-import psycopg2
-import subprocess
-import os
-from flask import Flask, request, jsonify, send_file
-from datetime import datetime, timedelta
+import os, uuid, shutil, subprocess
+from pathlib import Path
+from fastapi import FastAPI, UploadFile, File, HTTPException
+from fastapi.responses import HTMLResponse, FileResponse, JSONResponse
 
-app = Flask(__name__)
+# إخفاء واجهات التوثيق الافتراضية
+app = FastAPI(docs_url=None, redoc_url=None, openapi_url=None)
 
-# 🔗 بيانات Supabase (من Connection Pooling)
-DB_URL = "postgresql://postgres.ubartbsqgpuarlrtboyi:YOUR_PASSWORD@aws-1-eu-central-1.pooler.supabase.com:6543/postgres?sslmode=require"
+BASE = Path(__file__).resolve().parent
+WORK = BASE / "work"
+WORK.mkdir(exist_ok=True)
 
-def get_conn():
-    return psycopg2.connect(DB_URL)
+# الحد الأقصى لحجم الفيديو (100MB)
+MAX_SIZE = 100 * 1024 * 1024  
 
-@app.route("/")
+@app.get("/", response_class=HTMLResponse)
 def home():
-    return {"ok": True, "msg": "🚀 4Tik Pro Connected"}
+    html_path = BASE / "index.html"
+    if not html_path.exists():
+        return HTMLResponse("<h1>index.html غير موجود</h1>", status_code=500)
+    return html_path.read_text(encoding="utf-8")
 
-# ✅ التحقق من المفتاح
-@app.route("/me")
-def me():
-    key = request.headers.get("X-KEY")
-    device = request.headers.get("X-DEVICE")
-    if not key or not device:
-        return jsonify({"error": "missing headers"}), 400
+def run_silent(cmd: list[str]) -> bool:
+    """تشغيل ffmpeg بصمت"""
+    try:
+        p = subprocess.run(
+            cmd, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, text=False
+        )
+        return p.returncode == 0
+    except Exception:
+        return False
 
-    conn = get_conn()
-    cur = conn.cursor()
+@app.post("/process")
+async def process(file: UploadFile = File(...)):
+    # تحقق من حجم الملف
+    contents = await file.read()
+    if len(contents) > MAX_SIZE:
+        raise HTTPException(status_code=400, detail="⚠️ الملف أكبر من 100MB")
+    await file.seek(0)  # إعادة المؤشر للبداية بعد القراءة
 
-    # هل المفتاح موجود؟
-    cur.execute("SELECT key FROM keys WHERE key=%s", (key,))
-    row = cur.fetchone()
-    if not row:
-        cur.close()
-        conn.close()
-        return jsonify({"error": "invalid key"}), 401
-
-    # تحقق من الربط
-    cur.execute("SELECT * FROM binds WHERE key=%s", (key,))
-    bind = cur.fetchone()
-
-    if not bind:
-        start = datetime.utcnow()
-        expires = start + timedelta(days=30)
-        cur.execute("INSERT INTO binds (key, device, start, expires, last_used) VALUES (%s,%s,%s,%s,%s)",
-                    (key, device, start, expires, datetime.utcnow()))
-        conn.commit()
-        cur.close()
-        conn.close()
-        return jsonify({
-            "key": key,
-            "expires": expires.isoformat(),
-            "days_left": 30,
-            "bound_to_this_device": True
-        })
-
-    # تحديث آخر استخدام
-    cur.execute("UPDATE binds SET last_used=%s WHERE key=%s", (datetime.utcnow(), key))
-    conn.commit()
-    expires = bind[3]
-    days_left = (expires - datetime.utcnow()).days
-    cur.close()
-    conn.close()
-
-    return jsonify({
-        "key": key,
-        "expires": expires.isoformat(),
-        "days_left": days_left,
-        "bound_to_this_device": (bind[1] == device)
-    })
-
-# ✅ معالجة الفيديو بـ itsscale 2
-@app.route("/process", methods=["POST"])
-def process_video():
-    key = request.headers.get("X-KEY")
-    device = request.headers.get("X-DEVICE")
-    if not key or not device:
-        return jsonify({"error": "missing headers"}), 400
-
-    file = request.files.get("file")
-    if not file:
-        return jsonify({"error": "no file uploaded"}), 400
-
-    input_path = "/tmp/input.mp4"
-    output_path = "/tmp/output.mp4"
-    file.save(input_path)
+    uid = uuid.uuid4().hex
+    in_path  = WORK / f"in_{uid}.mp4"
+    out_path = WORK / f"out_{uid}.mp4"
 
     try:
-        # ⚡ استخدام FFmpeg مع itsscale 2
-        cmd = [
-            "ffmpeg", "-itsscale", "2",
-            "-i", input_path,
+        # حفظ الملف المؤقت
+        with open(in_path, "wb") as f:
+            shutil.copyfileobj(file.file, f)
+
+        # معالجة الفيديو
+        ok = run_silent([
+            "ffmpeg", "-y",
+            "-itsscale", "2",
+            "-i", str(in_path),
             "-c:v", "copy",
             "-c:a", "copy",
-            output_path
-        ]
-        subprocess.run(cmd, check=True)
+            "-movflags", "+faststart",
+            str(out_path)
+        ])
 
-        return send_file(output_path, as_attachment=True, download_name="output.mp4")
-    except subprocess.CalledProcessError:
-        return jsonify({"error": "ffmpeg failed"}), 500
+        if not ok or not out_path.exists():
+            return JSONResponse({"error": "تعذر إتمام المعالجة، حاول مجددًا."}, status_code=500)
+
+        # إرجاع الملف الناتج للتنزيل
+        headers = {"Content-Disposition": 'attachment; filename="4tik.mp4"'}
+        return FileResponse(str(out_path), media_type="video/mp4", headers=headers)
+
     finally:
-        if os.path.exists(input_path): os.remove(input_path)
-        if os.path.exists(output_path): os.remove(output_path)
+        # تنظيف
+        try:
+            os.remove(in_path)
+        except:
+            pass
 
-if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=8080)
