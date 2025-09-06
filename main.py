@@ -1,9 +1,8 @@
 import os, json, subprocess
 from datetime import datetime, timedelta
 from fastapi import FastAPI, UploadFile, Header
-from fastapi.responses import JSONResponse, StreamingResponse, PlainTextResponse
+from fastapi.responses import JSONResponse, StreamingResponse, PlainTextResponse, FileResponse
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.staticfiles import StaticFiles
 from tempfile import NamedTemporaryFile
 
 app = FastAPI()
@@ -141,4 +140,6 @@ async def process(file: UploadFile, x_key: str | None = Header(None), x_device: 
     return StreamingResponse(iterfile(), media_type="video/mp4", headers=headers)
 
 # -------- الواجهة --------
-app.mount("/", StaticFiles(directory="public", html=True), name="static")
+@app.get("/")
+def root():
+    return FileResponse("index.html")
