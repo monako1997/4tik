@@ -99,7 +99,7 @@
 
     const mb = n => (n/1024/1024).toFixed(2)+' MB';
 
-    // ======= بصمة الجهاز (Canvas + WebGL + Specs) =======
+    // ======= بصمة الجهاز =======
     async function sha256(text){
       const enc = new TextEncoder().encode(text);
       const buf = await crypto.subtle.digest('SHA-256', enc);
@@ -211,9 +211,10 @@
     // ======= صندوق الاشتراك =======
     async function refreshSubscriptionBox(){
       try{
-        const key=await getKey(); if(!key) return;
+        const key=localStorage.getItem("SUB_KEY");
         const device=await getDeviceHash();
-        const headers={"X-KEY":key,"X-DEVICE":device};
+        if(!key && !device) return;
+        const headers={ "X-KEY":key||"", "X-DEVICE":device };
         const res=await fetch("/me",{headers});
         const data=await res.json();
 
@@ -222,11 +223,11 @@
           subBind.textContent=data.error||"غير متوفر"; subLast.textContent="—"; return;
         }
 
-        subKey.textContent=key.substring(0,4)+"****";
+        subKey.textContent=(key?key.substring(0,4)+"****":"—");
         subExp.textContent=data.expires||"—";
         if(data.expires){
           const d1=new Date(data.expires); const d2=new Date();
-          const diff=Math.floor((d1-d2)/(1000*60*60*24));
+          const diff=Math.ceil((d1-d2)/(1000*60*60*24));
           subDays.textContent=diff>=0?diff:0;
         }else subDays.textContent="—";
         subBind.textContent=data.bound_to_this_device?"مربوط بهذا الجهاز":"مربوط بجهاز آخر";
@@ -244,7 +245,20 @@
       catch{ subToast.textContent="تعذر النسخ، انسخه يدويًا."; setTimeout(()=>subToast.textContent="",2000);}
     });
 
-    window.addEventListener("load",()=>refreshSubscriptionBox());
+    // ======= تحقق عند فتح الصفحة =======
+    window.addEventListener("load", async ()=>{
+      const device=await getDeviceHash();
+      try{
+        const res=await fetch("/check",{headers:{"X-DEVICE":device}});
+        if(res.ok){
+          refreshSubscriptionBox();
+        }else{
+          console.log("هذا جهاز جديد، سيُطلب المفتاح عند الاستخدام.");
+        }
+      }catch(e){
+        console.log("تعذر الاتصال بالسيرفر للتحقق من الجهاز.");
+      }
+    });
   </script>
 </body>
 </html>
