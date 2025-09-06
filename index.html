@@ -4,15 +4,6 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>4Tik Pro</title>
-
-  <!-- 🌟 PWA -->
-  <link rel="manifest" href="manifest.json">
-  <link rel="apple-touch-icon" href="icon-192.png">
-  <meta name="theme-color" content="#0a0b12">
-  <meta name="apple-mobile-web-app-capable" content="yes">
-  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-  <meta name="apple-mobile-web-app-title" content="4Tik Pro">
-
   <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;700;900&display=swap" rel="stylesheet">
   <style>
     :root{--bg:#0a0b12;--ink:#f3f6fb;--muted:#aab6c5;--line:#1d2433;--c1:#25F4EE;--c2:#FE2C55;}
@@ -101,39 +92,219 @@
 
   <div class="footer">Made by Manal <span class="heart">❤</span></div>
 
-  <!-- ==================== جافاسكربت ==================== -->
   <script>
-    const drop=document.getElementById('drop'),fileInput=document.getElementById('file'),info=document.getElementById('fileInfo'),
-    processBtn=document.getElementById('process'),bar=document.getElementById('bar'),status=document.getElementById('status'),
-    showSubBtn=document.getElementById('showSub'),copyKeyBtn=document.getElementById('copyKey'),
-    subKey=document.getElementById('subKey'),subExp=document.getElementById('subExp'),subDays=document.getElementById('subDays'),
-    subBind=document.getElementById('subBind'),subLast=document.getElementById('subLast'),subToast=document.getElementById('subToast');
-    const mb=n=>(n/1024/1024).toFixed(2)+' MB';
+    // عناصر
+    const drop = document.getElementById('drop');
+    const fileInput = document.getElementById('file');
+    const info = document.getElementById('fileInfo');
+    const processBtn = document.getElementById('process');
+    const bar = document.getElementById('bar');
+    const status = document.getElementById('status');
+    const showSubBtn = document.getElementById('showSub');
+    const copyKeyBtn = document.getElementById('copyKey');
+    const subKey = document.getElementById('subKey');
+    const subExp = document.getElementById('subExp');
+    const subDays = document.getElementById('subDays');
+    const subBind = document.getElementById('subBind');
+    const subLast = document.getElementById('subLast');
+    const subToast = document.getElementById('subToast');
+    const mb = n => (n/1024/1024).toFixed(2)+' MB';
 
-    async function sha256(t){const e=new TextEncoder().encode(t),n=await crypto.subtle.digest('SHA-256',e);return Array.from(new Uint8Array(n)).map(t=>t.toString(16).padStart(2,'0')).join('')}
-
-    function canvasFingerprint(){try{const e=document.createElement('canvas');e.width=200,e.height=60;const t=e.getContext('2d');return t.textBaseline='top',t.font='16px Arial',t.fillStyle='#f60',t.fillRect(0,0,200,30),t.fillStyle='#069',t.fillText('4TikPro-fp',2,2),t.strokeStyle='#f00',t.arc(100,30,20,0,2*Math.PI),t.stroke(),e.toDataURL()}catch{return'no-canvas'}}
-    function webglInfo(){try{const e=document.createElement('canvas'),t=e.getContext('webgl')||e.getContext('experimental-webgl');if(!t)return'no-webgl';const n=t.getExtension('WEBGL_debug_renderer_info');return(n?t.getParameter(n.UNMASKED_VENDOR_WEBGL):'v?')+'|'+(n?t.getParameter(n.UNMASKED_RENDERER_WEBGL):'r?')}catch{return'no-webgl'}}
-    async function getDeviceHash(){const e=[navigator.platform||'pf?',(screen.width||0)+'x'+(screen.height||0),window.devicePixelRatio||1,navigator.hardwareConcurrency||'hc?',navigator.deviceMemory||'dm?',navigator.maxTouchPoints||0,Intl.DateTimeFormat().resolvedOptions().timeZone||'tz?',canvasFingerprint(),webglInfo()].join('|');return await sha256(e)}
-
-    async function getKey(t=!1){let e=localStorage.getItem('SUB_KEY');if(e)return e;if(t){const t=await getDeviceHash();try{const e=await fetch('/check',{method:'POST',headers:{'X-DEVICE':t}}),a=await e.json();if(e.ok&&a.ok)return'__DEVICE_ONLY__'}catch{}}return(e=prompt('أدخل مفتاح الاشتراك'))?(localStorage.setItem('SUB_KEY',e.trim()),e):null}
-
-    function updateInfo(){const e=fileInput.files[0];status.textContent='',e?(info.textContent=`الملف: ${e.name} — ${mb(e.size)}`,processBtn.disabled=!1):(info.textContent='اسحب المقطع هنا أو اضغط للاختيار',processBtn.disabled=!0)}
-    drop.addEventListener('click',()=>fileInput.click()),drop.addEventListener('dragover',e=>e.preventDefault()),drop.addEventListener('drop',e=>{e.preventDefault(),e.dataTransfer.files.length&&(fileInput.files=e.dataTransfer.files,updateInfo())}),fileInput.addEventListener('change',updateInfo);
-
-    processBtn.addEventListener('click',async()=>{const e=fileInput.files[0];if(!e)return;const t=await getKey(!0);if(!t)return void alert('المفتاح مطلوب');const a=await getDeviceHash();status.textContent='جارٍ الرفع…',bar.classList.remove('running'),bar.style.width='0%',processBtn.disabled=!0,fileInput.disabled=!0,drop.style.pointerEvents='none',drop.style.opacity='0.5';const s=new FormData;s.append('file',e);const r=new XMLHttpRequest;r.open('POST','/process',!0),r.responseType='blob','__DEVICE_ONLY__'!==t&&r.setRequestHeader('X-KEY',t),r.setRequestHeader('X-DEVICE',a),r.upload.onprogress=e=>{e.lengthComputable&&(bar.style.width=Math.round(e.loaded/e.total*100)+'%')},r.onreadystatechange=()=>{4===r.readyState&&(bar.classList.remove('running'),200===r.status?(status.textContent='تمّت المعالجة — يبدأ التنزيل الآن',(()=>{const e=r.response,t=URL.createObjectURL(e),a=document.createElement('a');a.href=t,a.download='output.mp4',document.body.appendChild(a),a.click(),URL.revokeObjectURL(t),a.remove()})(),setTimeout(()=>{drop.style.pointerEvents='auto',drop.style.opacity='1',fileInput.disabled=!1,fileInput.value='',updateInfo()},800)):(new FileReader).onload=()=>{status.textContent=reader.result||'حدث خطأ، حاول مجددًا.'},drop.style.pointerEvents='auto',drop.style.opacity='1',fileInput.disabled=!1,updateInfo(),401===r.status&&localStorage.removeItem('SUB_KEY'))},r.send(s)});
-
-    async function refreshSubscriptionBox(t=!1){try{const e=await getKey(!0);if(!e)return void(t||alert('أدخل مفتاح الاشتراك أولاً'));const a=await getDeviceHash(),s={'X-DEVICE':a};'__DEVICE_ONLY__'!==e&&(s['X-KEY']=e);const r=await fetch('/me',{headers:s}),o=await r.json();if(!r.ok)return subKey.textContent='—',subExp.textContent='—',subDays.textContent='—',subBind.textContent=o.error||'غير متوفر',void(subLast.textContent='—');let n=o.key_masked||'—',c=localStorage.getItem('SUB_KEY');c&&'__DEVICE_ONLY__'!==c&&(n=c.substring(0,4)+'****'+c.slice(-4)),subKey.textContent=n,subExp.textContent=o.expires||'—',subDays.textContent=null!=o.days_left?o.days_left:'—',subBind.textContent=o.bound===!1?'غير مربوط بعد':o.bound_to_this_device?'مربوط بهذا الجهاز':'مربوط بجهاز آخر',subLast.textContent=o.last_used?o.last_used:'—',t||(subToast.textContent='✅ تم تحديث معلومات الاشتراك',setTimeout(()=>subToast.textContent='',2e3))}catch(e){subToast.textContent='تعذر جلب معلومات الاشتراك',setTimeout(()=>subToast.textContent='',2e3)}}
-    showSubBtn?.addEventListener('click',()=>refreshSubscriptionBox(!1)),copyKeyBtn?.addEventListener('click',async()=>{const e=localStorage.getItem('SUB_KEY');if(!e)return void alert('لا يوجد مفتاح محفوظ بعد.');try{await navigator.clipboard.writeText(e),subToast.textContent='📋 تم نسخ المفتاح',setTimeout(()=>subToast.textContent='',2e3)}catch{subToast.textContent='تعذر النسخ، انسخه يدويًا.',setTimeout(()=>subToast.textContent='',2e3)}}),window.addEventListener('load',()=>{refreshSubscriptionBox(!0)});
-
-    // 🌟 تسجيل Service Worker
-    if ('serviceWorker' in navigator) {
-      window.addEventListener('load', () => {
-        navigator.serviceWorker.register('/sw.js')
-          .then(reg => console.log('✅ Service Worker مسجل:', reg.scope))
-          .catch(err => console.log('❌ فشل تسجيل SW:', err));
-      });
+    // ======== أدوات هاش عامة ========
+    async function sha256(text){
+      const enc = new TextEncoder().encode(text);
+      const buf = await crypto.subtle.digest('SHA-256', enc);
+      const arr = Array.from(new Uint8Array(buf));
+      return arr.map(b => b.toString(16).padStart(2,'0')).join('');
     }
+
+    // ======== بصمة قوية: Hardware + Canvas + WebGL ========
+    function canvasFingerprint(){
+      try{
+        const c = document.createElement('canvas');
+        c.width = 200; c.height = 60;
+        const g = c.getContext('2d');
+        g.textBaseline = 'top';
+        g.font = '16px Arial';
+        g.fillStyle = '#f60';
+        g.fillRect(0,0,200,30);
+        g.fillStyle = '#069';
+        g.fillText('4TikPro-fp', 2, 2);
+        g.strokeStyle = '#f00';
+        g.arc(100,30,20,0,Math.PI*2); g.stroke();
+        return c.toDataURL();
+      }catch{ return 'no-canvas'; }
+    }
+
+    function webglInfo(){
+      try{
+        const c = document.createElement('canvas');
+        const gl = c.getContext('webgl') || c.getContext('experimental-webgl');
+        if(!gl) return 'no-webgl';
+        const dbg = gl.getExtension('WEBGL_debug_renderer_info');
+        const vendor = dbg ? gl.getParameter(dbg.UNMASKED_VENDOR_WEBGL) : 'v?';
+        const renderer = dbg ? gl.getParameter(dbg.UNMASKED_RENDERER_WEBGL) : 'r?';
+        return vendor + '|' + renderer;
+      }catch{ return 'no-webgl'; }
+    }
+
+    async function getDeviceHash(){
+      const seedParts = [
+        // عتاد/نظام (أكثر ثباتًا عبر المتصفحات)
+        navigator.platform || 'pf?',
+        (screen.width||0)+'x'+(screen.height||0),
+        window.devicePixelRatio || 1,
+        navigator.hardwareConcurrency || 'hc?',
+        navigator.deviceMemory || 'dm?',
+        navigator.maxTouchPoints || 0,
+        Intl.DateTimeFormat().resolvedOptions().timeZone || 'tz?',
+        // بصمات إضافية
+        canvasFingerprint(),
+        webglInfo()
+      ];
+      const seed = seedParts.join('|');
+      return await sha256(seed);
+    }
+
+    // ======== المفتاح: أول مرة فقط، بعد الربط يمكن بالجهاز ========
+    async function getKey(autoCheck = false) {
+      let k = localStorage.getItem('SUB_KEY');
+      if (k) return k;
+
+      if (autoCheck) {
+        const device = await getDeviceHash();
+        try {
+          const res = await fetch('/check', { method:'POST', headers: { 'X-DEVICE': device } });
+          const data = await res.json();
+          if (res.ok && data.ok) {
+            return "__DEVICE_ONLY__"; // الجهاز معروف مسبقًا
+          }
+        } catch(e) {}
+      }
+
+      k = prompt('أدخل مفتاح الاشتراك');
+      if (!k) return null;
+      localStorage.setItem('SUB_KEY', k.trim());
+      return k;
+    }
+
+    // ======== تحديث معلومات الملف ========
+    function updateInfo(){
+      const f = fileInput.files[0];
+      status.textContent='';
+      if(!f){ info.textContent='اسحب المقطع هنا أو اضغط للاختيار'; processBtn.disabled=true; return; }
+      info.textContent = `الملف: ${f.name} — ${mb(f.size)}`;
+      processBtn.disabled = false;
+    }
+
+    drop.addEventListener('click', () => fileInput.click());
+    drop.addEventListener('dragover', e => e.preventDefault());
+    drop.addEventListener('drop', e => { e.preventDefault(); if(e.dataTransfer.files.length){ fileInput.files = e.dataTransfer.files; updateInfo(); }});
+    fileInput.addEventListener('change', updateInfo);
+
+    // ======== معالجة ========
+    processBtn.addEventListener('click', async () => {
+      const f = fileInput.files[0]; if(!f) return;
+      const key = await getKey(true); if (!key) { alert('المفتاح مطلوب'); return; }
+      const device = await getDeviceHash();
+
+      status.textContent = 'جارٍ الرفع…';
+      bar.classList.remove('running'); bar.style.width='0%';
+      processBtn.disabled = true; fileInput.disabled = true; drop.style.pointerEvents='none'; drop.style.opacity='0.5';
+
+      const fd = new FormData(); fd.append('file', f);
+      const xhr = new XMLHttpRequest();
+      xhr.open('POST', '/process', true);
+      xhr.responseType = 'blob';
+
+      if (key !== "__DEVICE_ONLY__") xhr.setRequestHeader('X-KEY', key);
+      xhr.setRequestHeader('X-DEVICE', device);
+
+      xhr.upload.onprogress = e => { if(e.lengthComputable){ bar.style.width = Math.round((e.loaded/e.total)*100) + '%'; } };
+      xhr.onreadystatechange = () => { if (xhr.readyState === XMLHttpRequest.HEADERS_RECEIVED){ status.textContent='جارٍ تحسين الفيديو…'; bar.classList.add('running'); } };
+
+      xhr.onload = () => {
+        bar.classList.remove('running');
+        if (xhr.status === 200) {
+          status.textContent = 'تمّت المعالجة — يبدأ التنزيل الآن';
+          const blob = xhr.response, url = URL.createObjectURL(blob);
+          const a = document.createElement('a'); a.href = url; a.download = 'output.mp4'; document.body.appendChild(a); a.click();
+          URL.revokeObjectURL(url); a.remove();
+          setTimeout(() => { drop.style.pointerEvents='auto'; drop.style.opacity='1'; fileInput.disabled=false; fileInput.value=''; updateInfo(); }, 800);
+        } else {
+          const reader = new FileReader();
+          reader.onload = () => { status.textContent = reader.result || 'حدث خطأ، حاول مجددًا.'; };
+          reader.readAsText(xhr.response);
+          drop.style.pointerEvents='auto'; drop.style.opacity='1'; fileInput.disabled=false; updateInfo();
+          if (xhr.status === 401) localStorage.removeItem('SUB_KEY');
+        }
+      };
+      xhr.onerror = () => { bar.classList.remove('running'); status.textContent='تعذّر الاتصال.'; drop.style.pointerEvents='auto'; drop.style.opacity='1'; fileInput.disabled=false; updateInfo(); };
+      xhr.send(fd);
+    });
+
+    // ======== صندوق الاشتراك ========
+    async function refreshSubscriptionBox(auto=false){
+      try{
+        const key = await getKey(true);
+        if (!key) { if(!auto) alert('أدخل مفتاح الاشتراك أولاً'); return; }
+        const device = await getDeviceHash();
+        const headers = { 'X-DEVICE': device };
+        if (key !== "__DEVICE_ONLY__") headers['X-KEY'] = key;
+        const res = await fetch('/me', { headers });
+        const data = await res.json();
+
+        if (!res.ok) {
+          subKey.textContent = '—';
+          subExp.textContent = '—';
+          subDays.textContent = '—';
+          subBind.textContent = data.error || 'غير متوفر';
+          subLast.textContent = '—';
+          return;
+        }
+
+        // عرض المفتاح محليًا إن وُجد (أوضح من *** القادمة من السيرفر)
+        let displayKey = data.key_masked || '—';
+        const localKey = localStorage.getItem('SUB_KEY');
+        if (localKey && localKey !== "__DEVICE_ONLY__") {
+          displayKey = localKey.substring(0,4) + "****" + localKey.slice(-4);
+        }
+        subKey.textContent = displayKey;
+
+        subExp.textContent = data.expires || '—';
+        subDays.textContent = (data.days_left ?? '—');
+        if (data.bound === false) subBind.textContent = 'غير مربوط بعد';
+        else subBind.textContent = data.bound_to_this_device ? 'مربوط بهذا الجهاز' : 'مربوط بجهاز آخر';
+        subLast.textContent = data.last_used ? data.last_used : '—';
+
+        if(!auto){
+          subToast.textContent = '✅ تم تحديث معلومات الاشتراك';
+          setTimeout(()=> subToast.textContent = '', 2000);
+        }
+      }catch(e){
+        subToast.textContent = 'تعذر جلب معلومات الاشتراك';
+        setTimeout(()=> subToast.textContent = '', 2000);
+      }
+    }
+
+    showSubBtn?.addEventListener('click', ()=> refreshSubscriptionBox(false));
+    copyKeyBtn?.addEventListener('click', async ()=>{
+      const key = localStorage.getItem('SUB_KEY');
+      if (!key) { alert('لا يوجد مفتاح محفوظ بعد.'); return; }
+      try{
+        await navigator.clipboard.writeText(key);
+        subToast.textContent = '📋 تم نسخ المفتاح';
+        setTimeout(()=> subToast.textContent = '', 2000);
+      }catch{
+        subToast.textContent = 'تعذر النسخ، انسخه يدويًا.';
+        setTimeout(()=> subToast.textContent = '', 2000);
+      }
+    });
+
+    // تحديث تلقائي عند فتح الصفحة
+    window.addEventListener('load', ()=> {
+      refreshSubscriptionBox(true);
+    });
   </script>
 </body>
 </html>
