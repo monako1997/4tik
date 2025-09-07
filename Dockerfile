@@ -16,7 +16,6 @@ COPY . .
 
 # إنشاء مجلد التخزين الدائم للمفاتيح
 RUN mkdir -p /data
-VOLUME ["/data"]
 
 # المنفذ
 EXPOSE 8000
