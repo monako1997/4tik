@@ -1,33 +1,63 @@
 import os, uuid, shutil, subprocess, json, threading
-from datetime import datetime, timezone
+from datetime import datetime, timezone, timedelta # <<< تعديل: استيراد timedelta
 from pathlib import Path
 from math import ceil
 from fastapi import FastAPI, UploadFile, File, Request
 from fastapi.responses import HTMLResponse, FileResponse, JSONResponse
 
-# لا نعرض وثائق API
 app = FastAPI(docs_url=None, redoc_url=None, openapi_url=None)
+
+# ==============================================================================
+# ▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼ إعدادات المفاتيح ▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼
+# ==============================================================================
+
+# <<< تعديل: غيرنا "expires" إلى "duration_days" وأضفنا "activated_on"
+INITIAL_KEYS = [
+  { "key": "4TK-A7B1-C9D2-E3F4", "duration_days": 30, "activated_on": None, "device_hash": "", "last_used": None },
+  { "key": "4TK-G5H6-I7J8-K9L0", "duration_days": 30, "activated_on": None, "device_hash": "", "last_used": None },
+  { "key": "4TK-M1N2-O3P4-Q5R6", "duration_days": 30, "activated_on": None, "device_hash": "", "last_used": None },
+  { "key": "4TK-S7T8-U9V0-W1X2", "duration_days": 30, "activated_on": None, "device_hash": "", "last_used": None },
+  { "key": "4TK-Y3Z4-A5B6-C7D8", "duration_days": 30, "activated_on": None, "device_hash": "", "last_used": None },
+  { "key": "4TK-E9F0-G1H2-I3J4", "duration_days": 30, "activated_on": None, "device_hash": "", "last_used": None },
+  { "key": "4TK-K5L6-M7N8-O9P0", "duration_days": 30, "activated_on": None, "device_hash": "", "last_used": None },
+  { "key": "4TK-Q1R2-S3T4-U5V6", "duration_days": 30, "activated_on": None, "device_hash": "", "last_used": None },
+  { "key": "4TK-W7X8-Y9Z0-A1B2", "duration_days": 30, "activated_on": None, "device_hash": "", "last_used": None },
+  { "key": "4TK-C3D4-E5F6-G7H8", "duration_days": 30, "activated_on": None, "device_hash": "", "last_used": None },
+  { "key": "4TK-I9J0-K1L2-M3N4", "duration_days": 30, "activated_on": None, "device_hash": "", "last_used": None },
+  { "key": "4TK-O5P6-Q7R8-S9T0", "duration_days": 30, "activated_on": None, "device_hash": "", "last_used": None },
+  { "key": "4TK-U1V2-W3X4-Y5Z6", "duration_days": 30, "activated_on": None, "device_hash": "", "last_used": None },
+  { "key": "4TK-A7B8-C9D0-E1F2", "duration_days": 30, "activated_on": None, "device_hash": "", "last_used": None },
+  { "key": "4TK-G3H4-I5J6-K7L8", "duration_days": 30, "activated_on": None, "device_hash": "", "last_used": None },
+  { "key": "4TK-M9N0-O1P2-Q3R4", "duration_days": 30, "activated_on": None, "device_hash": "", "last_used": None },
+  { "key": "4TK-S5T6-U7V8-W9X0", "duration_days": 30, "activated_on": None, "device_hash": "", "last_used": None },
+  { "key": "4TK-Y1Z2-A3B4-C5D6", "duration_days": 30, "activated_on": None, "device_hash": "", "last_used": None },
+  { "key": "4TK-E7F8-G9H0-I1J2", "duration_days": 30, "activated_on": None, "device_hash": "", "last_used": None },
+  { "key": "4TK-K3L4-M5N6-O7P8", "duration_days": 30, "activated_on": None, "device_hash": "", "last_used": None }
+]
+
+# ==============================================================================
+# ▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲ نهاية إعدادات المفاتيح ▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲
+# ==============================================================================
 
 BASE = Path(__file__).resolve().parent
 WORK = BASE / "work"
 WORK.mkdir(exist_ok=True)
 
-DB_PATH = BASE / "keys.json"
+DB_PATH = Path("/data/database.json")
 DB_LOCK = threading.Lock()
+MAX_SIZE = 100 * 1024 * 1024
 
-MAX_SIZE = 100 * 1024 * 1024  # 100MB
-
-# ========= أدوات مساعدة =========
 def utcnow():
     return datetime.now(timezone.utc)
 
 def load_db():
-    if not DB_PATH.exists():
-        DB_PATH.write_text("[]", encoding="utf-8")
-    try:
-        return json.loads(DB_PATH.read_text(encoding="utf-8"))
-    except Exception:
-        return []
+    with DB_LOCK:
+        if not DB_PATH.exists():
+            DB_PATH.write_text(json.dumps(INITIAL_KEYS, ensure_ascii=False, indent=2), encoding="utf-8")
+        try:
+            return json.loads(DB_PATH.read_text(encoding="utf-8"))
+        except Exception:
+            return INITIAL_KEYS
 
 def save_db(data):
     with DB_LOCK:
@@ -60,39 +90,50 @@ def mask_key(k: str) -> str:
 def parse_exp(exp: str):
     return datetime.fromisoformat(exp.replace("Z", "+00:00"))
 
-# ========= منطق التحقق =========
+# <<< تعديل: تم تحديث منطق التحقق بالكامل
 def validate_row(row):
-    """يتحقق فقط من انتهاء الاشتراك."""
-    exp = row.get("expires")
+    """يتحقق من انتهاء الاشتراك بناءً على تاريخ التفعيل."""
+    activated_on = row.get("activated_on")
+    if not activated_on:
+        # إذا لم يتم تفعيل المفتاح بعد، فهو صالح للاستخدام الأول
+        return True, "صالح للتفعيل"
+    
     try:
-        exp_dt = parse_exp(exp)
+        activated_dt = parse_exp(activated_on)
+        duration = timedelta(days=row.get("duration_days", 30))
+        expires_dt = activated_dt + duration
+        
+        if utcnow() > expires_dt:
+            return False, "انتهت صلاحية الاشتراك"
+        
+        return True, None
     except Exception:
-        return False, "صيغة تاريخ غير صالحة"
-    if utcnow() > exp_dt:
-        return False, "انتهت صلاحية الاشتراك"
-    return True, None
+        return False, "صيغة تاريخ التفعيل غير صالحة"
 
+# <<< تعديل: تم تحديث منطق الربط ليسجل تاريخ التفعيل
 def bind_if_needed(row, device_hash, data):
-    """يربط الجهاز إن لم يكن مربوطًا بعد؛ وإلا يتحقق من المطابقة."""
-    bound = row.get("device_hash") or ""
-    if not bound:
+    """يربط الجهاز ويفعّل الاشتراك عند أول استخدام."""
+    bound_hash = row.get("device_hash") or ""
+    
+    if not bound_hash:
+        # هذا هو الاستخدام الأول للمفتاح
         row["device_hash"] = device_hash
+        # قم بتعيين تاريخ التفعيل فقط إذا لم يكن معينًا من قبل
+        if not row.get("activated_on"):
+            row["activated_on"] = utcnow().isoformat()
         row["last_used"] = utcnow().isoformat()
         save_db(data)
-        return True, "تم ربط المفتاح بهذا الجهاز"
+        return True, "تم تفعيل الاشتراك وربط المفتاح بهذا الجهاز"
     else:
-        if bound != device_hash:
+        # هذا ليس الاستخدام الأول
+        if bound_hash != device_hash:
             return False, "هذا المفتاح مربوط بجهاز آخر"
+        
         row["last_used"] = utcnow().isoformat()
         save_db(data)
         return True, "مسموح"
 
 def authorize(client_key: str, device_hash: str):
-    """
-    يُرجع (ok, msg, row)
-    - لو client_key مُرسل: نتحقق به ثم نربط/نتحقق من الجهاز.
-    - لو client_key فارغ: نحاول التعرف على الاشتراك عبر device_hash فقط.
-    """
     if not device_hash:
         return False, "بصمة الجهاز مطلوبة", None
 
@@ -108,24 +149,19 @@ def authorize(client_key: str, device_hash: str):
         ok, msg = bind_if_needed(row, device_hash, data)
         return ok, msg, row
     else:
-        # بدون مفتاح: تعرّف عبر الجهاز فقط (لو مربوط مسبقًا ولم تنتهِ الصلاحية)
         row = find_by_device(data, device_hash)
         if not row:
             return False, "المفتاح مطلوب لأول ربط", None
         ok, msg = validate_row(row)
         if not ok:
             return False, msg, None
-        # تحديث آخر استخدام
         row["last_used"] = utcnow().isoformat()
         save_db(data)
         return True, "معروف بهذا الجهاز", row
 
-# ========= المسارات =========
 @app.get("/", response_class=HTMLResponse)
 def home():
     html_path = BASE / "index.html"
-    if not html_path.exists():
-        return HTMLResponse("<h1>index.html غير موجود</h1>", status_code=500)
     return html_path.read_text(encoding="utf-8")
 
 @app.post("/check")
@@ -143,14 +179,12 @@ async def process(request: Request, file: UploadFile = File(...)):
     ok, msg, row = authorize(client_key, device_hash)
     if not ok:
         return JSONResponse({"error": msg}, status_code=401)
-
-    # حدّ الحجم
+    
     contents = await file.read()
     if len(contents) > MAX_SIZE:
-        return JSONResponse({"error": "الملف أكبر من 100MB"}, status_code=400)
+        return JSONResponse({"error": f"الملف أكبر من {int(MAX_SIZE/1024/1024)}MB"}, status_code=400)
     await file.seek(0)
 
-    # معالجة
     uid = uuid.uuid4().hex
     in_path  = WORK / f"in_{uid}.mp4"
     out_path = WORK / f"out_{uid}.mp4"
@@ -158,25 +192,18 @@ async def process(request: Request, file: UploadFile = File(...)):
     try:
         with open(in_path, "wb") as f:
             shutil.copyfileobj(file.file, f)
-
-        ok = run_silent([
-            "ffmpeg","-y",
-            "-itsscale","2",
-            "-i", str(in_path),
-            "-c:v","copy",
-            "-c:a","copy",
-            "-movflags","+faststart",
-            str(out_path)
-        ])
+        
+        ok = run_silent(["ffmpeg","-y","-itsscale","2","-i", str(in_path),"-c:v","copy","-c:a","copy","-movflags","+faststart",str(out_path)])
         if not ok or not out_path.exists():
             return JSONResponse({"error": "تعذر إتمام المعالجة"}, status_code=500)
-
+        
         headers = {"Content-Disposition": 'attachment; filename="output.mp4"'}
         return FileResponse(str(out_path), media_type="video/mp4", headers=headers)
     finally:
         try: os.remove(in_path)
         except: pass
 
+# <<< تعديل: تحديث مسار /me ليعرض المعلومات بشكل صحيح
 @app.get("/me")
 async def me(request: Request):
     client_key = request.headers.get("X-KEY", "")
@@ -192,29 +219,34 @@ async def me(request: Request):
     if not row:
         return JSONResponse({"error": "لا يوجد اشتراك مرتبط"}, status_code=404)
 
-    # تحقق انتهاء
-    exp = row.get("expires")
-    try:
-        exp_dt = parse_exp(exp)
-    except Exception:
-        return JSONResponse({"error": "صيغة تاريخ غير صالحة"}, status_code=500)
+    # حساب ديناميكي لتاريخ الانتهاء والأيام المتبقية
+    activated_on = row.get("activated_on")
+    expires_str = "لم يتم التفعيل بعد"
+    days_left = row.get("duration_days", 30)
 
-    now = utcnow()
-    seconds_left = (exp_dt - now).total_seconds()
-    days_left = max(0, ceil(seconds_left / 86400))
+    if activated_on:
+        try:
+            activated_dt = parse_exp(activated_on)
+            duration = timedelta(days=row.get("duration_days", 30))
+            expires_dt = activated_dt + duration
+            expires_str = expires_dt.strftime("%Y-%m-%d")
 
+            seconds_left = (expires_dt - utcnow()).total_seconds()
+            days_left = max(0, ceil(seconds_left / 86400))
+        except:
+            expires_str = "خطأ في صيغة التاريخ"
+    
     bound_hash = row.get("device_hash") or ""
     bound = bool(bound_hash)
     bound_to_this_device = (bound_hash == device_hash) if device_hash else False
-
-    # لو وصل المفتاح في الهيدر، نُظهره مقنّعًا؛ غير ذلك نعيد قيمة عامة
     key_mask = mask_key(row.get("key", "")) if client_key else ("***" if bound else "—")
 
     return JSONResponse({
         "key_masked": key_mask,
-        "expires": exp,
+        "expires": expires_str, # يعرض تاريخ الانتهاء المحسوب
         "days_left": days_left,
         "bound": bound,
         "bound_to_this_device": bound_to_this_device,
         "last_used": row.get("last_used")
     }, status_code=200)
+
