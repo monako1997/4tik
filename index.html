@@ -18,7 +18,6 @@
       -webkit-background-clip:text;background-clip:text;color:transparent;text-shadow:0 0 18px rgba(37,244,238,.35),0 0 18px rgba(254,44,85,.25);
       background-size:200% auto;animation:shine 3s linear infinite;}
     @keyframes shine { to { background-position:-200% center; } }
-
     .wrap{width:min(900px,96vw); padding:20px 16px 160px;}
     .card{background:#0f1320;border:1px solid var(--line);border-radius:16px;padding:22px;box-shadow:0 20px 60px rgba(0,0,0,.35);margin-bottom:14px}
     .upload{position:relative;border-radius:16px;padding:28px;text-align:center;cursor:pointer;background:rgba(255,255,255,.02);
@@ -47,9 +46,7 @@
 </head>
 <body>
   <header class="topbar"><h1 class="brand">4Tik Pro</h1></header>
-
   <main class="wrap">
-    <!-- رفع -->
     <section class="card">
       <div id="drop" class="upload">
         <input id="file" type="file" accept="video/*" hidden />
@@ -63,7 +60,6 @@
       <div class="bar-wrap" style="margin-top:12px"><div id="bar" class="bar"></div></div>
     </section>
 
-    <!-- اشتراك -->
     <section class="card">
       <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
         <button id="showSub">عرض اشتراكي</button>
@@ -75,11 +71,11 @@
         <div>ينتهي في: <b id="subExp">—</b></div>
         <div>الأيام المتبقية: <b id="subDays">—</b></div>
         <div>حالة الربط: <b id="subBind">—</b></div>
+        <div>الجهاز المربوط: <b id="subDevice">—</b></div>
         <div>آخر استخدام: <b id="subLast">—</b></div>
       </div>
     </section>
 
-    <!-- تعليمات -->
     <section class="card">
       <h3 style="margin-top:0;color:var(--c1)">📌 تعليمات مهمة</h3>
       <ul class="guide">
@@ -89,222 +85,55 @@
       </ul>
     </section>
   </main>
-
   <div class="footer">Made by Manal <span class="heart">❤</span></div>
 
   <script>
-    // عناصر
-    const drop = document.getElementById('drop');
-    const fileInput = document.getElementById('file');
-    const info = document.getElementById('fileInfo');
-    const processBtn = document.getElementById('process');
-    const bar = document.getElementById('bar');
-    const status = document.getElementById('status');
-    const showSubBtn = document.getElementById('showSub');
-    const copyKeyBtn = document.getElementById('copyKey');
-    const subKey = document.getElementById('subKey');
-    const subExp = document.getElementById('subExp');
-    const subDays = document.getElementById('subDays');
-    const subBind = document.getElementById('subBind');
-    const subLast = document.getElementById('subLast');
-    const subToast = document.getElementById('subToast');
-    const mb = n => (n/1024/1024).toFixed(2)+' MB';
+    const drop=document.getElementById('drop'),fileInput=document.getElementById('file'),info=document.getElementById('fileInfo'),
+    processBtn=document.getElementById('process'),bar=document.getElementById('bar'),status=document.getElementById('status'),
+    showSubBtn=document.getElementById('showSub'),copyKeyBtn=document.getElementById('copyKey'),subKey=document.getElementById('subKey'),
+    subExp=document.getElementById('subExp'),subDays=document.getElementById('subDays'),subBind=document.getElementById('subBind'),
+    subDevice=document.getElementById('subDevice'),subLast=document.getElementById('subLast'),subToast=document.getElementById('subToast');
+    const mb=n=>(n/1024/1024).toFixed(2)+' MB';
 
-    // ======== أدوات هاش عامة ========
-    async function sha256(text){
-      const enc = new TextEncoder().encode(text);
-      const buf = await crypto.subtle.digest('SHA-256', enc);
-      const arr = Array.from(new Uint8Array(buf));
-      return arr.map(b => b.toString(16).padStart(2,'0')).join('');
-    }
-
-    // ======== بصمة قوية: Hardware + Canvas + WebGL ========
-    function canvasFingerprint(){
-      try{
-        const c = document.createElement('canvas');
-        c.width = 200; c.height = 60;
-        const g = c.getContext('2d');
-        g.textBaseline = 'top';
-        g.font = '16px Arial';
-        g.fillStyle = '#f60';
-        g.fillRect(0,0,200,30);
-        g.fillStyle = '#069';
-        g.fillText('4TikPro-fp', 2, 2);
-        g.strokeStyle = '#f00';
-        g.arc(100,30,20,0,Math.PI*2); g.stroke();
-        return c.toDataURL();
-      }catch{ return 'no-canvas'; }
-    }
-
-    function webglInfo(){
-      try{
-        const c = document.createElement('canvas');
-        const gl = c.getContext('webgl') || c.getContext('experimental-webgl');
-        if(!gl) return 'no-webgl';
-        const dbg = gl.getExtension('WEBGL_debug_renderer_info');
-        const vendor = dbg ? gl.getParameter(dbg.UNMASKED_VENDOR_WEBGL) : 'v?';
-        const renderer = dbg ? gl.getParameter(dbg.UNMASKED_RENDERER_WEBGL) : 'r?';
-        return vendor + '|' + renderer;
-      }catch{ return 'no-webgl'; }
-    }
-
-    async function getDeviceHash(){
-      const seedParts = [
-        // عتاد/نظام (أكثر ثباتًا عبر المتصفحات)
-        navigator.platform || 'pf?',
-        (screen.width||0)+'x'+(screen.height||0),
-        window.devicePixelRatio || 1,
-        navigator.hardwareConcurrency || 'hc?',
-        navigator.deviceMemory || 'dm?',
-        navigator.maxTouchPoints || 0,
-        Intl.DateTimeFormat().resolvedOptions().timeZone || 'tz?',
-        // بصمات إضافية
-        canvasFingerprint(),
-        webglInfo()
-      ];
-      const seed = seedParts.join('|');
-      return await sha256(seed);
-    }
-
-    // ======== المفتاح: أول مرة فقط، بعد الربط يمكن بالجهاز ========
-    async function getKey(autoCheck = false) {
-      let k = localStorage.getItem('SUB_KEY');
-      if (k) return k;
-
-      if (autoCheck) {
-        const device = await getDeviceHash();
-        try {
-          const res = await fetch('/check', { method:'POST', headers: { 'X-DEVICE': device } });
-          const data = await res.json();
-          if (res.ok && data.ok) {
-            return "__DEVICE_ONLY__"; // الجهاز معروف مسبقًا
-          }
-        } catch(e) {}
+    // <<< دالة جديدة للتعرف على اسم الجهاز
+    function getDeviceName() {
+      const ua = navigator.userAgent;
+      if (/mobile/i.test(ua)) {
+        if (/iphone|ipad|ipod/i.test(ua)) return "Apple Device";
+        if (/android/i.test(ua)) {
+          const matches = ua.match(/Android\s+[\d\.]+;\s+([\w\s]+)\s+Build/i);
+          if (matches && matches.length > 1) return matches[1];
+          return "Android Device";
+        }
       }
-
-      k = prompt('أدخل مفتاح الاشتراك');
-      if (!k) return null;
-      localStorage.setItem('SUB_KEY', k.trim());
-      return k;
+      if (/windows/i.test(ua)) return "Windows PC";
+      if (/macintosh|mac os x/i.test(ua)) return "Mac";
+      return "Unknown Device";
     }
 
-    // ======== تحديث معلومات الملف ========
-    function updateInfo(){
-      const f = fileInput.files[0];
-      status.textContent='';
-      if(!f){ info.textContent='اسحب المقطع هنا أو اضغط للاختيار'; processBtn.disabled=true; return; }
-      info.textContent = `الملف: ${f.name} — ${mb(f.size)}`;
-      processBtn.disabled = false;
-    }
-
-    drop.addEventListener('click', () => fileInput.click());
-    drop.addEventListener('dragover', e => e.preventDefault());
-    drop.addEventListener('drop', e => { e.preventDefault(); if(e.dataTransfer.files.length){ fileInput.files = e.dataTransfer.files; updateInfo(); }});
-    fileInput.addEventListener('change', updateInfo);
-
-    // ======== معالجة ========
-    processBtn.addEventListener('click', async () => {
-      const f = fileInput.files[0]; if(!f) return;
-      const key = await getKey(true); if (!key) { alert('المفتاح مطلوب'); return; }
-      const device = await getDeviceHash();
-
-      status.textContent = 'جارٍ الرفع…';
-      bar.classList.remove('running'); bar.style.width='0%';
-      processBtn.disabled = true; fileInput.disabled = true; drop.style.pointerEvents='none'; drop.style.opacity='0.5';
-
-      const fd = new FormData(); fd.append('file', f);
-      const xhr = new XMLHttpRequest();
-      xhr.open('POST', '/process', true);
-      xhr.responseType = 'blob';
-
-      if (key !== "__DEVICE_ONLY__") xhr.setRequestHeader('X-KEY', key);
-      xhr.setRequestHeader('X-DEVICE', device);
-
-      xhr.upload.onprogress = e => { if(e.lengthComputable){ bar.style.width = Math.round((e.loaded/e.total)*100) + '%'; } };
-      xhr.onreadystatechange = () => { if (xhr.readyState === XMLHttpRequest.HEADERS_RECEIVED){ status.textContent='جارٍ تحسين الفيديو…'; bar.classList.add('running'); } };
-
-      xhr.onload = () => {
-        bar.classList.remove('running');
-        if (xhr.status === 200) {
-          status.textContent = 'تمّت المعالجة — يبدأ التنزيل الآن';
-          const blob = xhr.response, url = URL.createObjectURL(blob);
-          const a = document.createElement('a'); a.href = url; a.download = 'output.mp4'; document.body.appendChild(a); a.click();
-          URL.revokeObjectURL(url); a.remove();
-          setTimeout(() => { drop.style.pointerEvents='auto'; drop.style.opacity='1'; fileInput.disabled=false; fileInput.value=''; updateInfo(); }, 800);
-        } else {
-          const reader = new FileReader();
-          reader.onload = () => { status.textContent = reader.result || 'حدث خطأ، حاول مجددًا.'; };
-          reader.readAsText(xhr.response);
-          drop.style.pointerEvents='auto'; drop.style.opacity='1'; fileInput.disabled=false; updateInfo();
-          if (xhr.status === 401) localStorage.removeItem('SUB_KEY');
-        }
-      };
-      xhr.onerror = () => { bar.classList.remove('running'); status.textContent='تعذّر الاتصال.'; drop.style.pointerEvents='auto'; drop.style.opacity='1'; fileInput.disabled=false; updateInfo(); };
-      xhr.send(fd);
-    });
-
-    // ======== صندوق الاشتراك ========
-    async function refreshSubscriptionBox(auto=false){
-      try{
-        const key = await getKey(true);
-        if (!key) { if(!auto) alert('أدخل مفتاح الاشتراك أولاً'); return; }
-        const device = await getDeviceHash();
-        const headers = { 'X-DEVICE': device };
-        if (key !== "__DEVICE_ONLY__") headers['X-KEY'] = key;
-        const res = await fetch('/me', { headers });
-        const data = await res.json();
-
-        if (!res.ok) {
-          subKey.textContent = '—';
-          subExp.textContent = '—';
-          subDays.textContent = '—';
-          subBind.textContent = data.error || 'غير متوفر';
-          subLast.textContent = '—';
-          return;
-        }
-
-        // عرض المفتاح محليًا إن وُجد (أوضح من *** القادمة من السيرفر)
-        let displayKey = data.key_masked || '—';
-        const localKey = localStorage.getItem('SUB_KEY');
-        if (localKey && localKey !== "__DEVICE_ONLY__") {
-          displayKey = localKey.substring(0,4) + "****" + localKey.slice(-4);
-        }
-        subKey.textContent = displayKey;
-
-        subExp.textContent = data.expires || '—';
-        subDays.textContent = (data.days_left ?? '—');
-        if (data.bound === false) subBind.textContent = 'غير مربوط بعد';
-        else subBind.textContent = data.bound_to_this_device ? 'مربوط بهذا الجهاز' : 'مربوط بجهاز آخر';
-        subLast.textContent = data.last_used ? data.last_used : '—';
-
-        if(!auto){
-          subToast.textContent = '✅ تم تحديث معلومات الاشتراك';
-          setTimeout(()=> subToast.textContent = '', 2000);
-        }
-      }catch(e){
-        subToast.textContent = 'تعذر جلب معلومات الاشتراك';
-        setTimeout(()=> subToast.textContent = '', 2000);
-      }
-    }
-
-    showSubBtn?.addEventListener('click', ()=> refreshSubscriptionBox(false));
-    copyKeyBtn?.addEventListener('click', async ()=>{
-      const key = localStorage.getItem('SUB_KEY');
-      if (!key) { alert('لا يوجد مفتاح محفوظ بعد.'); return; }
-      try{
-        await navigator.clipboard.writeText(key);
-        subToast.textContent = '📋 تم نسخ المفتاح';
-        setTimeout(()=> subToast.textContent = '', 2000);
-      }catch{
-        subToast.textContent = 'تعذر النسخ، انسخه يدويًا.';
-        setTimeout(()=> subToast.textContent = '', 2000);
-      }
-    });
-
-    // تحديث تلقائي عند فتح الصفحة
-    window.addEventListener('load', ()=> {
-      refreshSubscriptionBox(true);
-    });
+    async function sha256(text){const enc=new TextEncoder().encode(text),buf=await crypto.subtle.digest('SHA-256',enc);return Array.from(new Uint8Array(buf)).map(b=>b.toString(16).padStart(2,'0')).join('');}
+    function canvasFingerprint(){try{const c=document.createElement('canvas');c.width=200;c.height=60;const g=c.getContext('2d');g.textBaseline='top';g.font='16px Arial';g.fillStyle='#f60';g.fillRect(0,0,200,30);g.fillStyle='#069';g.fillText('4TikPro-fp',2,2);g.strokeStyle='#f00';g.arc(100,30,20,0,Math.PI*2);g.stroke();return c.toDataURL();}catch{return'no-canvas';}}
+    function webglInfo(){try{const c=document.createElement('canvas'),gl=c.getContext('webgl')||c.getContext('experimental-webgl');if(!gl)return'no-webgl';const dbg=gl.getExtension('WEBGL_debug_renderer_info');return(dbg?gl.getParameter(dbg.UNMASKED_VENDOR_WEBGL):'v?')+'|'+(dbg?gl.getParameter(dbg.UNMASKED_RENDERER_WEBGL):'r?');}catch{return'no-webgl';}}
+    async function getDeviceHash(){const seedParts=[navigator.platform||'pf?',(screen.width||0)+'x'+(screen.height||0),window.devicePixelRatio||1,navigator.hardwareConcurrency||'hc?',navigator.deviceMemory||'dm?',navigator.maxTouchPoints||0,Intl.DateTimeFormat().resolvedOptions().timeZone||'tz?',canvasFingerprint(),webglInfo()];return await sha256(seedParts.join('|'));}
+    async function getKey(autoCheck=false){let k=localStorage.getItem('SUB_KEY');if(k)return k;if(autoCheck){const device=await getDeviceHash();try{const res=await fetch('/check',{method:'POST',headers:{'X-DEVICE':device,'X-DEVICE-NAME':getDeviceName()}});const data=await res.json();if(res.ok&&data.ok){return"__DEVICE_ONLY__";}}catch(e){}}k=prompt('أدخل مفتاح الاشتراك');if(!k)return null;localStorage.setItem('SUB_KEY',k.trim());return k;}
+    function updateInfo(){const f=fileInput.files[0];status.textContent='';if(!f){info.textContent='اسحب المقطع هنا أو اضغط للاختيار';processBtn.disabled=true;return;}info.textContent=`الملف: ${f.name} — ${mb(f.size)}`;processBtn.disabled=false;}
+    drop.addEventListener('click',()=>fileInput.click());drop.addEventListener('dragover',e=>e.preventDefault());drop.addEventListener('drop',e=>{e.preventDefault();if(e.dataTransfer.files.length){fileInput.files=e.dataTransfer.files;updateInfo();}});fileInput.addEventListener('change',updateInfo);
+    
+    processBtn.addEventListener('click',async()=>{const f=fileInput.files[0];if(!f)return;const key=await getKey(true);if(!key){alert('المفتاح مطلوب');return;}const device=await getDeviceHash();status.textContent='جارٍ الرفع…';bar.classList.remove('running');bar.style.width='0%';processBtn.disabled=true;fileInput.disabled=true;drop.style.pointerEvents='none';drop.style.opacity='0.5';const fd=new FormData();fd.append('file',f);const xhr=new XMLHttpRequest();xhr.open('POST','/process',true);xhr.responseType='blob';if(key!=="__DEVICE_ONLY__")xhr.setRequestHeader('X-KEY',key);xhr.setRequestHeader('X-DEVICE',device);
+    xhr.setRequestHeader('X-DEVICE-NAME', getDeviceName()); // <<< إرسال اسم الجهاز
+    xhr.upload.onprogress=e=>{if(e.lengthComputable){bar.style.width=Math.round((e.loaded/e.total)*100)+'%'}};xhr.onreadystatechange=()=>{if(xhr.readyState===XMLHttpRequest.HEADERS_RECEIVED){status.textContent='جارٍ تحسين الفيديو…';bar.classList.add('running');}};xhr.onload=()=>{bar.classList.remove('running');if(xhr.status===200){status.textContent='تمّت المعالجة — يبدأ التنزيل الآن';const blob=xhr.response,url=URL.createObjectURL(blob);const a=document.createElement('a');a.href=url;a.download='output.mp4';document.body.appendChild(a);a.click();URL.revokeObjectURL(url);a.remove();setTimeout(()=>{drop.style.pointerEvents='auto';drop.style.opacity='1';fileInput.disabled=false;fileInput.value='';updateInfo();},800);}else{const reader=new FileReader();reader.onload=()=>{status.textContent=reader.result||'حدث خطأ، حاول مجددًا.';};reader.readAsText(xhr.response);drop.style.pointerEvents='auto';drop.style.opacity='1';fileInput.disabled=false;updateInfo();if(xhr.status===401)localStorage.removeItem('SUB_KEY');}};xhr.onerror=()=>{bar.classList.remove('running');status.textContent='تعذّر الاتصال.';drop.style.pointerEvents='auto';drop.style.opacity='1';fileInput.disabled=false;updateInfo();};xhr.send(fd);});
+    
+    async function refreshSubscriptionBox(auto=false){try{const key=await getKey(true);if(!key){if(!auto)alert('أدخل مفتاح الاشتراك أولاً');return;}const device=await getDeviceHash();
+    const headers={'X-DEVICE':device,'X-DEVICE-NAME':getDeviceName()}; // <<< إرسال اسم الجهاز
+    if(key!=="__DEVICE_ONLY__")headers['X-KEY']=key;const res=await fetch('/me',{headers});const data=await res.json();
+    if(!res.ok){subKey.textContent='—';subExp.textContent='—';subDays.textContent='—';subBind.textContent=data.error||'غير متوفر';subDevice.textContent='—';subLast.textContent='—';return;}
+    let displayKey=data.key_masked||'—';const localKey=localStorage.getItem('SUB_KEY');if(localKey&&localKey!=="__DEVICE_ONLY__"){displayKey=localKey.substring(0,4)+"****"+localKey.slice(-4);}subKey.textContent=displayKey;subExp.textContent=data.expires||'—';subDays.textContent=(data.days_left??'—');
+    if(data.bound===false)subBind.textContent='غير مربوط بعد';else subBind.textContent=data.bound_to_this_device?'مربوط بهذا الجهاز':'مربوط بجهاز آخر';
+    subDevice.textContent = data.device_name || '—'; // <<< عرض اسم الجهاز
+    subLast.textContent=data.last_used?new Date(data.last_used).toLocaleString():'—';
+    if(!auto){subToast.textContent='✅ تم تحديث معلومات الاشتراك';setTimeout(()=>subToast.textContent='',2000);}}catch(e){subToast.textContent='تعذر جلب معلومات الاشتراك';setTimeout(()=>subToast.textContent='',2000);}}
+    showSubBtn?.addEventListener('click',()=>refreshSubscriptionBox(false));copyKeyBtn?.addEventListener('click',async()=>{const key=localStorage.getItem('SUB_KEY');if(!key){alert('لا يوجد مفتاح محفوظ بعد.');return;}try{await navigator.clipboard.writeText(key);subToast.textContent='📋 تم نسخ المفتاح';setTimeout(()=>subToast.textContent='',2000);}catch{subToast.textContent='تعذر النسخ، انسخه يدويًا.';setTimeout(()=>subToast.textContent='',2000);}});
+    window.addEventListener('load',()=>refreshSubscriptionBox(true));
   </script>
 </body>
 </html>
