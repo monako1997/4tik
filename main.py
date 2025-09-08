@@ -6,10 +6,11 @@ import subprocess
 import tempfile
 import threading
 import requests
+from pathlib import Path
 
-from fastapi import FastAPI, HTTPException, UploadFile, File, Form
+from fastapi import FastAPI, HTTPException, UploadFile, File, Form, Request
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import FileResponse
+from fastapi.responses import FileResponse, HTMLResponse, JSONResponse
 
 # ======================================================
 # إعدادات JSONBin
@@ -76,6 +77,12 @@ def find_key(db, key: str):
             return row
     return None
 
+def find_by_device(db, device_hash: str):
+    for row in db:
+        if row.get("device_hash") == device_hash:
+            return row
+    return None
+
 # ======================================================
 # تهيئة مفاتيح أولية (20 مفتاح)
 # ======================================================
@@ -120,15 +127,24 @@ app = FastAPI()
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=["*"],  # ممكن تخصصيها لدومينك لاحقًا
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
+BASE_DIR = Path(__file__).resolve().parent
+
 # ======================================================
 # المسارات
 # ======================================================
+
+@app.get("/", response_class=HTMLResponse)
+def home():
+    index_path = BASE_DIR / "index.html"
+    if not index_path.exists():
+        return HTMLResponse("<h3>index.html غير موجود</h3>", status_code=404)
+    return index_path.read_text(encoding="utf-8")
 
 @app.get("/health")
 def health():
@@ -187,7 +203,46 @@ def check_subscription(key: str, device_info: str = "unknown"):
         "device_name": row.get("device_name"),
         "activated_on": row["activated_on"],
         "expires_on": expires_on.isoformat(),
+        "days_left": max(0, (expires_on - now).days),
         "valid": now < expires_on
+    }
+
+@app.get("/me")
+def me(request: Request):
+    key         = request.headers.get("X-KEY")
+    device      = request.headers.get("X-DEVICE") or ""
+    device_name = request.headers.get("X-DEVICE-NAME") or None
+
+    db = load_db()
+    row = None
+    if key:
+        row = find_key(db, key)
+    elif device:
+        row = find_by_device(db, hash_device(device))
+
+    if not row:
+        return JSONResponse({"error": "لا يوجد اشتراك"}, status_code=401)
+
+    dev_hash = hash_device(device) if device else ""
+    if not row.get("device_hash"):
+        row["device_hash"] = dev_hash
+        row["device_name"] = device_name
+        save_db(db)
+
+    activated_on = datetime.datetime.fromisoformat(row["activated_on"])
+    expires_on   = activated_on + datetime.timedelta(days=row["duration_days"])
+    now          = datetime.datetime.utcnow()
+    days_left    = max(0, (expires_on - now).days)
+    bound_to_this = (row.get("device_hash") == dev_hash) if dev_hash else False
+
+    return {
+        "key_masked": row["key"][:4] + "****" + row["key"][-4:] if len(row["key"]) >= 8 else row["key"],
+        "expires": expires_on.isoformat(),
+        "days_left": days_left,
+        "bound": True,
+        "bound_to_this_device": bound_to_this,
+        "device_name": row.get("device_name"),
+        "last_used": row.get("last_used")
     }
 
 @app.post("/process")
@@ -201,7 +256,6 @@ async def process_video(file: UploadFile = File(...)):
 
         tmp_out_path = tmp_in_path.replace(suffix, f"_out{suffix}")
 
-        # أمر FFmpeg حسب الكود القديم
         cmd = [
             "ffmpeg", "-itsscale", "2",
             "-i", tmp_in_path,
