@@ -76,11 +76,42 @@ def find_key(db, key: str):
             return row
     return None
 
-def find_by_device(db, device_hash: str):
-    for row in db:
-        if row["device_hash"] == device_hash:
-            return row
-    return None
+# ======================================================
+# تهيئة مفاتيح أولية (20 مفتاح)
+# ======================================================
+def init_keys():
+    db = load_db()
+    if db:  # لو فيه بيانات قديمة ما نضيف
+        return
+
+    now = datetime.datetime.utcnow().isoformat()
+    keys = [
+        {"key": "A1B2C3D4", "duration_days": 30, "activated_on": now, "device_hash": "", "device_name": "user1", "last_used": None},
+        {"key": "E5F6G7H8", "duration_days": 30, "activated_on": now, "device_hash": "", "device_name": "user2", "last_used": None},
+        {"key": "I9J0K1L2", "duration_days": 30, "activated_on": now, "device_hash": "", "device_name": "user3", "last_used": None},
+        {"key": "M3N4O5P6", "duration_days": 30, "activated_on": now, "device_hash": "", "device_name": "user4", "last_used": None},
+        {"key": "Q7R8S9T0", "duration_days": 30, "activated_on": now, "device_hash": "", "device_name": "user5", "last_used": None},
+        {"key": "U1V2W3X4", "duration_days": 30, "activated_on": now, "device_hash": "", "device_name": "user6", "last_used": None},
+        {"key": "Y5Z6A7B8", "duration_days": 30, "activated_on": now, "device_hash": "", "device_name": "user7", "last_used": None},
+        {"key": "C9D0E1F2", "duration_days": 30, "activated_on": now, "device_hash": "", "device_name": "user8", "last_used": None},
+        {"key": "G3H4I5J6", "duration_days": 30, "activated_on": now, "device_hash": "", "device_name": "user9", "last_used": None},
+        {"key": "K7L8M9N0", "duration_days": 30, "activated_on": now, "device_hash": "", "device_name": "user10", "last_used": None},
+        {"key": "O1P2Q3R4", "duration_days": 30, "activated_on": now, "device_hash": "", "device_name": "user11", "last_used": None},
+        {"key": "S5T6U7V8", "duration_days": 30, "activated_on": now, "device_hash": "", "device_name": "user12", "last_used": None},
+        {"key": "W9X0Y1Z2", "duration_days": 30, "activated_on": now, "device_hash": "", "device_name": "user13", "last_used": None},
+        {"key": "A3B4C5D6", "duration_days": 30, "activated_on": now, "device_hash": "", "device_name": "user14", "last_used": None},
+        {"key": "E7F8G9H0", "duration_days": 30, "activated_on": now, "device_hash": "", "device_name": "user15", "last_used": None},
+        {"key": "I1J2K3L4", "duration_days": 30, "activated_on": now, "device_hash": "", "device_name": "user16", "last_used": None},
+        {"key": "M5N6O7P8", "duration_days": 30, "activated_on": now, "device_hash": "", "device_name": "user17", "last_used": None},
+        {"key": "Q9R0S1T2", "duration_days": 30, "activated_on": now, "device_hash": "", "device_name": "user18", "last_used": None},
+        {"key": "U3V4W5X6", "duration_days": 30, "activated_on": now, "device_hash": "", "device_name": "user19", "last_used": None},
+        {"key": "Y7Z8A9B0", "duration_days": 30, "activated_on": now, "device_hash": "", "device_name": "user20", "last_used": None}
+    ]
+    save_db(keys)
+    print("✅ تم إدخال 20 مفتاح أولية في JSONBin")
+
+# استدعاء التهيئة
+init_keys()
 
 # ======================================================
 # إعداد التطبيق
@@ -89,7 +120,7 @@ app = FastAPI()
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # عدليها لاحقاً لدومينك فقط
+    allow_origins=["*"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -116,12 +147,11 @@ def add_subscription(
     device_name: str = Form(None)
 ):
     db = load_db()
-    existing = find_key(db, key)
-    if existing:
-        raise HTTPException(400, "المفتاح مستخدم بالفعل")
+    if find_key(db, key):
+        raise HTTPException(400, "المفتاح موجود بالفعل")
 
-    device_hash = hash_device(device_info)
     now = datetime.datetime.utcnow().isoformat()
+    device_hash = hash_device(device_info)
 
     db.append({
         "key": key,
@@ -171,7 +201,7 @@ async def process_video(file: UploadFile = File(...)):
 
         tmp_out_path = tmp_in_path.replace(suffix, f"_out{suffix}")
 
-        # هنا أمر ffmpeg مثل كودك القديم
+        # أمر FFmpeg حسب الكود القديم
         cmd = [
             "ffmpeg", "-itsscale", "2",
             "-i", tmp_in_path,
