@@ -12,9 +12,9 @@ from fastapi import FastAPI, HTTPException, UploadFile, File, Form, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse, HTMLResponse, JSONResponse
 
-# ======================================================
-# إعدادات JSONBin
-# ======================================================
+# ============================
+# إعدادات JSONBin (من Environment)
+# ============================
 JSONBIN_ID = os.environ.get("JSONBIN_ID")
 JSONBIN_KEY = os.environ.get("JSONBIN_KEY")
 JSONBIN_BASE = f"https://api.jsonbin.io/v3/b/{JSONBIN_ID}"
@@ -27,8 +27,11 @@ _jsonbin_session.headers.update({
 
 DB_LOCK = threading.Lock()
 
+# ============================
+# دوال التخزين على JSONBin
+# ============================
 def load_db():
-    """تحميل قاعدة البيانات من JSONBin"""
+    """تحميل قاعدة البيانات من JSONBin: قائمة عناصر"""
     with DB_LOCK:
         r = _jsonbin_session.get(JSONBIN_BASE)
         if r.status_code == 404:
@@ -40,11 +43,14 @@ def load_db():
         body = r.json()
         data = body.get("record")
         if isinstance(data, list):
+            # تطبيع الحقول
             for row in data:
-                if "device_name" not in row:
-                    row["device_name"] = None
+                row.setdefault("device_name", None)
+                row.setdefault("last_used", None)
+                row.setdefault("device_hash", "")
             return data
         if isinstance(data, dict) and "subs" in data:
+            # تحويل شكل قديم dict -> list
             out = []
             for k, v in data["subs"].items():
                 out.append({
@@ -59,21 +65,21 @@ def load_db():
         return []
 
 def save_db(data):
-    """حفظ قاعدة البيانات في JSONBin"""
+    """حفظ قاعدة البيانات في JSONBin: قائمة عناصر"""
     with DB_LOCK:
         payload = json.dumps(data, ensure_ascii=False)
         r = _jsonbin_session.put(JSONBIN_BASE, data=payload)
         r.raise_for_status()
 
-# ======================================================
+# ============================
 # أدوات مساعدة
-# ======================================================
+# ============================
 def hash_device(device_info: str) -> str:
-    return hashlib.sha256(device_info.encode()).hexdigest()
+    return hashlib.sha256((device_info or "").encode()).hexdigest()
 
 def find_key(db, key: str):
     for row in db:
-        if row["key"] == key:
+        if row.get("key") == key:
             return row
     return None
 
@@ -83,14 +89,28 @@ def find_by_device(db, device_hash: str):
             return row
     return None
 
-# ======================================================
-# تهيئة مفاتيح أولية (20 مفتاح)
-# ======================================================
+def ensure_bound_or_bind(db, row, device: str, device_name: str | None):
+    """
+    يربط المفتاح بالجهاز لأول استخدام،
+    ويرفض إن كان جهاز مختلف لاحقًا.
+    """
+    dev_hash = hash_device(device) if device else ""
+    if not row.get("device_hash"):
+        row["device_hash"] = dev_hash
+        row["device_name"] = device_name
+        save_db(db)
+        return True
+    if dev_hash and row["device_hash"] != dev_hash:
+        return False
+    return True
+
+# ============================
+# تهيئة مفاتيح أولية (مرة واحدة فقط)
+# ============================
 def init_keys():
     db = load_db()
     if db:  # لو فيه بيانات قديمة ما نضيف
         return
-
     now = datetime.datetime.utcnow().isoformat()
     keys = [
         {"key": "A1B2C3D4", "duration_days": 30, "activated_on": now, "device_hash": "", "device_name": "user1", "last_used": None},
@@ -117,17 +137,18 @@ def init_keys():
     save_db(keys)
     print("✅ تم إدخال 20 مفتاح أولية في JSONBin")
 
-# استدعاء التهيئة
+# نفّذ التهيئة عند بدء التشغيل
 init_keys()
 
-# ======================================================
+# ============================
 # إعداد التطبيق
-# ======================================================
+# ============================
 app = FastAPI()
 
+# لو عندك دومين محدد للواجهة اذكريه بدلاً من *
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # ممكن تخصصيها لدومينك لاحقًا
+    allow_origins=["*"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -135,9 +156,9 @@ app.add_middleware(
 
 BASE_DIR = Path(__file__).resolve().parent
 
-# ======================================================
+# ============================
 # المسارات
-# ======================================================
+# ============================
 
 @app.get("/", response_class=HTMLResponse)
 def home():
@@ -173,7 +194,7 @@ def add_subscription(
         "key": key,
         "duration_days": duration_days,
         "activated_on": now,
-        "device_hash": device_hash,
+        "device_hash": device_hash,   # يُربط بالجهاز إن أردتِ من البداية
         "device_name": device_name,
         "last_used": None
     })
@@ -181,20 +202,23 @@ def add_subscription(
     return {"message": f"تمت إضافة الاشتراك {key}"}
 
 @app.get("/check/{key}")
-def check_subscription(key: str, device_info: str = "unknown"):
+def check_subscription(key: str, request: Request):
+    # يدعم إما query param (device_info) أو header X-DEVICE
+    device = request.query_params.get("device_info") or request.headers.get("X-DEVICE") or ""
+    device_name = request.headers.get("X-DEVICE-NAME") or None
+
     db = load_db()
     row = find_key(db, key)
     if not row:
         raise HTTPException(404, "المفتاح غير موجود")
 
-    device_hash = hash_device(device_info)
-    if row["device_hash"] and row["device_hash"] != device_hash:
-        raise HTTPException(403, "هذا المفتاح مستخدم على جهاز آخر")
+    # اربط أول مرة أو ارفض إن كان جهاز مختلف
+    if not ensure_bound_or_bind(db, row, device, device_name):
+        raise HTTPException(403, "هذا المفتاح مربوط بجهاز آخر")
 
     activated_on = datetime.datetime.fromisoformat(row["activated_on"])
     expires_on = activated_on + datetime.timedelta(days=row["duration_days"])
     now = datetime.datetime.utcnow()
-
     row["last_used"] = now.isoformat()
     save_db(db)
 
@@ -223,16 +247,18 @@ def me(request: Request):
     if not row:
         return JSONResponse({"error": "لا يوجد اشتراك"}, status_code=401)
 
-    dev_hash = hash_device(device) if device else ""
-    if not row.get("device_hash"):
-        row["device_hash"] = dev_hash
-        row["device_name"] = device_name
-        save_db(db)
+    if not ensure_bound_or_bind(db, row, device, device_name):
+        return JSONResponse({"error": "هذا المفتاح مربوط بجهاز آخر"}, status_code=403)
 
     activated_on = datetime.datetime.fromisoformat(row["activated_on"])
     expires_on   = activated_on + datetime.timedelta(days=row["duration_days"])
     now          = datetime.datetime.utcnow()
     days_left    = max(0, (expires_on - now).days)
+
+    row["last_used"] = now.isoformat()
+    save_db(db)
+
+    dev_hash = hash_device(device) if device else ""
     bound_to_this = (row.get("device_hash") == dev_hash) if dev_hash else False
 
     return {
@@ -246,8 +272,27 @@ def me(request: Request):
     }
 
 @app.post("/process")
-async def process_video(file: UploadFile = File(...)):
-    """معالجة فيديو باستخدام FFmpeg مع itsscale 2"""
+async def process_video(request: Request, file: UploadFile = File(...)):
+    """معالجة فيديو مع قفل المفتاح على الجهاز + ffmpeg -itsscale 2"""
+    key = request.headers.get("X-KEY")
+    device = request.headers.get("X-DEVICE") or ""
+    device_name = request.headers.get("X-DEVICE-NAME") or None
+    if not key or not device:
+        raise HTTPException(401, "المفتاح والجهاز مطلوبان")
+
+    db = load_db()
+    row = find_key(db, key)
+    if not row:
+        raise HTTPException(401, "المفتاح غير صحيح")
+
+    if not ensure_bound_or_bind(db, row, device, device_name):
+        raise HTTPException(403, "هذا المفتاح مربوط بجهاز آخر")
+
+    # حدّث آخر استخدام
+    row["last_used"] = datetime.datetime.utcnow().isoformat()
+    save_db(db)
+
+    # تنفيذ المعالجة
     try:
         suffix = os.path.splitext(file.filename)[1]
         with tempfile.NamedTemporaryFile(delete=False, suffix=suffix) as tmp_in:
