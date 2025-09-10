@@ -73,6 +73,7 @@
         <div>حالة الربط: <b id="subBind">—</b></div>
         <div>الجهاز المربوط: <b id="subDevice">—</b></div>
         <div>آخر استخدام: <b id="subLast">—</b></div>
+        <div>الدولة: <b id="subCountry">—</b></div>
       </div>
     </section>
 
@@ -92,16 +93,16 @@
     processBtn=document.getElementById('process'),bar=document.getElementById('bar'),status=document.getElementById('status'),
     showSubBtn=document.getElementById('showSub'),copyKeyBtn=document.getElementById('copyKey'),subKey=document.getElementById('subKey'),
     subExp=document.getElementById('subExp'),subDays=document.getElementById('subDays'),subBind=document.getElementById('subBind'),
-    subDevice=document.getElementById('subDevice'),subLast=document.getElementById('subLast'),subToast=document.getElementById('subToast');
+    subDevice=document.getElementById('subDevice'),subLast=document.getElementById('subLast'),subCountry=document.getElementById('subCountry'),
+    subToast=document.getElementById('subToast');
     const mb=n=>(n/1024/1024).toFixed(2)+' MB';
 
-    // <<< دالة جديدة للتعرف على اسم الجهاز
     function getDeviceName() {
       const ua = navigator.userAgent;
       if (/mobile/i.test(ua)) {
         if (/iphone|ipad|ipod/i.test(ua)) return "Apple Device";
         if (/android/i.test(ua)) {
-          const matches = ua.match(/Android\s+[\d\.]+;\s+([\w\s]+)\s+Build/i);
+          const matches = ua.match(/Android\\s+[\\d\\.]+;\\s+([\\w\\s]+)\\s+Build/i);
           if (matches && matches.length > 1) return matches[1];
           return "Android Device";
         }
@@ -120,17 +121,18 @@
     drop.addEventListener('click',()=>fileInput.click());drop.addEventListener('dragover',e=>e.preventDefault());drop.addEventListener('drop',e=>{e.preventDefault();if(e.dataTransfer.files.length){fileInput.files=e.dataTransfer.files;updateInfo();}});fileInput.addEventListener('change',updateInfo);
     
     processBtn.addEventListener('click',async()=>{const f=fileInput.files[0];if(!f)return;const key=await getKey(true);if(!key){alert('المفتاح مطلوب');return;}const device=await getDeviceHash();status.textContent='جارٍ الرفع…';bar.classList.remove('running');bar.style.width='0%';processBtn.disabled=true;fileInput.disabled=true;drop.style.pointerEvents='none';drop.style.opacity='0.5';const fd=new FormData();fd.append('file',f);const xhr=new XMLHttpRequest();xhr.open('POST','/process',true);xhr.responseType='blob';if(key!=="__DEVICE_ONLY__")xhr.setRequestHeader('X-KEY',key);xhr.setRequestHeader('X-DEVICE',device);
-    xhr.setRequestHeader('X-DEVICE-NAME', getDeviceName()); // <<< إرسال اسم الجهاز
+    xhr.setRequestHeader('X-DEVICE-NAME', getDeviceName());
     xhr.upload.onprogress=e=>{if(e.lengthComputable){bar.style.width=Math.round((e.loaded/e.total)*100)+'%'}};xhr.onreadystatechange=()=>{if(xhr.readyState===XMLHttpRequest.HEADERS_RECEIVED){status.textContent='جارٍ تحسين الفيديو…';bar.classList.add('running');}};xhr.onload=()=>{bar.classList.remove('running');if(xhr.status===200){status.textContent='تمّت المعالجة — يبدأ التنزيل الآن';const blob=xhr.response,url=URL.createObjectURL(blob);const a=document.createElement('a');a.href=url;a.download='output.mp4';document.body.appendChild(a);a.click();URL.revokeObjectURL(url);a.remove();setTimeout(()=>{drop.style.pointerEvents='auto';drop.style.opacity='1';fileInput.disabled=false;fileInput.value='';updateInfo();},800);}else{const reader=new FileReader();reader.onload=()=>{status.textContent=reader.result||'حدث خطأ، حاول مجددًا.';};reader.readAsText(xhr.response);drop.style.pointerEvents='auto';drop.style.opacity='1';fileInput.disabled=false;updateInfo();if(xhr.status===401)localStorage.removeItem('SUB_KEY');}};xhr.onerror=()=>{bar.classList.remove('running');status.textContent='تعذّر الاتصال.';drop.style.pointerEvents='auto';drop.style.opacity='1';fileInput.disabled=false;updateInfo();};xhr.send(fd);});
     
     async function refreshSubscriptionBox(auto=false){try{const key=await getKey(true);if(!key){if(!auto)alert('أدخل مفتاح الاشتراك أولاً');return;}const device=await getDeviceHash();
-    const headers={'X-DEVICE':device,'X-DEVICE-NAME':getDeviceName()}; // <<< إرسال اسم الجهاز
+    const headers={'X-DEVICE':device,'X-DEVICE-NAME':getDeviceName()};
     if(key!=="__DEVICE_ONLY__")headers['X-KEY']=key;const res=await fetch('/me',{headers});const data=await res.json();
-    if(!res.ok){subKey.textContent='—';subExp.textContent='—';subDays.textContent='—';subBind.textContent=data.error||'غير متوفر';subDevice.textContent='—';subLast.textContent='—';return;}
+    if(!res.ok){subKey.textContent='—';subExp.textContent='—';subDays.textContent='—';subBind.textContent=data.error||'غير متوفر';subDevice.textContent='—';subLast.textContent='—';subCountry.textContent='—';return;}
     let displayKey=data.key_masked||'—';const localKey=localStorage.getItem('SUB_KEY');if(localKey&&localKey!=="__DEVICE_ONLY__"){displayKey=localKey.substring(0,4)+"****"+localKey.slice(-4);}subKey.textContent=displayKey;subExp.textContent=data.expires||'—';subDays.textContent=(data.days_left??'—');
     if(data.bound===false)subBind.textContent='غير مربوط بعد';else subBind.textContent=data.bound_to_this_device?'مربوط بهذا الجهاز':'مربوط بجهاز آخر';
-    subDevice.textContent = data.device_name || '—'; // <<< عرض اسم الجهاز
+    subDevice.textContent = data.device_name || '—';
     subLast.textContent=data.last_used?new Date(data.last_used).toLocaleString():'—';
+    subCountry.textContent=data.country || '—';
     if(!auto){subToast.textContent='✅ تم تحديث معلومات الاشتراك';setTimeout(()=>subToast.textContent='',2000);}}catch(e){subToast.textContent='تعذر جلب معلومات الاشتراك';setTimeout(()=>subToast.textContent='',2000);}}
     showSubBtn?.addEventListener('click',()=>refreshSubscriptionBox(false));copyKeyBtn?.addEventListener('click',async()=>{const key=localStorage.getItem('SUB_KEY');if(!key){alert('لا يوجد مفتاح محفوظ بعد.');return;}try{await navigator.clipboard.writeText(key);subToast.textContent='📋 تم نسخ المفتاح';setTimeout(()=>subToast.textContent='',2000);}catch{subToast.textContent='تعذر النسخ، انسخه يدويًا.';setTimeout(()=>subToast.textContent='',2000);}});
     window.addEventListener('load',()=>refreshSubscriptionBox(true));
