@@ -8,9 +8,9 @@ import threading
 import requests
 from pathlib import Path
 
-from fastapi import FastAPI, HTTPException, UploadFile, File, Form, Request
+from fastapi import FastAPI, HTTPException, UploadFile, File, Request
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import FileResponse, HTMLResponse, JSONResponse
+from fastapi.responses import FileResponse, HTMLResponse
 
 # ============================
 # إعدادات JSONBin
@@ -69,12 +69,6 @@ def hash_device(device_info: str) -> str:
 def find_key(db, key: str):
     for row in db:
         if row.get("key") == key:
-            return row
-    return None
-
-def find_by_device(db, device_hash: str):
-    for row in db:
-        if row.get("device_hash") == device_hash:
             return row
     return None
 
@@ -180,7 +174,7 @@ def expired_keys():
     now = datetime.datetime.utcnow()
     for row in db:
         if row.get("activated_on"):
-            expires_on = calc_expiry(row["activated_on"], row.get("duration_days", 30))
+            expires_on = calc_expiry(row.get("activated_on"), row.get("duration_days", 30))
             if expires_on and now >= expires_on:
                 expired.append({
                     "key": row["key"],
@@ -220,6 +214,36 @@ def check_subscription(key: str, request: Request):
         "days_left": days_left,
         "valid": (now < expires_on) if expires_on else True,
         "country": row.get("country")
+    }
+
+# ✅ مسار جديد للواجهة (index.html) يشتغل مع /me
+@app.get("/me")
+def me(request: Request):
+    key = request.headers.get("X-KEY")
+    device = request.headers.get("X-DEVICE") or ""
+    device_name = request.headers.get("X-DEVICE-NAME") or None
+
+    db = load_db()
+    row = find_key(db, key)
+    if not row:
+        raise HTTPException(401, "المفتاح غير صحيح")
+
+    if not ensure_bound_or_bind(db, row, device, device_name):
+        raise HTTPException(403, "هذا المفتاح مربوط بجهاز آخر")
+
+    expires_on = calc_expiry(row.get("activated_on"), row.get("duration_days", 30))
+    now = datetime.datetime.utcnow()
+    days_left = max(0, (expires_on - now).days) if expires_on else 0
+
+    return {
+        "key": row["key"],
+        "device_name": row.get("device_name"),
+        "activated_on": row.get("activated_on"),
+        "expires_on": expires_on.isoformat() if expires_on else None,
+        "days_left": days_left,
+        "valid": (now < expires_on) if expires_on else True,
+        "country": row.get("country"),
+        "last_used": row.get("last_used")
     }
 
 @app.post("/process")
