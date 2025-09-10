@@ -47,6 +47,7 @@ def load_db():
                 row.setdefault("last_used", None)
                 row.setdefault("device_hash", "")
                 row.setdefault("activated_on", None)
+                row.setdefault("country", None)
             return data
         return []
 
@@ -82,15 +83,10 @@ def ensure_bound_or_bind(db, row, device: str, device_name: str | None):
     if not row.get("device_hash"):
         row["device_hash"] = dev_hash
         row["device_name"] = device_name
-        if not row.get("activated_on"):
-            row["activated_on"] = now_iso()
         save_db(db)
         return True
     if dev_hash and row["device_hash"] != dev_hash:
         return False
-    if not row.get("activated_on"):
-        row["activated_on"] = now_iso()
-        save_db(db)
     return True
 
 def calc_expiry(activated_on_str: str | None, duration_days: int):
@@ -99,18 +95,25 @@ def calc_expiry(activated_on_str: str | None, duration_days: int):
     activated_on = datetime.datetime.fromisoformat(activated_on_str)
     return activated_on + datetime.timedelta(days=duration_days)
 
+def get_country_from_ip(ip: str) -> str | None:
+    try:
+        r = requests.get(f"https://ipapi.co/{ip}/country_name/", timeout=3)
+        if r.status_code == 200:
+            return r.text.strip()
+    except:
+        pass
+    return None
+
 # ============================
-# تهيئة أولية (مرة واحدة فقط)
+# تهيئة أولية
 # ============================
 def init_keys():
     db = load_db()
     if db:
         return
     keys = [
-        {"key": "A1B2C3D4", "duration_days": 30, "activated_on": None, "device_hash": "", "device_name": "user1", "last_used": None},
-        {"key": "E5F6G7H8", "duration_days": 30, "activated_on": None, "device_hash": "", "device_name": "user2", "last_used": None},
-        {"key": "I9J0K1L2", "duration_days": 30, "activated_on": None, "device_hash": "", "device_name": "user3", "last_used": None},
-        {"key": "M3N4O5P6", "duration_days": 30, "activated_on": None, "device_hash": "", "device_name": "user4", "last_used": None},
+        {"key": "A1B2C3D4", "duration_days": 30, "activated_on": None, "device_hash": "", "device_name": None, "last_used": None, "country": None},
+        {"key": "E5F6G7H8", "duration_days": 30, "activated_on": None, "device_hash": "", "device_name": None, "last_used": None, "country": None},
     ]
     save_db(keys)
     print("✅ تم إدخال مفاتيح أولية في JSONBin")
@@ -165,7 +168,8 @@ def active_keys():
             "activated_on": row.get("activated_on"),
             "expires_on": expires_on.isoformat() if expires_on else None,
             "days_left": days_left,
-            "valid": now < expires_on if expires_on else True
+            "valid": now < expires_on if expires_on else True,
+            "country": row.get("country")
         })
     return {"count": len(out), "subs": out}
 
@@ -183,7 +187,8 @@ def expired_keys():
                     "device_name": row.get("device_name"),
                     "activated_on": row.get("activated_on"),
                     "expires_on": expires_on.isoformat(),
-                    "last_used": row.get("last_used")
+                    "last_used": row.get("last_used"),
+                    "country": row.get("country")
                 })
     return {"count": len(expired), "subs": expired}
 
@@ -213,47 +218,8 @@ def check_subscription(key: str, request: Request):
         "activated_on": row.get("activated_on"),
         "expires_on": expires_on.isoformat() if expires_on else None,
         "days_left": days_left,
-        "valid": (now < expires_on) if expires_on else True
-    }
-
-@app.get("/me")
-def me(request: Request):
-    key         = request.headers.get("X-KEY")
-    device      = request.headers.get("X-DEVICE") or ""
-    device_name = request.headers.get("X-DEVICE-NAME") or None
-
-    db = load_db()
-    row = None
-    if key:
-        row = find_key(db, key)
-    elif device:
-        row = find_by_device(db, hash_device(device))
-
-    if not row:
-        return JSONResponse({"error": "لا يوجد اشتراك"}, status_code=401)
-
-    if not ensure_bound_or_bind(db, row, device, device_name):
-        return JSONResponse({"error": "هذا المفتاح مربوط بجهاز آخر"}, status_code=403)
-
-    expires_on = calc_expiry(row.get("activated_on"), row.get("duration_days", 30))
-    now = datetime.datetime.utcnow()
-    days_left = max(0, (expires_on - now).days) if expires_on else 30
-
-    row["last_used"] = now_iso()
-    save_db(db)
-
-    dev_hash = hash_device(device) if device else ""
-    bound_to_this = (row.get("device_hash") == dev_hash) if dev_hash else False
-
-    return {
-        "key_masked": row["key"][:4] + "****" + row["key"][-4:] if len(row["key"]) >= 8 else row["key"],
-        "activated_on": row.get("activated_on"),
-        "expires": expires_on.isoformat() if expires_on else None,
-        "days_left": days_left,
-        "bound": True,
-        "bound_to_this_device": bound_to_this,
-        "device_name": row.get("device_name"),
-        "last_used": row.get("last_used")
+        "valid": (now < expires_on) if expires_on else True,
+        "country": row.get("country")
     }
 
 @app.post("/process")
@@ -271,6 +237,12 @@ async def process_video(request: Request, file: UploadFile = File(...)):
 
     if not ensure_bound_or_bind(db, row, device, device_name):
         raise HTTPException(403, "هذا المفتاح مربوط بجهاز آخر")
+
+    # ✅ التفعيل أول مرة فقط عند المعالجة
+    if not row.get("activated_on"):
+        row["activated_on"] = now_iso()
+        client_ip = request.client.host
+        row["country"] = get_country_from_ip(client_ip)
 
     row["last_used"] = now_iso()
     save_db(db)
