@@ -74,7 +74,6 @@
       <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
         <button id="showSub">عرض اشتراكي</button>
         <button id="copyKey" style="background:#fff;color:#0a0b12">نسخ مفتاحي</button>
-        <div id="subToast" style="font-size:13px;color:#aab6c5"></div>
       </div>
       <div style="margin-top:10px;line-height:1.9">
         <div>المفتاح: <b id="subKey">—</b></div>
@@ -127,8 +126,49 @@
       }
     });
 
-    // باقي كودك الأصلي (المعالجة + الاشتراك) يبقى كما هو
-    // ...
+    // ✅ تحديث معلومات الاشتراك
+    async function refreshSubscriptionBox() {
+      const key = localStorage.getItem("SUB_KEY");
+      if (!key) {
+        alert("⚠️ لا يوجد مفتاح محفوظ بعد.");
+        return;
+      }
+      try {
+        const res = await fetch("/me", { headers: { "X-KEY": key } });
+        const data = await res.json();
+        if (!res.ok) {
+          alert("❌ المفتاح غير صالح أو مربوط بجهاز آخر");
+          return;
+        }
+        document.getElementById("subKey").innerText = key.substring(0,4) + "****" + key.slice(-4);
+        document.getElementById("subExp").innerText = data.expires_on || "—";
+        document.getElementById("subDays").innerText = data.days_left ?? "—";
+        document.getElementById("subBind").innerText = data.bound_to_this_device ? "مربوط بهذا الجهاز" : "مربوط بجهاز آخر";
+        document.getElementById("subDevice").innerText = data.device_name || "—";
+        document.getElementById("subLast").innerText = data.last_used || "—";
+        document.getElementById("subCountry").innerText = data.country || "—";
+      } catch (e) {
+        alert("⚠️ حدث خطأ أثناء جلب المعلومات");
+      }
+    }
+
+    // ✅ نسخ المفتاح
+    document.getElementById("copyKey").addEventListener("click", async () => {
+      const key = localStorage.getItem("SUB_KEY");
+      if (!key) {
+        alert("⚠️ لا يوجد مفتاح محفوظ.");
+        return;
+      }
+      try {
+        await navigator.clipboard.writeText(key);
+        alert("📋 تم نسخ المفتاح");
+      } catch {
+        alert("⚠️ لم يتم النسخ تلقائياً، انسخه يدوياً.");
+      }
+    });
+
+    // ✅ ربط زر عرض الاشتراك
+    document.getElementById("showSub").addEventListener("click", refreshSubscriptionBox);
   </script>
 </body>
 </html>
