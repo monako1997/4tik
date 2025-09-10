@@ -10,7 +10,7 @@ from pathlib import Path
 
 from fastapi import FastAPI, HTTPException, UploadFile, File, Request
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import FileResponse, HTMLResponse
+from fastapi.responses import HTMLResponse, StreamingResponse
 
 # ============================
 # إعدادات JSONBin
@@ -141,7 +141,6 @@ def home():
 def health():
     return {"ok": True}
 
-# ✅ المسار المهم للواجهة
 @app.get("/me")
 def me(request: Request):
     key = request.headers.get("X-KEY")
@@ -215,9 +214,15 @@ async def process_video(request: Request, file: UploadFile = File(...)):
             "-c:v", "copy", "-c:a", "copy",
             tmp_out_path
         ]
-        subprocess.run(cmd, check=True)
+        # 👇 عشان يطبع أي خطأ بدل ما يعلق
+        result = subprocess.run(cmd, capture_output=True, text=True)
+        if result.returncode != 0:
+            raise Exception(result.stderr)
 
-        return FileResponse(tmp_out_path, filename=f"processed{suffix}")
+        # 👇 إرجاع الملف بطريقة مضمونة
+        return StreamingResponse(open(tmp_out_path, "rb"), media_type="video/mp4", headers={
+            "Content-Disposition": f"attachment; filename=processed{suffix}"
+        })
 
     except Exception as e:
         raise HTTPException(500, f"خطأ في المعالجة: {str(e)}")
