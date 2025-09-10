@@ -1,17 +1,23 @@
 FROM python:3.11-slim
 
-# تثبيت ffmpeg (مطلوب لمعالجة الفيديو)
-RUN apt-get update && apt-get install -y ffmpeg
+# تثبيت ffmpeg
+RUN apt-get update && apt-get install -y ffmpeg && rm -rf /var/lib/apt/lists/*
 
-# مجلد العمل
+# مكان العمل
 WORKDIR /app
 
-# نسخ المتطلبات وتثبيتها
+# تثبيت المتطلبات
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
-# نسخ كل الملفات
+# نسخ باقي الملفات (index.html, main.py, manifest.json, sw.js, icons…)
 COPY . .
 
-# تشغيل السيرفر على المنفذ 8080 (يعمل في Render & Railway)
-CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8080"]
+# إنشاء مجلد التخزين الدائم للمفاتيح
+RUN mkdir -p /data
+
+# المنفذ
+EXPOSE 8000
+
+# تشغيل السيرفر
+CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000"]
