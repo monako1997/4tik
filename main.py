@@ -141,87 +141,15 @@ def home():
 def health():
     return {"ok": True}
 
-@app.get("/unused-keys")
-def unused_keys():
-    db = load_db()
-    unused = [row for row in db if not row.get("activated_on")]
-    return {"count": len(unused), "keys": [row["key"] for row in unused]}
-
-@app.get("/active-keys")
-def active_keys():
-    db = load_db()
-    active = [row for row in db if row.get("activated_on")]
-    out = []
-    now = datetime.datetime.utcnow()
-    for row in active:
-        expires_on = calc_expiry(row["activated_on"], row.get("duration_days", 30))
-        days_left = max(0, (expires_on - now).days) if expires_on else 0
-        out.append({
-            "key": row["key"],
-            "device_name": row.get("device_name"),
-            "activated_on": row.get("activated_on"),
-            "expires_on": expires_on.isoformat() if expires_on else None,
-            "days_left": days_left,
-            "valid": now < expires_on if expires_on else True,
-            "country": row.get("country")
-        })
-    return {"count": len(out), "subs": out}
-
-@app.get("/expired-keys")
-def expired_keys():
-    db = load_db()
-    expired = []
-    now = datetime.datetime.utcnow()
-    for row in db:
-        if row.get("activated_on"):
-            expires_on = calc_expiry(row.get("activated_on"), row.get("duration_days", 30))
-            if expires_on and now >= expires_on:
-                expired.append({
-                    "key": row["key"],
-                    "device_name": row.get("device_name"),
-                    "activated_on": row.get("activated_on"),
-                    "expires_on": expires_on.isoformat(),
-                    "last_used": row.get("last_used"),
-                    "country": row.get("country")
-                })
-    return {"count": len(expired), "subs": expired}
-
-@app.get("/check/{key}")
-def check_subscription(key: str, request: Request):
-    device = request.query_params.get("device_info") or request.headers.get("X-DEVICE") or ""
-    device_name = request.headers.get("X-DEVICE-NAME") or None
-
-    db = load_db()
-    row = find_key(db, key)
-    if not row:
-        raise HTTPException(404, "المفتاح غير موجود")
-
-    if not ensure_bound_or_bind(db, row, device, device_name):
-        raise HTTPException(403, "هذا المفتاح مربوط بجهاز آخر")
-
-    expires_on = calc_expiry(row.get("activated_on"), row.get("duration_days", 30))
-    now = datetime.datetime.utcnow()
-    days_left = max(0, (expires_on - now).days) if expires_on else 0
-
-    row["last_used"] = now_iso()
-    save_db(db)
-
-    return {
-        "key": row["key"],
-        "device_name": row.get("device_name"),
-        "activated_on": row.get("activated_on"),
-        "expires_on": expires_on.isoformat() if expires_on else None,
-        "days_left": days_left,
-        "valid": (now < expires_on) if expires_on else True,
-        "country": row.get("country")
-    }
-
-# ✅ مسار جديد للواجهة (index.html) يشتغل مع /me
+# ✅ المسار المهم للواجهة
 @app.get("/me")
 def me(request: Request):
     key = request.headers.get("X-KEY")
     device = request.headers.get("X-DEVICE") or ""
     device_name = request.headers.get("X-DEVICE-NAME") or None
+
+    if not key:
+        raise HTTPException(401, "المفتاح مطلوب")
 
     db = load_db()
     row = find_key(db, key)
@@ -242,8 +170,10 @@ def me(request: Request):
         "expires_on": expires_on.isoformat() if expires_on else None,
         "days_left": days_left,
         "valid": (now < expires_on) if expires_on else True,
-        "country": row.get("country"),
-        "last_used": row.get("last_used")
+        "country": row.get("country") or "—",
+        "last_used": row.get("last_used"),
+        "bound": True,
+        "bound_to_this_device": True
     }
 
 @app.post("/process")
@@ -262,11 +192,11 @@ async def process_video(request: Request, file: UploadFile = File(...)):
     if not ensure_bound_or_bind(db, row, device, device_name):
         raise HTTPException(403, "هذا المفتاح مربوط بجهاز آخر")
 
-    # ✅ التفعيل أول مرة فقط عند المعالجة
+    # ✅ أول مرة يستخدم المفتاح
     if not row.get("activated_on"):
         row["activated_on"] = now_iso()
-        client_ip = request.client.host
-        row["country"] = get_country_from_ip(client_ip)
+        client_ip = request.headers.get("X-Forwarded-For", request.client.host)
+        row["country"] = get_country_from_ip(client_ip) or "—"
 
     row["last_used"] = now_iso()
     save_db(db)
