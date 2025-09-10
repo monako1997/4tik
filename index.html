@@ -167,8 +167,112 @@
       }
     });
 
-    // ✅ ربط زر عرض الاشتراك
     document.getElementById("showSub").addEventListener("click", refreshSubscriptionBox);
+
+    // ✅ رفع ومعالجة الفيديو
+    const drop = document.getElementById("drop");
+    const fileInput = document.getElementById("file");
+    const processBtn = document.getElementById("process");
+    const bar = document.getElementById("bar");
+    const status = document.getElementById("status");
+    const fileInfo = document.getElementById("fileInfo");
+
+    function updateInfo() {
+      const f = fileInput.files[0];
+      status.textContent = "";
+      if (!f) {
+        fileInfo.textContent = "اسحب المقطع هنا أو اضغط للاختيار";
+        processBtn.disabled = true;
+        return;
+      }
+      fileInfo.textContent = `الملف: ${f.name} — ${(f.size/1024/1024).toFixed(2)} MB`;
+      processBtn.disabled = false;
+    }
+
+    drop.addEventListener("click", () => fileInput.click());
+    drop.addEventListener("dragover", e => e.preventDefault());
+    drop.addEventListener("drop", e => {
+      e.preventDefault();
+      if (e.dataTransfer.files.length) {
+        fileInput.files = e.dataTransfer.files;
+        updateInfo();
+      }
+    });
+    fileInput.addEventListener("change", updateInfo);
+
+    processBtn.addEventListener("click", async () => {
+      const f = fileInput.files[0];
+      if (!f) return alert("⚠️ اختر فيديو أولاً");
+
+      const key = localStorage.getItem("SUB_KEY");
+      if (!key) return alert("⚠️ المفتاح غير موجود، تحقق أولاً");
+
+      status.textContent = "جارٍ الرفع…";
+      bar.classList.remove("running");
+      bar.style.width = "0%";
+      processBtn.disabled = true;
+      fileInput.disabled = true;
+      drop.style.pointerEvents = "none";
+      drop.style.opacity = "0.5";
+
+      const fd = new FormData();
+      fd.append("file", f);
+
+      const xhr = new XMLHttpRequest();
+      xhr.open("POST", "/process", true);
+      xhr.responseType = "blob";
+      xhr.setRequestHeader("X-KEY", key);
+      xhr.setRequestHeader("X-DEVICE", "browser");
+      xhr.setRequestHeader("X-DEVICE-NAME", navigator.userAgent);
+
+      xhr.upload.onprogress = e => {
+        if (e.lengthComputable) {
+          bar.style.width = Math.round((e.loaded/e.total)*100) + "%";
+        }
+      };
+
+      xhr.onreadystatechange = () => {
+        if (xhr.readyState === XMLHttpRequest.HEADERS_RECEIVED) {
+          status.textContent = "جارٍ تحسين الفيديو…";
+          bar.classList.add("running");
+        }
+      };
+
+      xhr.onload = () => {
+        bar.classList.remove("running");
+        if (xhr.status === 200) {
+          status.textContent = "✅ تمّت المعالجة — يبدأ التنزيل الآن";
+          const blob = xhr.response;
+          const url = URL.createObjectURL(blob);
+          const a = document.createElement("a");
+          a.href = url;
+          a.download = "output.mp4";
+          document.body.appendChild(a);
+          a.click();
+          URL.revokeObjectURL(url);
+          a.remove();
+        } else {
+          status.textContent = "❌ خطأ أثناء المعالجة";
+        }
+        drop.style.pointerEvents = "auto";
+        drop.style.opacity = "1";
+        fileInput.disabled = false;
+        fileInput.value = "";
+        updateInfo();
+        processBtn.disabled = false;
+      };
+
+      xhr.onerror = () => {
+        bar.classList.remove("running");
+        status.textContent = "❌ تعذّر الاتصال بالسيرفر";
+        drop.style.pointerEvents = "auto";
+        drop.style.opacity = "1";
+        fileInput.disabled = false;
+        processBtn.disabled = false;
+      };
+
+      xhr.send(fd);
+    });
   </script>
 </body>
 </html>
