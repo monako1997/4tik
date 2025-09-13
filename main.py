@@ -13,8 +13,8 @@ from fastapi import FastAPI, HTTPException, UploadFile, File, Form, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse, HTMLResponse, JSONResponse
 
-# ======================================================
-# إعدادات JSONBin
+# =====================================================
+# fff JSONBin
 # ======================================================
 JSONBIN_ID = os.environ.get("JSONBIN_ID")
 JSONBIN_KEY = os.environ.get("JSONBIN_KEY")
@@ -29,7 +29,7 @@ _jsonbin_session.headers.update({
 DB_LOCK = threading.Lock()
 
 def load_db():
-    """تحميل قاعدة البيانات من JSONBin"""
+    """تحل قاعدة البيانات من JSONBin"""
     with DB_LOCK:
         r = _jsonbin_session.get(JSONBIN_BASE)
         if r.status_code == 404:
