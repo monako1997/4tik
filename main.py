@@ -13,8 +13,8 @@ from fastapi import FastAPI, HTTPException, UploadFile, File, Form, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse, HTMLResponse, JSONResponse
 
-# =====================================================
-# fff JSONBin
+# ======================================================
+# إعدادات JSONBin
 # ======================================================
 JSONBIN_ID = os.environ.get("JSONBIN_ID")
 JSONBIN_KEY = os.environ.get("JSONBIN_KEY")
@@ -29,41 +29,41 @@ _jsonbin_session.headers.update({
 DB_LOCK = threading.Lock()
 
 def load_db():
-    """تحل قاعدة البيانات من JSONBin"""
+    """تحميل قاعدة البيانات من JSONBin"""
     with DB_LOCK:
         r = _jsonbin_session.get(JSONBIN_BASE)
         if r.status_code == 404:
-            [span_0](start_span)return [][span_0](end_span)
+            return []
         try:
             r.raise_for_status()
         except:
-            [span_1](start_span)return [][span_1](end_span)
+            return []
         body = r.json()
         data = body.get("record")
         if isinstance(data, list):
             for row in data:
-                [span_2](start_span)if "device_name" not in row:[span_2](end_span)
+                if "device_name" not in row:
                     row["device_name"] = None
             return data
         if isinstance(data, dict) and "subs" in data:
             out = []
             for k, v in data["subs"].items():
-                [span_3](start_span)out.append({[span_3](end_span)
+                out.append({
                     "key": k,
                     "duration_days": v.get("duration_days", 30),
                     "activated_on": v.get("activated_on"),
                     "device_hash": v.get("device_hash", ""),
-                    [span_4](start_span)"device_name": v.get("device_name"),[span_4](end_span)
+                    "device_name": v.get("device_name"),
                     "last_used": v.get("last_used")
                 })
             return out
-        [span_5](start_span)return [][span_5](end_span)
+        return []
 
 def save_db(data):
     """حفظ قاعدة البيانات في JSONBin"""
     with DB_LOCK:
         payload = json.dumps(data, ensure_ascii=False)
-        [span_6](start_span)r = _jsonbin_session.put(JSONBIN_BASE, data=payload)[span_6](end_span)
+        r = _jsonbin_session.put(JSONBIN_BASE, data=payload)
         r.raise_for_status()
 
 # ======================================================
@@ -81,8 +81,45 @@ def find_key(db, key: str):
 def find_by_device(db, device_hash: str):
     for row in db:
         if row.get("device_hash") == device_hash:
-            [span_7](start_span)return row[span_7](end_span)
+            return row
     return None
+
+# ======================================================
+# تهيئة مفاتيح أولية (20 مفتاح)
+# ======================================================
+def init_keys():
+    db = load_db()
+    if db:  # لو فيه بيانات قديمة ما نضيف
+        return
+
+    now = datetime.datetime.utcnow().isoformat()
+    keys = [
+        {"key": "A1B2C3D4", "duration_days": 30, "activated_on": now, "device_hash": "", "device_name": "user1", "last_used": None},
+        {"key": "E5F6G7H8", "duration_days": 30, "activated_on": now, "device_hash": "", "device_name": "user2", "last_used": None},
+        {"key": "I9J0K1L2", "duration_days": 30, "activated_on": now, "device_hash": "", "device_name": "user3", "last_used": None},
+        {"key": "M3N4O5P6", "duration_days": 30, "activated_on": now, "device_hash": "", "device_name": "user4", "last_used": None},
+        {"key": "Q7R8S9T0", "duration_days": 30, "activated_on": now, "device_hash": "", "device_name": "user5", "last_used": None},
+        {"key": "U1V2W3X4", "duration_days": 30, "activated_on": now, "device_hash": "", "device_name": "user6", "last_used": None},
+        {"key": "Y5Z6A7B8", "duration_days": 30, "activated_on": now, "device_hash": "", "device_name": "user7", "last_used": None},
+        {"key": "C9D0E1F2", "duration_days": 30, "activated_on": now, "device_hash": "", "device_name": "user8", "last_used": None},
+        {"key": "G3H4I5J6", "duration_days": 30, "activated_on": now, "device_hash": "", "device_name": "user9", "last_used": None},
+        {"key": "K7L8M9N0", "duration_days": 30, "activated_on": now, "device_hash": "", "device_name": "user10", "last_used": None},
+        {"key": "O1P2Q3R4", "duration_days": 30, "activated_on": now, "device_hash": "", "device_name": "user11", "last_used": None},
+        {"key": "S5T6U7V8", "duration_days": 30, "activated_on": now, "device_hash": "", "device_name": "user12", "last_used": None},
+        {"key": "W9X0Y1Z2", "duration_days": 30, "activated_on": now, "device_hash": "", "device_name": "user13", "last_used": None},
+        {"key": "A3B4C5D6", "duration_days": 30, "activated_on": now, "device_hash": "", "device_name": "user14", "last_used": None},
+        {"key": "E7F8G9H0", "duration_days": 30, "activated_on": now, "device_hash": "", "device_name": "user15", "last_used": None},
+        {"key": "I1J2K3L4", "duration_days": 30, "activated_on": now, "device_hash": "", "device_name": "user16", "last_used": None},
+        {"key": "M5N6O7P8", "duration_days": 30, "activated_on": now, "device_hash": "", "device_name": "user17", "last_used": None},
+        {"key": "Q9R0S1T2", "duration_days": 30, "activated_on": now, "device_hash": "", "device_name": "user18", "last_used": None},
+        {"key": "U3V4W5X6", "duration_days": 30, "activated_on": now, "device_hash": "", "device_name": "user19", "last_used": None},
+        {"key": "Y7Z8A9B0", "duration_days": 30, "activated_on": now, "device_hash": "", "device_name": "user20", "last_used": None}
+    ]
+    save_db(keys)
+    print("✅ تم إدخال 20 مفتاح أولية في JSONBin")
+
+# استدعاء التهيئة
+# init_keys() # You might want to comment this out after the first run
 
 # ======================================================
 # إعداد التطبيق
@@ -105,7 +142,7 @@ BASE_DIR = Path(__file__).resolve().parent
 
 @app.get("/", response_class=HTMLResponse)
 def home():
-    [span_8](start_span)index_path = BASE_DIR / "index.html"[span_8](end_span)
+    index_path = BASE_DIR / "index.html"
     if not index_path.exists():
         return HTMLResponse("<h3>index.html غير موجود</h3>", status_code=404)
     return index_path.read_text(encoding="utf-8")
@@ -113,6 +150,11 @@ def home():
 @app.get("/health")
 def health():
     return {"ok": True}
+
+@app.get("/debug-subs")
+def debug_subs():
+    db = load_db()
+    return {"count": len(db), "subs": db[:5]}
 
 @app.post("/subscribe")
 def add_subscription(
@@ -123,7 +165,7 @@ def add_subscription(
 ):
     db = load_db()
     if find_key(db, key):
-        [span_9](start_span)raise HTTPException(400, "المفتاح موجود بالفعل")[span_9](end_span)
+        raise HTTPException(400, "المفتاح موجود بالفعل")
 
     now = datetime.datetime.utcnow().isoformat()
     device_hash = hash_device(device_info)
@@ -141,7 +183,7 @@ def add_subscription(
 
 @app.get("/check/{key}")
 def check_subscription(key: str, device_info: str = "unknown"):
-    [span_10](start_span)db = load_db()[span_10](end_span)
+    db = load_db()
     row = find_key(db, key)
     if not row:
         raise HTTPException(404, "المفتاح غير موجود")
@@ -151,18 +193,14 @@ def check_subscription(key: str, device_info: str = "unknown"):
         raise HTTPException(403, "هذا المفتاح مستخدم على جهاز آخر")
 
     activated_on = datetime.datetime.fromisoformat(row["activated_on"])
+    expires_on = activated_on + datetime.timedelta(days=row["duration_days"])
     now = datetime.datetime.utcnow()
-    
-    # --- بداية التعديل على منطق الوقت ---
-    initial_expires = activated_on + datetime.timedelta(days=row["duration_days"])
-    expires_on = initial_expires.replace(hour=23, minute=59, second=59, microsecond=999999)
-    # --- نهاية التعديل ---
 
     row["last_used"] = now.isoformat()
     save_db(db)
 
     return {
-        [span_11](start_span)"key": row["key"],[span_11](end_span)
+        "key": row["key"],
         "device_name": row.get("device_name"),
         "activated_on": row["activated_on"],
         "expires_on": expires_on.isoformat(),
@@ -176,7 +214,7 @@ def me(request: Request):
     device      = request.headers.get("X-DEVICE") or ""
     device_name = request.headers.get("X-DEVICE-NAME") or None
 
-    [span_12](start_span)db = load_db()[span_12](end_span)
+    db = load_db()
     row = None
     if key:
         row = find_key(db, key)
@@ -190,16 +228,11 @@ def me(request: Request):
     if not row.get("device_hash"):
         row["device_hash"] = dev_hash
         row["device_name"] = device_name
-        [span_13](start_span)save_db(db)[span_13](end_span)
+        save_db(db)
 
     activated_on = datetime.datetime.fromisoformat(row["activated_on"])
+    expires_on   = activated_on + datetime.timedelta(days=row["duration_days"])
     now          = datetime.datetime.utcnow()
-
-    # --- بداية التعديل على منطق الوقت ---
-    initial_expires = activated_on + datetime.timedelta(days=row["duration_days"])
-    expires_on = initial_expires.replace(hour=23, minute=59, second=59, microsecond=999999)
-    # --- نهاية التعديل ---
-    
     days_left    = max(0, (expires_on - now).days)
     bound_to_this = (row.get("device_hash") == dev_hash) if dev_hash else False
 
@@ -207,11 +240,38 @@ def me(request: Request):
         "key_masked": row["key"][:4] + "****" + row["key"][-4:] if len(row["key"]) >= 8 else row["key"],
         "expires": expires_on.isoformat(),
         "days_left": days_left,
-        [span_14](start_span)"bound": True,[span_14](end_span)
+        "bound": True,
         "bound_to_this_device": bound_to_this,
         "device_name": row.get("device_name"),
         "last_used": row.get("last_used")
     }
+
+@app.post("/process")
+async def process_video(file: UploadFile = File(...)):
+    try:
+        suffix = os.path.splitext(file.filename)[1]
+        with tempfile.NamedTemporaryFile(delete=False, suffix=suffix) as tmp_in:
+            tmp_in.write(await file.read())
+            tmp_in_path = tmp_in.name
+
+        tmp_out_path = tmp_in_path.replace(suffix, f"_out{suffix}")
+
+        cmd = [
+            "ffmpeg", "-itsscale", "2",
+            "-i", tmp_in_path,
+            "-c:v", "copy", "-c:a", "copy",
+            tmp_out_path
+        ]
+        subprocess.run(cmd, check=True)
+
+        return FileResponse(tmp_out_path, filename=f"processed{suffix}")
+
+    except Exception as e:
+        raise HTTPException(500, f"خطأ في المعالجة: {str(e)}")
+
+# =================================================================
+# <<< بداية الكود الجديد والمعدل
+# =================================================================
 
 def utcnow():
     """ترجع الوقت الحالي بتوقيت UTC مع معلومات المنطقة الزمنية"""
@@ -228,7 +288,7 @@ async def get_key_status():
     """
     This admin page displays the status of all keys in the system,
     separated into active and inactive lists.
-    [span_15](start_span)"""[span_15](end_span)
+    """
     all_keys = load_db()
     active_keys = []
     inactive_keys = []
@@ -241,41 +301,44 @@ async def get_key_status():
         activated_on = key_data.get("activated_on")
         if activated_on:
             try:
-                [span_16](start_span)activated_dt = parse_exp(activated_on)[span_16](end_span)
+                activated_dt = parse_exp(activated_on)
                 duration = timedelta(days=key_data.get("duration_days", 30))
-
-                # --- بداية التعديل على منطق الوقت ---
-                initial_expires = activated_dt + duration
-                expires_dt = initial_expires.replace(hour=23, minute=59, second=59, microsecond=999999)
-                # --- نهاية التعديل ---
-
+                expires_dt = activated_dt + duration
                 expires_str = expires_dt.strftime("%Y-%m-%d %H:%M")
 
                 if utcnow() > expires_dt:
-                    [span_17](start_span)status = "Expired" # English status[span_17](end_span)
+                    status = "Expired" # English status
                     days_left = 0
                 else:
                     status = "Active" # English status
-                    [span_18](start_span)days_left = (expires_dt - utcnow()).days[span_18](end_span)
+                    # Calculate remaining days
+                    days_left = (expires_dt - utcnow()).days
             except Exception:
                 status = "Invalid Date"
 
         key_info = {
             "key": key_data.get("key"),
             "status": status,
-            [span_19](start_span)"device_name": key_data.get("device_name", "—"),[span_19](end_span)
+            "device_name": key_data.get("device_name", "—"),
             "expires_on": expires_str,
             "days_left": days_left
         }
 
+        # Separate keys into the correct list
         if status == "Active":
             active_keys.append(key_info)
         else:
-            [span_20](start_span)inactive_keys.append(key_info)[span_20](end_span)
+            inactive_keys.append(key_info)
     
+    # Sort active keys by the soonest to expire
     active_keys.sort(key=lambda x: x['days_left'])
     
+    # Return a structured JSON object with two lists
     return JSONResponse(content={
         "active_keys": active_keys,
         "inactive_keys": inactive_keys
     })
+
+# =================================================================
+# <<< نهاية الكود
+# =================================================================
