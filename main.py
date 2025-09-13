@@ -7,7 +7,7 @@ import tempfile
 import threading
 import requests
 from pathlib import Path
-from datetime import timedelta # <<< تم إضافة هذا السطر
+from datetime import timedelta, timezone
 
 from fastapi import FastAPI, HTTPException, UploadFile, File, Form, Request
 from fastapi.middleware.cors import CORSMiddleware
@@ -119,7 +119,7 @@ def init_keys():
     print("✅ تم إدخال 20 مفتاح أولية في JSONBin")
 
 # استدعاء التهيئة
-init_keys()
+# init_keys() # You might want to comment this out after the first run
 
 # ======================================================
 # إعداد التطبيق
@@ -128,7 +128,7 @@ app = FastAPI()
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # ممكن تخصصيها لدومينك لاحقًا
+    allow_origins=["*"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -248,7 +248,6 @@ def me(request: Request):
 
 @app.post("/process")
 async def process_video(file: UploadFile = File(...)):
-    """معالجة فيديو باستخدام FFmpeg مع itsscale 2"""
     try:
         suffix = os.path.splitext(file.filename)[1]
         with tempfile.NamedTemporaryFile(delete=False, suffix=suffix) as tmp_in:
@@ -271,12 +270,12 @@ async def process_video(file: UploadFile = File(...)):
         raise HTTPException(500, f"خطأ في المعالجة: {str(e)}")
 
 # =================================================================
-# <<< بداية الكود الجديد: دوال مساعدة وصفحة إدارية
+# <<< بداية الكود الجديد والمعدل
 # =================================================================
 
 def utcnow():
     """ترجع الوقت الحالي بتوقيت UTC مع معلومات المنطقة الزمنية"""
-    return datetime.datetime.now(datetime.timezone.utc)
+    return datetime.datetime.now(timezone.utc)
 
 def parse_exp(timestamp_str):
     """تحويل التاريخ النصي إلى كائن datetime مع التعامل مع صيغ مختلفة"""
@@ -287,14 +286,17 @@ def parse_exp(timestamp_str):
 @app.get("/admin/key_status")
 async def get_key_status():
     """
-    هذه الصفحة الإدارية تعرض حالة جميع المفاتيح في النظام
+    This admin page displays the status of all keys in the system,
+    separated into active and inactive lists.
     """
     all_keys = load_db()
-    status_report = []
+    active_keys = []
+    inactive_keys = []
 
     for key_data in all_keys:
-        status = "لم يتم التفعيل"
+        status = "Not Activated" # English status
         expires_str = "N/A"
+        days_left = None
         
         activated_on = key_data.get("activated_on")
         if activated_on:
@@ -305,25 +307,38 @@ async def get_key_status():
                 expires_str = expires_dt.strftime("%Y-%m-%d %H:%M")
 
                 if utcnow() > expires_dt:
-                    status = "منتهي الصلاحية"
+                    status = "Expired" # English status
+                    days_left = 0
                 else:
-                    status = "نشط"
+                    status = "Active" # English status
+                    # Calculate remaining days
+                    days_left = (expires_dt - utcnow()).days
             except Exception:
-                status = "خطأ في تاريخ التفعيل"
+                status = "Invalid Date"
 
-        status_report.append({
+        key_info = {
             "key": key_data.get("key"),
             "status": status,
             "device_name": key_data.get("device_name", "—"),
             "expires_on": expires_str,
-            "last_used": key_data.get("last_used", "—")
-        })
+            "days_left": days_left
+        }
+
+        # Separate keys into the correct list
+        if status == "Active":
+            active_keys.append(key_info)
+        else:
+            inactive_keys.append(key_info)
     
-    # لتحسين العرض، يمكنك فرز المفاتيح حسب الحالة
-    status_report.sort(key=lambda x: (x['status'] != 'نشط', x['status'] != 'لم يتم التفعيل', x['expires_on']))
+    # Sort active keys by the soonest to expire
+    active_keys.sort(key=lambda x: x['days_left'])
     
-    return JSONResponse(content=status_report)
+    # Return a structured JSON object with two lists
+    return JSONResponse(content={
+        "active_keys": active_keys,
+        "inactive_keys": inactive_keys
+    })
 
 # =================================================================
-# <<< نهاية الكود الجديد
+# <<< نهاية الكود
 # =================================================================
