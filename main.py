@@ -248,6 +248,13 @@ def me(request: Request):
 
     expires_on = calc_expiry(row.get("activated_on"), row.get("duration_days", 30))
     now = datetime.datetime.utcnow()
+
+    # --- ✨✨ بداية الإصلاح ✨✨ ---
+    # التحقق من انتهاء الصلاحية هنا أيضاً لمنع الدخول للتطبيق بمفتاح منته
+    if expires_on and now >= expires_on:
+        return JSONResponse({"error": "انتهت صلاحية اشتراكك"}, status_code=403)
+    # --- نهاية الإصلاح ---
+
     days_left = max(0, (expires_on - now).days) if expires_on else 30
 
     row["last_used"] = now_iso()
@@ -269,7 +276,6 @@ def me(request: Request):
 
 @app.post("/process")
 async def process_video(request: Request, file: UploadFile = File(...)):
-    # --- بداية التعديل: التحقق من حجم الملف ---
     MAX_FILE_SIZE = 200 * 1024 * 1024  # 200MB in bytes
     content_length = request.headers.get("content-length")
 
@@ -284,7 +290,6 @@ async def process_video(request: Request, file: UploadFile = File(...)):
             status_code=413,
             detail=f"الملف أكبر من الحجم المسموح به. حجم الملف: {file_size_mb:.2f} MB، الحد الأقصى: 200 MB."
         )
-    # --- نهاية التعديل ---
 
     key = request.headers.get("X-KEY")
     device = request.headers.get("X-DEVICE") or ""
