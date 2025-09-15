@@ -24,6 +24,14 @@
         linear-gradient(180deg, #080910 0%, #0a0b12 100%);
       background-attachment: fixed;
     }
+   
+    /* THIS IS THE FIX */
+    #app-content {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+    }
+
     .topbar{
       position:sticky; top:0; width:100%; display:flex; justify-content:center; align-items:center; padding:14px 16px;
       backdrop-filter: saturate(140%) blur(8px);
