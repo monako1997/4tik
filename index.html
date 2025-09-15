@@ -98,7 +98,7 @@
     function getDeviceName() {
       const ua = navigator.userAgent;
       if (/mobile/i.test(ua)) {
-        if (/iphone|ipad|ipod/i.test(ua)) return "Apple Device";
+        if (/iphone|ipad|ipod/i.test(ua)) return "Apple🍎";
         if (/android/i.test(ua)) {
           const matches = ua.match(/Android\s+[\d\.]+;\s+([\w\s]+)\s+Build/i);
           if (matches && matches.length > 1) return matches[1];
@@ -107,7 +107,7 @@
       }
       if (/windows/i.test(ua)) return "Windows PC";
       if (/macintosh|mac os x/i.test(ua)) return "Mac";
-      return "Unknown Device";
+      return "phone";
     }
 
     async function sha256(text){const enc=new TextEncoder().encode(text),buf=await crypto.subtle.digest('SHA-256',enc);return Array.from(new Uint8Array(buf)).map(b=>b.toString(16).padStart(2,'0')).join('');}
