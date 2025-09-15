@@ -269,6 +269,23 @@ def me(request: Request):
 
 @app.post("/process")
 async def process_video(request: Request, file: UploadFile = File(...)):
+    # --- بداية التعديل: التحقق من حجم الملف ---
+    MAX_FILE_SIZE = 200 * 1024 * 1024  # 200MB in bytes
+    content_length = request.headers.get("content-length")
+
+    if not content_length:
+        raise HTTPException(status_code=411, detail="خطأ: لم يتم تحديد حجم الملف في الطلب.")
+    
+    file_size = int(content_length)
+
+    if file_size > MAX_FILE_SIZE:
+        file_size_mb = file_size / (1024 * 1024)
+        raise HTTPException(
+            status_code=413,
+            detail=f"الملف أكبر من الحجم المسموح به. حجم الملف: {file_size_mb:.2f} MB، الحد الأقصى: 200 MB."
+        )
+    # --- نهاية التعديل ---
+
     key = request.headers.get("X-KEY")
     device = request.headers.get("X-DEVICE") or ""
     device_name = request.headers.get("X-DEVICE-NAME") or None
@@ -283,7 +300,6 @@ async def process_video(request: Request, file: UploadFile = File(...)):
     if not ensure_bound_or_bind(db, row, device, device_name):
         raise HTTPException(403, "هذا المفتاح مربوط بجهاز آخر")
 
-    # ✅ تحقق من انتهاء الاشتراك
     expires_on = calc_expiry(row.get("activated_on"), row.get("duration_days", 30))
     now = datetime.datetime.utcnow()
     if not expires_on or now >= expires_on:
@@ -295,7 +311,8 @@ async def process_video(request: Request, file: UploadFile = File(...)):
     try:
         suffix = os.path.splitext(file.filename)[1]
         with tempfile.NamedTemporaryFile(delete=False, suffix=suffix) as tmp_in:
-            tmp_in.write(await file.read())
+            contents = await file.read()
+            tmp_in.write(contents)
             tmp_in_path = tmp_in.name
 
         tmp_out_path = tmp_in_path.replace(suffix, f"_out{suffix}")
