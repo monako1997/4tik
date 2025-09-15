@@ -39,7 +39,6 @@
     }
     @keyframes shine { to { background-position:-200% center; } }
     
-    /* THIS IS THE FIX */
     .wrap{
       width: min(900px, 94vw);
       padding: 20px 0 160px;
@@ -140,12 +139,14 @@
     .login-overlay .btn-container { display: flex; justify-content: center; margin-top: 2.5em; }
     .login-overlay .login-button { padding: 0.8em; width: 100%; border-radius: 5px; border: none; outline: none; transition: 0.4s ease-in-out; background-color: #252525; color: white; font-size: 1em; font-family: 'Cairo', sans-serif; cursor: pointer; }
     .login-overlay .login-button:hover { background-color: #00ff75; color: black; }
+    .login-overlay .login-button:disabled { background-color: #555; cursor: not-allowed; }
     .login-feedback {
         text-align: center;
         color: #FE2C55;
         font-size: 14px;
         height: 20px;
         margin-top: 10px;
+        color: var(--c1); /* Use a less alarming color for status updates */
     }
 
   </style>
@@ -156,13 +157,14 @@
     <div class="login-card">
       <div class="card2">
         <form class="form" id="login-form">
+          <h1 class="brand" style="text-align: center; font-size: 38px; margin-bottom: 20px;">4TIK PRO</h1>
           <p id="heading">تسجيل الدخول</p>
           <div class="field">
             <svg viewBox="0 0 16 16" fill="currentColor" height="16" width="16" xmlns="http://www.w3.org/2000/svg" class="input-icon">
               <path d="M13.106 7.222c0-2.967-2.249-5.032-5.482-5.032-3.35 0-5.646 2.318-5.646 5.702 0 3.493 2.235 5.708 5.762 5.708.862 0 1.689-.123 2.304-.335v-.862c-.43.۱۹۹-۱.۳۵۴.۳۲۸-۲.۲۹.۳۲۸-۲.۹۲۶ ۰-۴.۸۱۳-۱.۸۸-۴.۸۱۳-۴.۷۹۸ ۰-۲.۸۴۴ ۱.۹۲۱-۴.۸۸۱ ۴.۵۹۴-۴.۸۸۱ ۲.۷۳۵ ۰ ۴.۶۰۸ ۱.۶۸۸ ۴.۶۰۸ ۴.۱۵۶ ۰ ۱.۶۸۲-.۵۵۴ ۲.۷۶۹-۱.۴۱۶ ۲.۷۶۹-.۴۹۲ ۰-.۷۷۲-.۲۸-.۷۷۲-.۷۶V5.206H8.923v.834h-.11c-.266-.595-.881-.964-۱.۶-.964-۱.۴ ۰-۲.۳۷۸ ۱.۱۶۲-۲.۳۷۸ ۲.۸۲۳ ۰ ۱.۷۳۷.۹۵۷ ۲.۹۰۶ ۲.۳۷۹ ۲.۹۰۶.۸ ۰ ۱.۴۱۵-.۳۹ ۱.۷۰۹-۱.۰۸۷h.۱۱c.۰۸۱.۶۷.۷۰۳ ۱.۱۴۸ ۱.۵۰۳ ۱.۱۴۸ ۱.۵۷۲ ۰ ۲.۵۷-۱.۴۱۵ ۲.۵۷-۳.۶۴۳zm-۷.۱۷۷.۷۰۴c۰-۱.۱۹۷.۵۴-۱.۹۰۷ ۱.۴۵۶-۱.۹۰۷.۹۳ ۰ ۱.۵۲۴.۷۳۸ ۱.۵۲۴ ۱.۹۰۷S8.۳۰۸ ۹.۸۴ 7.37۱ ۹.۸۴c-.۸۹۵ ۰-۱.۴۴۲-.۷۲۵-۱.۴۴۲-۱.۹۱۴z"></path>
             </svg>
-            <input type="text" class="input-field" placeholder="اسم المستخدم" id="username-field" readonly>
-          </div>
+            <input type="text" class="input-field" placeholder="اسم المستخدم" id="username-field">
+            </div>
           <div class="field">
             <svg viewBox="0 0 16 16" fill="currentColor" height="16" width="16" xmlns="http://www.w3.org/2000/svg" class="input-icon">
               <path d="M8 1a2 2 0 0 1 2 2v4H6V3a2 2 0 0 1 2-2zm3 6V3a3 3 0 0 0-6 0v4a2 2 0 0 0-2 2v5a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2z"></path>
@@ -248,14 +250,10 @@
     function canvasFingerprint(){try{const c=document.createElement('canvas');c.width=200;c.height=60;const g=c.getContext('2d');g.textBaseline='top';g.font='16px Arial';g.fillStyle='#f60';g.fillRect(0,0,200,30);g.fillStyle='#069';g.fillText('4TikPro-fp',2,2);g.strokeStyle='#f00';g.arc(100,30,20,0,Math.PI*2);g.stroke();return c.toDataURL()}catch{return'no-canvas'}}
     function webglInfo(){try{const c=document.createElement('canvas'),gl=c.getContext('webgl')||c.getContext('experimental-webgl');if(!gl)return'no-webgl';const dbg=gl.getExtension('WEBGL_debug_renderer_info');return(dbg?gl.getParameter(dbg.UNMASKED_VENDOR_WEBGL):'v?')+'|'+(dbg?gl.getParameter(dbg.UNMASKED_RENDERER_WEBGL):'r?')}catch{return'no-webgl'}}
     async function getDeviceHash(){const seedParts=[navigator.platform||'pf?',(screen.width||0)+'x'+(screen.height||0),window.devicePixelRatio||1,navigator.hardwareConcurrency||'hc?',navigator.deviceMemory||'dm?',navigator.maxTouchPoints||0,Intl.DateTimeFormat().resolvedOptions().timeZone||'tz?',canvasFingerprint(),webglInfo()];return await sha256(seedParts.join('|'))}
-    function generateRandomUsername() {
-        const adjectives = ["Fast", "Quick", "Silent", "Brave", "Clever", "Super", "Magic"];
-        const nouns = ["Lion", "Tiger", "Fox", "Wolf", "Eagle", "User", "Guest"];
-        const randomAdj = adjectives[Math.floor(Math.random() * adjectives.length)];
-        const randomNoun = nouns[Math.floor(Math.random() * nouns.length)];
-        const randomNumber = Math.floor(100 + Math.random() * 900);
-        return `${randomAdj}${randomNoun}${randomNumber}`;
-    }
+    
+    // --- START CHANGE 3: Removed random username generator ---
+    // The function generateRandomUsername() was removed as it's no longer needed.
+    // --- END CHANGE 3 ---
 
     // --- Main App Logic ---
     function showApp() {
@@ -264,7 +262,11 @@
     }
 
     function showLogin(message = '') {
-        usernameField.value = generateRandomUsername();
+        // --- START CHANGE 4: No longer setting a random username ---
+        // usernameField.value = generateRandomUsername(); // This line is removed.
+        // --- END CHANGE 4 ---
+        keyField.value = ''; // Clear key field on re-login
+        loginFeedback.style.color = '#FE2C55'; // Set color to red for errors
         loginFeedback.textContent = message;
         loginOverlay.style.display = 'flex';
         appContent.style.display = 'none';
@@ -277,7 +279,9 @@
         return false;
       }
 
-      loginFeedback.textContent = 'جارٍ التحقق...';
+      if (!isAutoCheck) {
+          loginFeedback.style.color = 'var(--c1)'; // Set color to cyan for status
+      }
 
       try {
         const device = await getDeviceHash();
@@ -317,6 +321,7 @@
       } catch (e) {
         if (!isAutoCheck) {
             subToast.textContent = 'تعذر جلب معلومات الاشتراك';
+            showLogin('فشل الاتصال بالخادم. تحقق من اتصالك بالإنترنت.');
             setTimeout(() => subToast.textContent = '', 2000);
         }
         return false;
@@ -324,16 +329,39 @@
     }
 
     // --- Event Listeners ---
+    // --- START CHANGE 5: Updated Login Form Submission Logic ---
     loginForm.addEventListener('submit', async (e) => {
         e.preventDefault();
+        const loginButton = e.target.querySelector('.login-button');
         const userKey = keyField.value.trim();
-        if (!userKey) {
-            loginFeedback.textContent = 'خانة المفتاح لا يمكن أن تكون فارغة.';
+        const username = usernameField.value.trim(); // Get username value
+
+        if (!username || !userKey) {
+            loginFeedback.style.color = '#FE2C55';
+            loginFeedback.textContent = 'يجب إدخال اسم المستخدم والمفتاح.';
             return;
         }
-        localStorage.setItem('SUB_KEY', userKey);
-        await refreshSubscriptionBox(false);
+
+        loginButton.disabled = true;
+        loginFeedback.style.color = 'var(--c1)'; // Cyan for status updates
+        loginFeedback.textContent = 'جار التحقق...';
+
+        // Staged feedback for a smoother feel
+        setTimeout(async () => {
+            loginFeedback.textContent = 'جاري التحقق من الخادم...';
+            
+            // Now, perform the actual check
+            localStorage.setItem('SUB_KEY', userKey);
+            const isValid = await refreshSubscriptionBox(false);
+
+            // If the login fails, re-enable the button so the user can try again.
+            if (!isValid) {
+                loginButton.disabled = false;
+            }
+        }, 800); // 800ms delay before showing the second message
     });
+    // --- END CHANGE 5 ---
+
 
     function updateInfo(){const f=fileInput.files[0];status.textContent='';if(!f){info.textContent='اسحب المقطع هنا أو اضغط للاختيار';processBtn.disabled=!0;return}
     const MAX_SIZE=209715200;if(f.size>MAX_SIZE){info.textContent=`الملف: ${f.name}`;status.textContent=`❌ حجم الملف كبير جدًا (${mb(f.size)}). الحد الأقصى 200 MB.`;processBtn.disabled=!0;fileInput.value='';return}
@@ -356,34 +384,28 @@
             a.remove();
             setTimeout(()=>{drop.style.pointerEvents='auto';drop.style.opacity='1';fileInput.disabled=!1;fileInput.value='';updateInfo()},800)
         } else {
-            // --- ✨✨ بداية الإصلاح ✨✨ ---
             const reader = new FileReader();
             reader.onload = () => {
                 let errorMsg = 'حدث خطأ غير متوقع. حاول مجددًا.';
                 try {
-                    // الباكند يرسل الخطأ كـ JSON مثل {"detail": "message"} أو {"error": "message"}
                     const errorResponse = JSON.parse(reader.result);
                     errorMsg = errorResponse.detail || errorResponse.error || 'المفتاح غير صالح أو انتهت صلاحيته.';
                 } catch (e) {
-                    // إذا لم تكن الاستجابة JSON، استخدم رسالة عامة
                     errorMsg = 'المفتاح غير صالح أو انتهت صلاحيته. سجل الدخول مجددًا.';
                 }
                 localStorage.removeItem('SUB_KEY');
-                showLogin(errorMsg); // عرض رسالة الخطأ الفعلية
+                showLogin(errorMsg);
             };
             reader.onerror = () => {
-                // في حالة فشل القراءة
                 localStorage.removeItem('SUB_KEY');
                 showLogin('خطأ في معالجة الاستجابة من الخادم.');
             };
             reader.readAsText(xhr.response);
 
-            // إعادة تعيين الواجهة
             drop.style.pointerEvents = 'auto';
             drop.style.opacity = '1';
             fileInput.disabled = false;
             updateInfo();
-            // --- نهاية الإصلاح ---
         }
     };
     
@@ -395,12 +417,12 @@
     window.addEventListener('load', async () => {
       const keyExists = localStorage.getItem('SUB_KEY');
       if (keyExists) {
-        const isValid = await refreshSubscriptionBox(true); // Auto-check silently
+        const isValid = await refreshSubscriptionBox(true);
         if (!isValid) {
           showLogin('المفتاح المحفوظ غير صالح، أدخل مفتاحًا جديدًا.');
         }
       } else {
-        showLogin(); // No key found, show login form
+        showLogin();
       }
     });
 
