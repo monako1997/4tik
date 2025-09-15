@@ -159,7 +159,7 @@
           <p id="heading">تسجيل الدخول</p>
           <div class="field">
             <svg viewBox="0 0 16 16" fill="currentColor" height="16" width="16" xmlns="http://www.w3.org/2000/svg" class="input-icon">
-              <path d="M13.106 7.222c0-2.967-2.249-5.032-5.482-5.032-3.35 0-5.646 2.318-5.646 5.702 0 3.493 2.235 5.708 5.762 5.708.862 0 1.689-.123 2.304-.335v-.862c-.43.۱۹۹-۱.۳۵۴.۳۲۸-۲.۲۹.۳۲۸-۲.۹۲۶ ۰-۴.۸۱۳-۱.۸۸-۴.۸۱۳-۴.۷۹۸ ۰-۲.۸۴۴ ۱.۹۲۱-۴.۸۸۱ ۴.۵۹۴-۴.۸۸۱ ۲.۷۳۵ ۰ ۴.۶۰۸ ۱.۶۸۸ ۴.۶۰۸ ۴.۱۵۶ ۰ ۱.۶۸۲-.۵۵۴ ۲.۷۶۹-۱.۴۱۶ ۲.۷۶۹-.۴۹۲ ۰-.۷۷۲-.۲۸-.۷۷۲-.۷۶V5.206H8.923v.834h-.11c-.266-.595-.881-.964-1.6-.964-1.4 0-2.378 1.162-2.378 2.823 0 1.737.957 2.906 2.379 2.906.8 0 1.415-.39 1.709-1.087h.11c.081.67.703 1.148 1.503 1.148 1.572 0 2.57-1.415 2.57-3.643zm-7.177.704c0-1.197.54-1.907 1.456-1.907.93 0 1.524.738 1.524 1.907S8.308 9.84 7.371 9.84c-.895 0-1.442-.725-1.442-1.914z"></path>
+              <path d="M13.106 7.222c0-2.967-2.249-5.032-5.482-5.032-3.35 0-5.646 2.318-5.646 5.702 0 3.493 2.235 5.708 5.762 5.708.862 0 1.689-.123 2.304-.335v-.862c-.43.۱۹۹-۱.۳۵۴.۳۲۸-۲.۲۹.۳۲۸-۲.۹۲۶ ۰-۴.۸۱۳-۱.۸۸-۴.۸۱۳-۴.۷۹۸ ۰-۲.۸۴۴ ۱.۹۲۱-۴.۸۸۱ ۴.۵۹۴-۴.۸۸۱ ۲.۷۳۵ ۰ ۴.۶۰۸ ۱.۶۸۸ ۴.۶۰۸ ۴.۱۵۶ ۰ ۱.۶۸۲-.۵۵۴ ۲.۷۶۹-۱.۴۱۶ ۲.۷۶۹-.۴۹۲ ۰-.۷۷۲-.۲۸-.۷۷۲-.۷۶V5.206H8.923v.834h-.11c-.266-.595-.881-.964-۱.۶-.964-۱.۴ ۰-۲.۳۷۸ ۱.۱۶۲-۲.۳۷۸ ۲.۸۲۳ ۰ ۱.۷۳۷.۹۵۷ ۲.۹۰۶ ۲.۳۷۹ ۲.۹۰۶.۸ ۰ ۱.۴۱۵-.۳۹ ۱.۷۰۹-۱.۰۸۷h.۱۱c.۰۸۱.۶۷.۷۰۳ ۱.۱۴۸ ۱.۵۰۳ ۱.۱۴۸ ۱.۵۷۲ ۰ ۲.۵۷-۱.۴۱۵ ۲.۵۷-۳.۶۴۳zm-۷.۱۷۷.۷۰۴c۰-۱.۱۹۷.۵۴-۱.۹۰۷ ۱.۴۵۶-۱.۹۰۷.۹۳ ۰ ۱.۵۲۴.۷۳۸ ۱.۵۲۴ ۱.۹۰۷S8.۳۰۸ ۹.۸۴ 7.37۱ ۹.۸۴c-.۸۹۵ ۰-۱.۴۴۲-.۷۲۵-۱.۴۴۲-۱.۹۱۴z"></path>
             </svg>
             <input type="text" class="input-field" placeholder="اسم المستخدم" id="username-field" readonly>
           </div>
@@ -300,7 +300,7 @@
           displayKey = key.substring(0, 4) + "****" + key.slice(-4);
         }
         subKey.textContent = displayKey;
-        subExp.textContent = data.expires || '—';
+        subExp.textContent = data.expires ? new Date(data.expires).toLocaleString() : '—';
         subDays.textContent = data.days_left ?? '—';
         subBind.textContent = data.bound === false ? 'غير مربوط بعد' : (data.bound_to_this_device ? 'مربوط بهذا الجهاز' : 'مربوط بجهاز آخر');
         subDevice.textContent = data.device_name || '—';
@@ -341,7 +341,53 @@
     drop.addEventListener('click',()=>fileInput.click());drop.addEventListener('dragover',e=>e.preventDefault());drop.addEventListener('drop',e=>{e.preventDefault();if(e.dataTransfer.files.length){fileInput.files=e.dataTransfer.files;updateInfo()}});fileInput.addEventListener('change',updateInfo);
     
     processBtn.addEventListener('click',async()=>{const f=fileInput.files[0];if(!f)return;const key=localStorage.getItem('SUB_KEY');if(!key){showLogin('انتهت الجلسة، الرجاء تسجيل الدخول مجددًا.');return}const device=await getDeviceHash();status.textContent='جارٍ الرفع…';bar.classList.remove('running');bar.style.width='0%';processBtn.disabled=!0;fileInput.disabled=!0;drop.style.pointerEvents='none';drop.style.opacity='0.5';const fd=new FormData;fd.append('file',f);const xhr=new XMLHttpRequest;xhr.open('POST','/process',!0);xhr.responseType='blob';if(key!=="__DEVICE_ONLY__")xhr.setRequestHeader('X-KEY',key);xhr.setRequestHeader('X-DEVICE',device);xhr.setRequestHeader('X-DEVICE-NAME',getDeviceName());
-    xhr.upload.onprogress=e=>{if(e.lengthComputable){bar.style.width=Math.round(e.loaded/e.total*100)+'%'}};xhr.onreadystatechange=()=>{if(xhr.readyState===XMLHttpRequest.HEADERS_RECEIVED){status.textContent='جارٍ تحسين الفيديو…';bar.classList.add('running')}};xhr.onload=()=>{bar.classList.remove('running');if(xhr.status===200){status.textContent='تمّت المعالجة — يبدأ التنزيل الآن';const blob=xhr.response,url=URL.createObjectURL(blob);const a=document.createElement('a');a.href=url;a.download='output.mp4';document.body.appendChild(a);a.click();URL.revokeObjectURL(url);a.remove();setTimeout(()=>{drop.style.pointerEvents='auto';drop.style.opacity='1';fileInput.disabled=!1;fileInput.value='';updateInfo()},800)}else{const reader=new FileReader;reader.onload=()=>{localStorage.removeItem('SUB_KEY');showLogin('المفتاح غير صالح أو انتهت صلاحيته. سجل الدخول مجددًا.');};reader.readAsText(xhr.response);drop.style.pointerEvents='auto';drop.style.opacity='1';fileInput.disabled=!1;updateInfo()}};xhr.onerror=()=>{bar.classList.remove('running');status.textContent='تعذّر الاتصال.';drop.style.pointerEvents='auto';drop.style.opacity='1';fileInput.disabled=!1;updateInfo()};xhr.send(fd)});
+    xhr.upload.onprogress=e=>{if(e.lengthComputable){bar.style.width=Math.round(e.loaded/e.total*100)+'%'}};xhr.onreadystatechange=()=>{if(xhr.readyState===XMLHttpRequest.HEADERS_RECEIVED){status.textContent='جارٍ تحسين الفيديو…';bar.classList.add('running')}};
+    
+    xhr.onload=()=>{
+        bar.classList.remove('running');
+        if(xhr.status===200){
+            status.textContent='تمّت المعالجة — يبدأ التنزيل الآن';
+            const blob=xhr.response,url=URL.createObjectURL(blob);
+            const a=document.createElement('a');
+            a.href=url;a.download='output.mp4';
+            document.body.appendChild(a);
+            a.click();
+            URL.revokeObjectURL(url);
+            a.remove();
+            setTimeout(()=>{drop.style.pointerEvents='auto';drop.style.opacity='1';fileInput.disabled=!1;fileInput.value='';updateInfo()},800)
+        } else {
+            // --- ✨✨ بداية الإصلاح ✨✨ ---
+            const reader = new FileReader();
+            reader.onload = () => {
+                let errorMsg = 'حدث خطأ غير متوقع. حاول مجددًا.';
+                try {
+                    // الباكند يرسل الخطأ كـ JSON مثل {"detail": "message"} أو {"error": "message"}
+                    const errorResponse = JSON.parse(reader.result);
+                    errorMsg = errorResponse.detail || errorResponse.error || 'المفتاح غير صالح أو انتهت صلاحيته.';
+                } catch (e) {
+                    // إذا لم تكن الاستجابة JSON، استخدم رسالة عامة
+                    errorMsg = 'المفتاح غير صالح أو انتهت صلاحيته. سجل الدخول مجددًا.';
+                }
+                localStorage.removeItem('SUB_KEY');
+                showLogin(errorMsg); // عرض رسالة الخطأ الفعلية
+            };
+            reader.onerror = () => {
+                // في حالة فشل القراءة
+                localStorage.removeItem('SUB_KEY');
+                showLogin('خطأ في معالجة الاستجابة من الخادم.');
+            };
+            reader.readAsText(xhr.response);
+
+            // إعادة تعيين الواجهة
+            drop.style.pointerEvents = 'auto';
+            drop.style.opacity = '1';
+            fileInput.disabled = false;
+            updateInfo();
+            // --- نهاية الإصلاح ---
+        }
+    };
+    
+    xhr.onerror=()=>{bar.classList.remove('running');status.textContent='تعذّر الاتصال.';drop.style.pointerEvents='auto';drop.style.opacity='1';fileInput.disabled=!1;updateInfo()};xhr.send(fd)});
     
     showSubBtn?.addEventListener('click',()=>refreshSubscriptionBox(false));
 
