@@ -22,8 +22,15 @@
         radial-gradient(ellipse 50vw 30vh at 15% -10%, rgba(37,244,238,.12), transparent 80%),
         radial-gradient(ellipse 60vw 40vh at 110% -20%, rgba(254,44,85,.12), transparent 80%),
         linear-gradient(180deg, #080910 0%, #0a0b12 100%);
-      background-attachment: fixed;
+      /* --- START CHANGE 1: Removed 'background-attachment: fixed;' for smoother scrolling --- */
+      /* background-attachment: fixed; */ /* This line was removed */
+      /* --- END CHANGE 1 --- */
     }
+    /* --- START CHANGE 2: Added class to prevent scrolling when login is active --- */
+    body.login-active {
+      overflow: hidden;
+    }
+    /* --- END CHANGE 2 --- */
     .topbar{
       position:sticky; top:0; width:100%; display:flex; justify-content:center; align-items:center; padding:14px 16px;
       backdrop-filter: saturate(140%) blur(8px);
@@ -251,25 +258,25 @@
     function webglInfo(){try{const c=document.createElement('canvas'),gl=c.getContext('webgl')||c.getContext('experimental-webgl');if(!gl)return'no-webgl';const dbg=gl.getExtension('WEBGL_debug_renderer_info');return(dbg?gl.getParameter(dbg.UNMASKED_VENDOR_WEBGL):'v?')+'|'+(dbg?gl.getParameter(dbg.UNMASKED_RENDERER_WEBGL):'r?')}catch{return'no-webgl'}}
     async function getDeviceHash(){const seedParts=[navigator.platform||'pf?',(screen.width||0)+'x'+(screen.height||0),window.devicePixelRatio||1,navigator.hardwareConcurrency||'hc?',navigator.deviceMemory||'dm?',navigator.maxTouchPoints||0,Intl.DateTimeFormat().resolvedOptions().timeZone||'tz?',canvasFingerprint(),webglInfo()];return await sha256(seedParts.join('|'))}
     
-    // --- START CHANGE 3: Removed random username generator ---
-    // The function generateRandomUsername() was removed as it's no longer needed.
-    // --- END CHANGE 3 ---
 
     // --- Main App Logic ---
     function showApp() {
         loginOverlay.style.display = 'none';
         appContent.style.display = 'block';
+        // --- START CHANGE 3: Remove class to re-enable scrolling ---
+        document.body.classList.remove('login-active');
+        // --- END CHANGE 3 ---
     }
 
     function showLogin(message = '') {
-        // --- START CHANGE 4: No longer setting a random username ---
-        // usernameField.value = generateRandomUsername(); // This line is removed.
-        // --- END CHANGE 4 ---
         keyField.value = ''; // Clear key field on re-login
         loginFeedback.style.color = '#FE2C55'; // Set color to red for errors
         loginFeedback.textContent = message;
         loginOverlay.style.display = 'flex';
         appContent.style.display = 'none';
+        // --- START CHANGE 4: Add class to disable scrolling ---
+        document.body.classList.add('login-active');
+        // --- END CHANGE 4 ---
     }
     
     async function refreshSubscriptionBox(isAutoCheck = false) {
@@ -329,7 +336,6 @@
     }
 
     // --- Event Listeners ---
-    // --- START CHANGE 5: Updated Login Form Submission Logic ---
     loginForm.addEventListener('submit', async (e) => {
         e.preventDefault();
         const loginButton = e.target.querySelector('.login-button');
@@ -360,7 +366,6 @@
             }
         }, 800); // 800ms delay before showing the second message
     });
-    // --- END CHANGE 5 ---
 
 
     function updateInfo(){const f=fileInput.files[0];status.textContent='';if(!f){info.textContent='اسحب المقطع هنا أو اضغط للاختيار';processBtn.disabled=!0;return}
