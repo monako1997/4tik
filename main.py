@@ -227,6 +227,51 @@ def check_subscription(key: str, request: Request):
         "valid": (now < expires_on) if expires_on else True
     }
 
+# --- ✨✨ المسار التشخيصي الجديد ✨✨ ---
+@app.get("/debug-key/{key}")
+def debug_key_info(key: str):
+    db = load_db()
+    row = find_key(db, key)
+    
+    if not row:
+        return {"error": "لم يتم العثور على المفتاح في قاعدة البيانات."}
+
+    # --- معلومات من وجهة نظر الخادم ---
+    server_now_utc = datetime.datetime.utcnow()
+    activated_on_str = row.get("activated_on")
+    duration_days = row.get("duration_days", 30)
+    
+    expires_on = None
+    is_expired = None
+    
+    if activated_on_str:
+        try:
+            activated_on_dt = datetime.datetime.fromisoformat(activated_on_str)
+            expires_on = activated_on_dt + datetime.timedelta(days=duration_days)
+            is_expired = server_now_utc >= expires_on
+        except (ValueError, TypeError):
+            # This handles cases where activated_on might be in a wrong format
+            expires_on = "خطأ في الحساب"
+            is_expired = "خطأ في الحساب"
+    
+    return {
+        "1_server_time": {
+            "current_utc_time": server_now_utc.isoformat(),
+            "comment": "هذا هو الوقت الحالي على الخادم. قارنه بالوقت الفعلي."
+        },
+        "2_key_data_from_db": {
+            "key": row.get("key"),
+            "activated_on": activated_on_str,
+            "duration_days": duration_days,
+            "comment": "هذه هي البيانات التي يقرأها الخادم من قاعدة البيانات."
+        },
+        "3_expiry_calculation": {
+            "expires_on_utc": expires_on.isoformat() if isinstance(expires_on, datetime.datetime) else str(expires_on),
+            "is_expired_according_to_server": is_expired,
+            "comment": "بناءً على ما سبق، هل يعتقد الخادم أن المفتاح منتهي الصلاحية؟"
+        }
+    }
+
 @app.get("/me")
 def me(request: Request):
     key = request.headers.get("X-KEY")
@@ -249,11 +294,9 @@ def me(request: Request):
     expires_on = calc_expiry(row.get("activated_on"), row.get("duration_days", 30))
     now = datetime.datetime.utcnow()
 
-    # --- ✨✨ بداية الإصلاح ✨✨ ---
     # التحقق من انتهاء الصلاحية هنا أيضاً لمنع الدخول للتطبيق بمفتاح منته
     if expires_on and now >= expires_on:
         return JSONResponse({"error": "انتهت صلاحية اشتراكك"}, status_code=403)
-    # --- نهاية الإصلاح ---
 
     days_left = max(0, (expires_on - now).days) if expires_on else 30
 
