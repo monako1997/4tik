@@ -67,7 +67,8 @@ def load_db():
 def save_db(data):
     """حفظ قاعدة البيانات في JSONBin: قائمة عناصر"""
     with DB_LOCK:
-        payload = json.dumps(data, ensure_ascii=False)
+        # ✨✨ هذا هو السطر الذي تم تصحيحه ✨✨
+        payload = json.dumps(data, ensure_ascii=False).encode('utf-8')
         r = _jsonbin_session.put(JSONBIN_BASE, data=payload)
         r.raise_for_status()
 
