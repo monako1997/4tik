@@ -20,9 +20,10 @@ JSONBIN_KEY = os.environ.get("JSONBIN_KEY")
 JSONBIN_BASE = f"https://api.jsonbin.io/v3/b/{JSONBIN_ID}"
 
 _jsonbin_session = requests.Session()
+# ✨✨ التعديل الأول: تحديد الترميز في الهيدر ✨✨
 _jsonbin_session.headers.update({
     "X-Master-Key": JSONBIN_KEY,
-    "Content-Type": "application/json"
+    "Content-Type": "application/json; charset=utf-8"
 })
 
 DB_LOCK = threading.Lock()
@@ -67,7 +68,7 @@ def load_db():
 def save_db(data):
     """حفظ قاعدة البيانات في JSONBin: قائمة عناصر"""
     with DB_LOCK:
-        # ✨✨ هذا هو السطر الذي تم تصحيحه ✨✨
+        # ✨✨ التعديل الثاني: ترميز البيانات قبل إرسالها ✨✨
         payload = json.dumps(data, ensure_ascii=False).encode('utf-8')
         r = _jsonbin_session.put(JSONBIN_BASE, data=payload)
         r.raise_for_status()
