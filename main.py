@@ -18,11 +18,11 @@ from fastapi.responses import FileResponse, HTMLResponse, JSONResponse
 # ============================
 JSONBIN_ID = os.environ.get("JSONBIN_ID")
 JSONBIN_KEY = os.environ.get("JSONBIN_KEY")
-JSONBIN_BASE = f"https://api.jsonbin.io/v3/b/{JSONBIN_ID}"
+JSONBIN_BASE = f"https://api.json.io/v3/b/{JSONBIN_ID}"
 
 ADMIN_SECRET_KEY = os.environ.get("ADMIN_SECRET_KEY")
 if not ADMIN_SECRET_KEY:
-    raise ValueError("⛔️ خطأ فادح: متغير البيئة ADMIN_SECRET_KEY غير معين. لا يمكن تشغيل التطبيق بأمان.")
+    raise ValueError("⛔️ خطأ فادح: متغير البيئة ADMIN_SECRET_KEY غير معين.")
 
 _jsonbin_session = requests.Session()
 _jsonbin_session.headers.update({
@@ -33,29 +33,34 @@ _jsonbin_session.headers.update({
 DB_LOCK = threading.Lock()
 
 # ============================
-# دوال التخزين (بدون تغيير)
+# دوال التخزين (Database Functions)
 # ============================
 def load_db():
-    """تحميل قاعدة البيانات (قائمة المفاتيح) من JSONBin"""
     with DB_LOCK:
-        r = _jsonbin_session.get(JSONBIN_BASE)
-        if r.status_code == 404: return []
         try:
+            r = _jsonbin_session.get(JSONBIN_BASE)
+            if r.status_code == 404: return []
             r.raise_for_status()
-            record = r.json().get("record", [])
-            return record if isinstance(record, list) else []
-        except Exception:
+            data = r.json().get("record", [])
+            if isinstance(data, list):
+                for row in data:
+                    row.setdefault("device_name", None)
+                    row.setdefault("last_used", None)
+                    row.setdefault("device_hash", "")
+                    row.setdefault("activated_on", None)
+                return data
+            return []
+        except (requests.exceptions.RequestException, json.JSONDecodeError):
             return []
 
 def save_db(data):
-    """حفظ قاعدة البيانات (قائمة المفاتيح) في JSONBin"""
     with DB_LOCK:
-        payload = json.dumps(data, ensure_ascii=False).encode('utf-8')
+        payload = json.dumps(data, ensure_ascii=False, indent=2).encode('utf-8')
         r = _jsonbin_session.put(JSONBIN_BASE, data=payload)
         r.raise_for_status()
 
 # ============================
-# أدوات مساعدة (بدون تغيير)
+# أدوات مساعدة (Helper Functions)
 # ============================
 def now_iso(): return datetime.datetime.utcnow().isoformat()
 def hash_device(device_info: str) -> str: return hashlib.sha256((device_info or "").encode()).hexdigest()
@@ -65,10 +70,12 @@ def find_key(db, key: str):
     return None
 def calc_expiry(activated_on_str: str | None, duration_days: int):
     if not activated_on_str: return None
-    activated_on = datetime.datetime.fromisoformat(activated_on_str)
-    return activated_on + datetime.timedelta(days=duration_days)
+    try:
+        activated_on = datetime.datetime.fromisoformat(activated_on_str)
+        return activated_on + datetime.timedelta(days=duration_days)
+    except (ValueError, TypeError): return None
 def ensure_bound_or_bind(db, row, device: str, device_name: str | None):
-    dev_hash = hash_device(device) if device else ""
+    dev_hash = hash_device(device)
     if not row.get("device_hash"):
         row["device_hash"] = dev_hash
         row["device_name"] = device_name
@@ -78,13 +85,14 @@ def ensure_bound_or_bind(db, row, device: str, device_name: str | None):
     return row["device_hash"] == dev_hash
 
 # ============================
-# إعداد التطبيق (بدون تغيير)
+# إعداد التطبيق (App Setup)
 # ============================
-app = FastAPI()
+app = FastAPI(title="4TIK PRO Service API")
+BASE_DIR = Path(__file__).resolve().parent
 app.add_middleware(CORSMiddleware, allow_origins=["*"], allow_credentials=True, allow_methods=["*"], allow_headers=["*"])
 
 # ============================
-# آلية التحقق من صلاحيات المشرف (Admin)
+# آلية التحقق من صلاحيات المشرف (Admin Auth)
 # ============================
 async def verify_admin_key(admin_key: str = Header(..., alias="X-Admin-Key")):
     if admin_key != ADMIN_SECRET_KEY:
@@ -93,86 +101,94 @@ async def verify_admin_key(admin_key: str = Header(..., alias="X-Admin-Key")):
 # ============================
 # المسارات (Endpoints)
 # ============================
-# 🔒 مسار محمي للمشرف
-@app.post("/subscribe", dependencies=[Depends(verify_admin_key)])
+
+@app.get("/", response_class=HTMLResponse, include_in_schema=False)
+async def home():
+    index_path = BASE_DIR / "index.html"
+    if not index_path.exists():
+        return HTMLResponse("<h1>Welcome! Server is running.</h1>", status_code=200)
+    return index_path.read_text(encoding="utf-8")
+
+# --- مسارات المشرف المحمية ---
+@app.post("/subscribe", dependencies=[Depends(verify_admin_key)], summary="إنشاء مفتاح اشتراك جديد (للمشرف فقط)")
 async def add_subscription(key: str = Form(...), duration_days: int = Form(30)):
     db = load_db()
     if find_key(db, key):
-        raise HTTPException(400, "المفتاح موجود بالفعل")
-    row = {"key": key, "duration_days": duration_days, "activated_on": None, "device_hash": "", "device_name": None, "last_used": None}
-    db.append(row)
+        raise HTTPException(status_code=400, detail="المفتاح موجود بالفعل")
+    new_key = {"key": key, "duration_days": duration_days, "activated_on": None, "device_hash": "", "device_name": None, "last_used": None}
+    db.append(new_key)
     save_db(db)
-    return {"message": f"تمت إضافة الاشتراك {key} بنجاح"}
+    return {"message": f"تمت إضافة الاشتراك '{key}' بنجاح لمدة {duration_days} يومًا."}
 
-# ✨✨✨ المسار المعدل الذي يحل المشكلة ✨✨✨
-@app.get("/me")
+# --- مسارات المستخدمين ---
+@app.get("/me", summary="الحصول على معلومات الاشتراك الحالية")
 async def me(request: Request):
     key = request.headers.get("X-KEY")
-    device = request.headers.get("X-DEVICE") or ""
-    device_name = request.headers.get("X-DEVICE-NAME") or None
-    
-    if not key:
-        return JSONResponse({"error": "المفتاح مطلوب"}, status_code=401)
-        
-    db = load_db()
-    row = find_key(db, key)
-    
-    if not row:
-        return JSONResponse({"error": "لا يوجد اشتراك بهذا المفتاح"}, status_code=401)
-    
-    if not ensure_bound_or_bind(db, row, device, device_name):
-        return JSONResponse({"error": "هذا المفتاح مربوط بجهاز آخر"}, status_code=403)
-    
-    expires_on = calc_expiry(row.get("activated_on"), row.get("duration_days", 30))
-    now = datetime.datetime.utcnow()
-    
-    if expires_on and now >= expires_on:
-        return JSONResponse({
-            "error": "انتهت صلاحية اشتراكك",
-            "key": row.get("key"),
-            "valid": False,
-            "expires_on": expires_on.isoformat() if expires_on else None,
-            "days_left": 0
-        }, status_code=403)
-        
-    days_left = max(0, (expires_on - now).days) if expires_on else row.get("duration_days", 30)
-    
-    row["last_used"] = now_iso()
-    save_db(db)
-    
-    return {
-        "key_masked": row["key"][:4] + "****",
-        "device_name": row.get("device_name"),
-        "activated_on": row.get("activated_on"),
-        "expires_on": expires_on.isoformat() if expires_on else None,
-        "days_left": days_left,
-        "valid": True
-    }
-
-@app.post("/process")
-async def process_video(request: Request):
-    key = request.headers.get("X-KEY")
-    device = request.headers.get("X-DEVICE") or ""
+    device = request.headers.get("X-DEVICE")
+    device_name = request.headers.get("X-DEVICE-NAME")
     if not key or not device:
-        raise HTTPException(401, "المفتاح والجهاز مطلوبان")
+        raise HTTPException(status_code=401, detail="المفتاح (X-KEY) ومعرف الجهاز (X-DEVICE) مطلوبان")
+    db = load_db()
+    row = find_key(db, key)
+    if not row:
+        raise HTTPException(status_code=404, detail="المفتاح غير صالح")
+    if not ensure_bound_or_bind(db, row, device, device_name):
+        raise HTTPException(status_code=403, detail="هذا المفتاح مربوط بجهاز آخر")
+    
+    expires_on = calc_expiry(row.get("activated_on"), row.get("duration_days", 30))
+    now = datetime.datetime.utcnow()
+    is_expired = expires_on and now >= expires_on
+    days_left = 0 if is_expired else ((expires_on - now).days if expires_on else row.get("duration_days", 30))
+    last_used_time = now_iso()
+    row["last_used"] = last_used_time
+    save_db(db)
+    
+    return {"key_masked": row["key"][:4] + "****", "device_name": row.get("device_name"), "activated_on": row.get("activated_on"), "expires_on": expires_on.isoformat() if expires_on else None, "days_left": days_left, "is_active": not is_expired, "last_used": last_used_time}
+
+# =================================================================
+# ✨✨✨ المسار المصحح الذي يحتوي على معالجة الفيديو ✨✨✨
+# =================================================================
+@app.post("/process", summary="معالجة الفيديو للمستخدمين المشتركين")
+async def process_video(request: Request, file: UploadFile = File(...)):
+    # 1. التحقق من صلاحية الاشتراك
+    key = request.headers.get("X-KEY")
+    device = request.headers.get("X-DEVICE")
+    if not key or not device:
+        raise HTTPException(status_code=401, detail="المفتاح ومعرف الجهاز مطلوبان")
 
     db = load_db()
     row = find_key(db, key)
-
-    if not row:
-        raise HTTPException(401, "المفتاح غير صحيح")
-
-    if not ensure_bound_or_bind(db, row, device, None):
-        raise HTTPException(403, "هذا المفتاح مربوط بجهاز آخر")
-
+    if not row: raise HTTPException(status_code=401, detail="المفتاح غير صحيح")
+    if not ensure_bound_or_bind(db, row, device, None): raise HTTPException(status_code=403, detail="المفتاح مربوط بجهاز آخر")
     expires_on = calc_expiry(row.get("activated_on"), row.get("duration_days", 30))
-    now = datetime.datetime.utcnow()
+    if not expires_on or datetime.datetime.utcnow() >= expires_on: raise HTTPException(status_code=403, detail="⛔ انتهت صلاحية هذا المفتاح")
     
-    if not expires_on or now >= expires_on:
-        raise HTTPException(403, "⛔ انتهت صلاحية هذا المفتاح")
-        
     row["last_used"] = now_iso()
     save_db(db)
     
-    return {"message": "تم التحقق بنجاح، وجاري معالجة الفيديو..."}
+    # 2. معالجة الفيديو
+    try:
+        suffix = Path(file.filename).suffix
+        with tempfile.NamedTemporaryFile(delete=False, suffix=suffix) as tmp_in:
+            contents = await file.read()
+            tmp_in.write(contents)
+            tmp_in_path = tmp_in.name
+        
+        tmp_out_path = tmp_in_path.replace(suffix, f"_out{suffix}")
+        
+        # --- أمر FFmpeg مع itsscale موجود هنا ---
+        cmd = [
+            "ffmpeg", "-itsscale", "2",
+            "-i", tmp_in_path,
+            "-c:v", "copy", "-c:a", "copy",
+            tmp_out_path
+        ]
+        
+        subprocess.run(cmd, check=True, capture_output=True, text=True, encoding='utf-8')
+        
+        return FileResponse(tmp_out_path, filename=f"processed_{file.filename}")
+    except subprocess.CalledProcessError as e:
+        raise HTTPException(status_code=500, detail=f"خطأ في معالجة الفيديو: {e.stderr}")
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"حدث خطأ غير متوقع: {str(e)}")
 
