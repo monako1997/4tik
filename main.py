@@ -8,19 +8,27 @@ import threading
 import requests
 from pathlib import Path
 
-from fastapi import FastAPI, HTTPException, UploadFile, File, Form, Request
+# ✨ 1. استيراد Header للتحقق من المفتاح السري
+from fastapi import FastAPI, HTTPException, UploadFile, File, Form, Request, Header
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse, HTMLResponse, JSONResponse
 
 # ============================
-# إعدادات JSONBin (من Environment)
+# إعدادات JSONBin و المفتاح السري للمشرف
 # ============================
 JSONBIN_ID = os.environ.get("JSONBIN_ID")
 JSONBIN_KEY = os.environ.get("JSONBIN_KEY")
 JSONBIN_BASE = f"https://api.jsonbin.io/v3/b/{JSONBIN_ID}"
 
+# ✨ 2. إضافة مفتاح سري للمشرف من متغيرات البيئة
+# يجب عليك تعيين هذا المتغير في بيئة التشغيل الخاصة بك
+# مثال: export ADMIN_SECRET_KEY="your-very-long-and-secret-key"
+ADMIN_SECRET_KEY = os.environ.get("ADMIN_SECRET_KEY")
+if not ADMIN_SECRET_KEY:
+    # هذا يمنع تشغيل التطبيق بدون مفتاح سري لحماية نقطة الإنشاء
+    raise ValueError("⛔️ خطأ فادح: متغير البيئة ADMIN_SECRET_KEY غير معين. لا يمكن تشغيل التطبيق بأمان.")
+
 _jsonbin_session = requests.Session()
-# ✨✨ التعديل الأول: تحديد الترميز في الهيدر ✨✨
 _jsonbin_session.headers.update({
     "X-Master-Key": JSONBIN_KEY,
     "Content-Type": "application/json; charset=utf-8"
@@ -29,7 +37,7 @@ _jsonbin_session.headers.update({
 DB_LOCK = threading.Lock()
 
 # ============================
-# دوال التخزين على JSONBin
+# دوال التخزين (بدون تغيير)
 # ============================
 def load_db():
     """تحميل قاعدة البيانات من JSONBin: قائمة عناصر"""
@@ -44,7 +52,6 @@ def load_db():
         body = r.json()
         data = body.get("record")
         if isinstance(data, list):
-            # تطبيع الحقول
             for row in data:
                 row.setdefault("device_name", None)
                 row.setdefault("last_used", None)
@@ -68,13 +75,12 @@ def load_db():
 def save_db(data):
     """حفظ قاعدة البيانات في JSONBin: قائمة عناصر"""
     with DB_LOCK:
-        # ✨✨ التعديل الثاني: ترميز البيانات قبل إرسالها ✨✨
         payload = json.dumps(data, ensure_ascii=False).encode('utf-8')
         r = _jsonbin_session.put(JSONBIN_BASE, data=payload)
         r.raise_for_status()
 
 # ============================
-# أدوات مساعدة
+# أدوات مساعدة (بدون تغيير)
 # ============================
 def now_iso():
     return datetime.datetime.utcnow().isoformat()
@@ -95,11 +101,6 @@ def find_by_device(db, device_hash: str):
     return None
 
 def ensure_bound_or_bind(db, row, device: str, device_name: str | None):
-    """
-    يربط المفتاح بالجهاز لأول استخدام،
-    وإن لم يكن مفعّلاً بعد (activated_on=None) يعيّنه الآن.
-    يرفض إن كان جهاز مختلف لاحقًا.
-    """
     dev_hash = hash_device(device) if device else ""
     if not row.get("device_hash"):
         row["device_hash"] = dev_hash
@@ -122,7 +123,7 @@ def calc_expiry(activated_on_str: str | None, duration_days: int):
     return activated_on + datetime.timedelta(days=duration_days)
 
 # ============================
-# تهيئة مفاتيح أولية (مرة واحدة فقط)
+# تهيئة مفاتيح أولية (بدون تغيير)
 # ============================
 def init_keys():
     db = load_db()
@@ -141,7 +142,7 @@ def init_keys():
 init_keys()
 
 # ============================
-# إعداد التطبيق
+# إعداد التطبيق (بدون تغيير)
 # ============================
 app = FastAPI()
 app.add_middleware(
@@ -172,13 +173,21 @@ def debug_subs():
     db = load_db()
     return {"count": len(db), "subs": db[:5]}
 
+# ✨ 3. تعديل مسار إضافة الاشتراك ليصبح آمناً
 @app.post("/subscribe")
 def add_subscription(
     key: str = Form(...),
     duration_days: int = Form(30),
     device_info: str = Form(""),
-    device_name: str = Form(None)
+    device_name: str = Form(None),
+    # هنا نطلب المفتاح السري من الهيدر X-Admin-Key
+    admin_key: str = Header(..., alias="X-Admin-Key")
 ):
+    # التحقق من المفتاح السري للمشرف
+    if admin_key != ADMIN_SECRET_KEY:
+        raise HTTPException(status_code=403, detail="
+        غير مصرح لك بالقيام بهذه العملية")
+
     db = load_db()
     if find_key(db, key):
         raise HTTPException(400, "المفتاح موجود بالفعل")
@@ -198,28 +207,24 @@ def add_subscription(
 
     db.append(row)
     save_db(db)
-    return {"message": f"تمت إضافة الاشتراك {key}"}
+    return {"message": f"تمت إضافة الاشتراك {key} بنجاح"}
 
+# باقي المسارات تبقى كما هي بدون تغيير...
 @app.get("/check/{key}")
 def check_subscription(key: str, request: Request):
     device = request.query_params.get("device_info") or request.headers.get("X-DEVICE") or ""
     device_name = request.headers.get("X-DEVICE-NAME") or None
-
     db = load_db()
     row = find_key(db, key)
     if not row:
         raise HTTPException(404, "المفتاح غير موجود")
-
     if not ensure_bound_or_bind(db, row, device, device_name):
         raise HTTPException(403, "هذا المفتاح مربوط بجهاز آخر")
-
     expires_on = calc_expiry(row.get("activated_on"), row.get("duration_days", 30))
     now = datetime.datetime.utcnow()
     days_left = max(0, (expires_on - now).days) if expires_on else 0
-
     row["last_used"] = now_iso()
     save_db(db)
-
     return {
         "key": row["key"],
         "device_name": row.get("device_name"),
@@ -229,33 +234,25 @@ def check_subscription(key: str, request: Request):
         "valid": (now < expires_on) if expires_on else True
     }
 
-# --- ✨✨ المسار التشخيصي الجديد ✨✨ ---
 @app.get("/debug-key/{key}")
 def debug_key_info(key: str):
     db = load_db()
     row = find_key(db, key)
-    
     if not row:
         return {"error": "لم يتم العثور على المفتاح في قاعدة البيانات."}
-
-    # --- معلومات من وجهة نظر الخادم ---
     server_now_utc = datetime.datetime.utcnow()
     activated_on_str = row.get("activated_on")
     duration_days = row.get("duration_days", 30)
-    
     expires_on = None
     is_expired = None
-    
     if activated_on_str:
         try:
             activated_on_dt = datetime.datetime.fromisoformat(activated_on_str)
             expires_on = activated_on_dt + datetime.timedelta(days=duration_days)
             is_expired = server_now_utc >= expires_on
         except (ValueError, TypeError):
-            # This handles cases where activated_on might be in a wrong format
             expires_on = "خطأ في الحساب"
             is_expired = "خطأ في الحساب"
-    
     return {
         "1_server_time": {
             "current_utc_time": server_now_utc.isoformat(),
@@ -279,35 +276,25 @@ def me(request: Request):
     key = request.headers.get("X-KEY")
     device = request.headers.get("X-DEVICE") or ""
     device_name = request.headers.get("X-DEVICE-NAME") or None
-
     db = load_db()
     row = None
     if key:
         row = find_key(db, key)
     elif device:
         row = find_by_device(db, hash_device(device))
-
     if not row:
         return JSONResponse({"error": "لا يوجد اشتراك"}, status_code=401)
-
     if not ensure_bound_or_bind(db, row, device, device_name):
         return JSONResponse({"error": "هذا المفتاح مربوط بجهاز آخر"}, status_code=403)
-
     expires_on = calc_expiry(row.get("activated_on"), row.get("duration_days", 30))
     now = datetime.datetime.utcnow()
-
-    # التحقق من انتهاء الصلاحية هنا أيضاً لمنع الدخول للتطبيق بمفتاح منته
     if expires_on and now >= expires_on:
         return JSONResponse({"error": "انتهت صلاحية اشتراكك"}, status_code=403)
-
     days_left = max(0, (expires_on - now).days) if expires_on else 30
-
     row["last_used"] = now_iso()
     save_db(db)
-
     dev_hash = hash_device(device) if device else ""
     bound_to_this = (row.get("device_hash") == dev_hash) if dev_hash else False
-
     return {
         "key_masked": row["key"][:4] + "****" + row["key"][-4:] if len(row["key"]) >= 8 else row["key"],
         "activated_on": row.get("activated_on"),
@@ -321,52 +308,41 @@ def me(request: Request):
 
 @app.post("/process")
 async def process_video(request: Request, file: UploadFile = File(...)):
-    MAX_FILE_SIZE = 200 * 1024 * 1024  # 200MB in bytes
+    MAX_FILE_SIZE = 200 * 1024 * 1024
     content_length = request.headers.get("content-length")
-
     if not content_length:
         raise HTTPException(status_code=411, detail="خطأ: لم يتم تحديد حجم الملف في الطلب.")
-    
     file_size = int(content_length)
-
     if file_size > MAX_FILE_SIZE:
         file_size_mb = file_size / (1024 * 1024)
         raise HTTPException(
             status_code=413,
             detail=f"الملف أكبر من الحجم المسموح به. حجم الملف: {file_size_mb:.2f} MB، الحد الأقصى: 200 MB."
         )
-
     key = request.headers.get("X-KEY")
     device = request.headers.get("X-DEVICE") or ""
     device_name = request.headers.get("X-DEVICE-NAME") or None
     if not key or not device:
         raise HTTPException(401, "المفتاح والجهاز مطلوبان")
-
     db = load_db()
     row = find_key(db, key)
     if not row:
         raise HTTPException(401, "المفتاح غير صحيح")
-
     if not ensure_bound_or_bind(db, row, device, device_name):
         raise HTTPException(403, "هذا المفتاح مربوط بجهاز آخر")
-
     expires_on = calc_expiry(row.get("activated_on"), row.get("duration_days", 30))
     now = datetime.datetime.utcnow()
     if not expires_on or now >= expires_on:
         raise HTTPException(403, "⛔ انتهت صلاحية هذا المفتاح")
-
     row["last_used"] = now_iso()
     save_db(db)
-
     try:
         suffix = os.path.splitext(file.filename)[1]
         with tempfile.NamedTemporaryFile(delete=False, suffix=suffix) as tmp_in:
             contents = await file.read()
             tmp_in.write(contents)
             tmp_in_path = tmp_in.name
-
         tmp_out_path = tmp_in_path.replace(suffix, f"_out{suffix}")
-
         cmd = [
             "ffmpeg", "-itsscale", "2",
             "-i", tmp_in_path,
@@ -374,8 +350,6 @@ async def process_video(request: Request, file: UploadFile = File(...)):
             tmp_out_path
         ]
         subprocess.run(cmd, check=True)
-
         return FileResponse(tmp_out_path, filename=f"processed{suffix}")
-
     except Exception as e:
         raise HTTPException(500, f"خطأ في المعالجة: {str(e)}")
