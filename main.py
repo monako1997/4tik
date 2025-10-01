@@ -8,8 +8,8 @@ import threading
 import requests
 from pathlib import Path
 
-# ✨ 1. استيراد Header للتحقق من المفتاح السري
-from fastapi import FastAPI, HTTPException, UploadFile, File, Form, Request, Header
+# ✨ 1. استيراد Header و Depends للتحقق من المفتاح السري
+from fastapi import FastAPI, HTTPException, UploadFile, File, Form, Request, Header, Depends
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse, HTMLResponse, JSONResponse
 
@@ -20,12 +20,8 @@ JSONBIN_ID = os.environ.get("JSONBIN_ID")
 JSONBIN_KEY = os.environ.get("JSONBIN_KEY")
 JSONBIN_BASE = f"https://api.jsonbin.io/v3/b/{JSONBIN_ID}"
 
-# ✨ 2. إضافة مفتاح سري للمشرف من متغيرات البيئة
-# يجب عليك تعيين هذا المتغير في بيئة التشغيل الخاصة بك
-# مثال: export ADMIN_SECRET_KEY="your-very-long-and-secret-key"
 ADMIN_SECRET_KEY = os.environ.get("ADMIN_SECRET_KEY")
 if not ADMIN_SECRET_KEY:
-    # هذا يمنع تشغيل التطبيق بدون مفتاح سري لحماية نقطة الإنشاء
     raise ValueError("⛔️ خطأ فادح: متغير البيئة ADMIN_SECRET_KEY غير معين. لا يمكن تشغيل التطبيق بأمان.")
 
 _jsonbin_session = requests.Session()
@@ -40,7 +36,6 @@ DB_LOCK = threading.Lock()
 # دوال التخزين (بدون تغيير)
 # ============================
 def load_db():
-    """تحميل قاعدة البيانات من JSONBin: قائمة عناصر"""
     with DB_LOCK:
         r = _jsonbin_session.get(JSONBIN_BASE)
         if r.status_code == 404:
@@ -73,7 +68,6 @@ def load_db():
         return []
 
 def save_db(data):
-    """حفظ قاعدة البيانات في JSONBin: قائمة عناصر"""
     with DB_LOCK:
         payload = json.dumps(data, ensure_ascii=False).encode('utf-8')
         r = _jsonbin_session.put(JSONBIN_BASE, data=payload)
@@ -154,6 +148,15 @@ app.add_middleware(
 )
 BASE_DIR = Path(__file__).resolve().parent
 
+# ✨ 2. إنشاء دالة تحقق (Dependency) يمكن إعادة استخدامها لحماية المسارات
+async def verify_admin_key(admin_key: str = Header(..., alias="X-Admin-Key")):
+    """
+    هذه الدالة تتحقق من وجود ومطابقة مفتاح المشرف السري في الهيدر.
+    إذا لم يكن صحيحاً، سترفع خطأ 403 مباشرة.
+    """
+    if admin_key != ADMIN_SECRET_KEY:
+        raise HTTPException(status_code=403, detail="غير مصرح لك بالقيام بهذه العملية")
+
 # ============================
 # المسارات
 # ============================
@@ -168,26 +171,21 @@ def home():
 def health():
     return {"ok": True}
 
-@app.get("/debug-subs")
+# ✨ 3. حماية مسار تصحيح الأخطاء باستخدام الدالة الجديدة
+@app.get("/debug-subs", dependencies=[Depends(verify_admin_key)])
 def debug_subs():
     db = load_db()
     return {"count": len(db), "subs": db[:5]}
 
-# ✨ 3. تعديل مسار إضافة الاشتراك ليصبح آمناً
-@app.post("/subscribe")
+# ✨ 4. حماية مسار إضافة الاشتراك باستخدام الدالة الجديدة (للتناسق)
+@app.post("/subscribe", dependencies=[Depends(verify_admin_key)])
 def add_subscription(
     key: str = Form(...),
     duration_days: int = Form(30),
     device_info: str = Form(""),
     device_name: str = Form(None),
-    # هنا نطلب المفتاح السري من الهيدر X-Admin-Key
-    admin_key: str = Header(..., alias="X-Admin-Key")
 ):
-    # التحقق من المفتاح السري للمشرف
-    if admin_key != ADMIN_SECRET_KEY:
-        raise HTTPException(status_code=403, detail="
-        غير مصرح لك بالقيام بهذه العملية")
-
+    # لم نعد بحاجة للتحقق اليدوي هنا لأن Depends(verify_admin_key) تقوم بذلك
     db = load_db()
     if find_key(db, key):
         raise HTTPException(400, "المفتاح موجود بالفعل")
@@ -234,7 +232,8 @@ def check_subscription(key: str, request: Request):
         "valid": (now < expires_on) if expires_on else True
     }
 
-@app.get("/debug-key/{key}")
+# ✨ 5. حماية مسار تصحيح المفتاح أيضاً
+@app.get("/debug-key/{key}", dependencies=[Depends(verify_admin_key)])
 def debug_key_info(key: str):
     db = load_db()
     row = find_key(db, key)
@@ -353,3 +352,4 @@ async def process_video(request: Request, file: UploadFile = File(...)):
         return FileResponse(tmp_out_path, filename=f"processed{suffix}")
     except Exception as e:
         raise HTTPException(500, f"خطأ في المعالجة: {str(e)}")
+
