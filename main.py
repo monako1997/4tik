@@ -18,7 +18,7 @@ from fastapi.responses import FileResponse, HTMLResponse, JSONResponse
 # ============================
 JSONBIN_ID = os.environ.get("JSONBIN_ID")
 JSONBIN_KEY = os.environ.get("JSONBIN_KEY")
-JSONBIN_BASE = f"https://api.json.io/v3/b/{JSONBIN_ID}"
+JSONBIN_BASE = f"https://api.jsonbin.io/v3/b/{JSONBIN_ID}"
 
 ADMIN_SECRET_KEY = os.environ.get("ADMIN_SECRET_KEY")
 if not ADMIN_SECRET_KEY:
@@ -98,6 +98,23 @@ async def verify_admin_key(admin_key: str = Header(..., alias="X-Admin-Key")):
     if admin_key != ADMIN_SECRET_KEY:
         raise HTTPException(status_code=403, detail="غير مصرح لك بالقيام بهذه العملية")
 
+# =================================================================
+# ✨✨✨ مسار تصحيح مؤقت (احذفه بعد حل المشكلة) ✨✨✨
+# =================================================================
+@app.get("/debug-db", dependencies=[Depends(verify_admin_key)], summary="فحص البيانات التي يراها الخادم مباشرة من JSONBin")
+async def debug_database_content():
+    """
+    هذا المسار سيقرأ قاعدة البيانات من JSONBin ويعرضها كما هي.
+    هذا سيؤكد لنا إذا كان الخادم يقرأ من المكان الصحيح أم لا.
+    """
+    db_content = load_db()
+    if not db_content:
+        return JSONResponse(
+            status_code=404,
+            content={"error": "الخادم لم يجد أي بيانات.", "message": "تحقق من متغيرات البيئة JSONBIN_ID و JSONBIN_KEY."}
+        )
+    return db_content
+
 # ============================
 # المسارات (Endpoints)
 # ============================
@@ -145,17 +162,12 @@ async def me(request: Request):
     
     return {"key_masked": row["key"][:4] + "****", "device_name": row.get("device_name"), "activated_on": row.get("activated_on"), "expires_on": expires_on.isoformat() if expires_on else None, "days_left": days_left, "is_active": not is_expired, "last_used": last_used_time}
 
-# =================================================================
-# ✨✨✨ المسار المصحح الذي يحتوي على معالجة الفيديو ✨✨✨
-# =================================================================
 @app.post("/process", summary="معالجة الفيديو للمستخدمين المشتركين")
 async def process_video(request: Request, file: UploadFile = File(...)):
-    # 1. التحقق من صلاحية الاشتراك
     key = request.headers.get("X-KEY")
     device = request.headers.get("X-DEVICE")
     if not key or not device:
         raise HTTPException(status_code=401, detail="المفتاح ومعرف الجهاز مطلوبان")
-
     db = load_db()
     row = find_key(db, key)
     if not row: raise HTTPException(status_code=401, detail="المفتاح غير صحيح")
@@ -166,29 +178,17 @@ async def process_video(request: Request, file: UploadFile = File(...)):
     row["last_used"] = now_iso()
     save_db(db)
     
-    # 2. معالجة الفيديو
     try:
         suffix = Path(file.filename).suffix
         with tempfile.NamedTemporaryFile(delete=False, suffix=suffix) as tmp_in:
             contents = await file.read()
             tmp_in.write(contents)
             tmp_in_path = tmp_in.name
-        
         tmp_out_path = tmp_in_path.replace(suffix, f"_out{suffix}")
-        
-        # --- أمر FFmpeg مع itsscale موجود هنا ---
-        cmd = [
-            "ffmpeg", "-itsscale", "2",
-            "-i", tmp_in_path,
-            "-c:v", "copy", "-c:a", "copy",
-            tmp_out_path
-        ]
-        
+        cmd = ["ffmpeg", "-itsscale", "2", "-i", tmp_in_path, "-c:v", "copy", "-c:a", "copy", tmp_out_path]
         subprocess.run(cmd, check=True, capture_output=True, text=True, encoding='utf-8')
-        
         return FileResponse(tmp_out_path, filename=f"processed_{file.filename}")
     except subprocess.CalledProcessError as e:
         raise HTTPException(status_code=500, detail=f"خطأ في معالجة الفيديو: {e.stderr}")
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"حدث خطأ غير متوقع: {str(e)}")
-
