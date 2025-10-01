@@ -7,82 +7,21 @@
   <title>4TIK PRO</title>
   <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;700;900&display=swap" rel="stylesheet">
   <style>
-    /* --- Styles for Main Page --- */
-    :root{
-      --bg:#0a0b12; --ink:#f3f6fb; --muted:#aab6c5; --line:#1d2433;
-      --c1:#25F4EE; /* TikTok Cyan */
-      --c2:#FE2C55; /* TikTok Pink */
-    }
+    :root{ --bg:#0a0b12; --ink:#f3f6fb; --muted:#aab6c5; --line:#1d2433; --c1:#25F4EE; --c2:#FE2C55; }
     html { scroll-behavior: smooth; }
     *{ box-sizing: border-box; font-family: 'Cairo', sans-serif; }
-    body{
-      margin:0; min-height:100vh; display:flex; flex-direction:column; align-items:center; color:var(--ink);
-      background-color: var(--bg);
-      background-image:
-        radial-gradient(ellipse 50vw 30vh at 15% -10%, rgba(37,244,238,.12), transparent 80%),
-        radial-gradient(ellipse 60vw 40vh at 110% -20%, rgba(254,44,85,.12), transparent 80%),
-        linear-gradient(180deg, #080910 0%, #0a0b12 100%);
-      /* --- START CHANGE 1: Removed 'background-attachment: fixed;' for smoother scrolling --- */
-      /* background-attachment: fixed; */ /* This line was removed */
-      /* --- END CHANGE 1 --- */
-    }
-    /* --- START CHANGE 2: Added class to prevent scrolling when login is active --- */
-    body.login-active {
-      overflow: hidden;
-    }
-    /* --- END CHANGE 2 --- */
-    .topbar{
-      position:sticky; top:0; width:100%; display:flex; justify-content:center; align-items:center; padding:14px 16px;
-      backdrop-filter: saturate(140%) blur(8px);
-      background: linear-gradient(180deg, rgba(10,11,18,.75), rgba(10,11,18,0)); z-index:10;
-    }
-    .brand{
-      font-weight:900; font-size:42px; letter-spacing:.6px; margin:0;
-      background: linear-gradient(90deg, var(--c2), var(--c1), var(--c2));
-      -webkit-background-clip:text; background-clip:text; color:transparent;
-      text-shadow: 0 0 18px rgba(37,244,238,.35), 0 0 18px rgba(254,44,85,.25);
-      background-size: 200% auto; animation: shine 3s linear infinite;
-      transition: font-size 0.3s ease;
-    }
+    body{ margin:0; min-height:100vh; display:flex; flex-direction:column; align-items:center; color:var(--ink); background-color: var(--bg); background-image: radial-gradient(ellipse 50vw 30vh at 15% -10%, rgba(37,244,238,.12), transparent 80%), radial-gradient(ellipse 60vw 40vh at 110% -20%, rgba(254,44,85,.12), transparent 80%), linear-gradient(180deg, #080910 0%, #0a0b12 100%); }
+    body.login-active { overflow: hidden; }
+    .topbar{ position:sticky; top:0; width:100%; display:flex; justify-content:center; align-items:center; padding:14px 16px; backdrop-filter: saturate(140%) blur(8px); background: linear-gradient(180deg, rgba(10,11,18,.75), rgba(10,11,18,0)); z-index:10; }
+    .brand{ font-weight:900; font-size:42px; letter-spacing:.6px; margin:0; background: linear-gradient(90deg, var(--c2), var(--c1), var(--c2)); -webkit-background-clip:text; background-clip:text; color:transparent; text-shadow: 0 0 18px rgba(37,244,238,.35), 0 0 18px rgba(254,44,85,.25); background-size: 200% auto; animation: shine 3s linear infinite; transition: font-size 0.3s ease; }
     @keyframes shine { to { background-position:-200% center; } }
-    
-    .wrap{
-      width: min(900px, 94vw);
-      padding: 20px 0 160px;
-      margin-left: auto;
-      margin-right: auto;
-    }
-
-    .card{
-      background: rgba(15, 19, 32, 0.8);
-      border: 1px solid var(--line); border-radius:18px;
-      padding: 24px; box-shadow:0 20px 60px rgba(0,0,0,.35); margin-bottom:16px;
-      transition: all 0.3s ease;
-    }
-    .upload{
-      position:relative; border-radius:16px; padding:28px; text-align:center; cursor:pointer;
-      background:rgba(255,255,255,.02); border:2px dashed #314055;
-      overflow:hidden; isolation:isolate; transition: transform 0.3s ease;
-    }
+    .wrap{ width: min(900px, 94vw); padding: 20px 0 160px; margin-left: auto; margin-right: auto; }
+    .card{ background: rgba(15, 19, 32, 0.8); border: 1px solid var(--line); border-radius:18px; padding: 24px; box-shadow:0 20px 60px rgba(0,0,0,.35); margin-bottom:16px; transition: all 0.3s ease; }
+    .upload{ position:relative; border-radius:16px; padding:28px; text-align:center; cursor:pointer; background:rgba(255,255,255,.02); border:2px dashed #314055; overflow:hidden; isolation:isolate; transition: transform 0.3s ease; }
     .upload:hover { transform: scale(1.02); }
-    .u-title{
-      display:inline-block; font-weight:800; font-size:22px; text-transform:uppercase;
-      background: linear-gradient(90deg,var(--c1),var(--c2));
-      -webkit-background-clip:text; background-clip:text; color:transparent;
-      transition: font-size 0.3s ease;
-    }
+    .u-title{ display:inline-block; font-weight:800; font-size:22px; text-transform:uppercase; background: linear-gradient(90deg,var(--c1),var(--c2)); -webkit-background-clip:text; background-clip:text; color:transparent; transition: font-size 0.3s ease; }
     .hint{ margin-top:6px; color:var(--muted); font-size:14px; }
-    .row{
-      display:flex; gap:12px; align-items:center; flex-wrap:wrap; margin-top:16px;
-    }
-    .controls-wrap {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      gap: 12px;
-      margin-top: 25px;
-      margin-bottom: 10px;
-    }
+    .controls-wrap { display: flex; flex-direction: column; align-items: center; gap: 12px; margin-top: 25px; margin-bottom: 10px; }
     .btn { display: flex; justify-content: center; align-items: center; width: 14rem; overflow: hidden; height: 3.5rem; background-size: 300% 300%; cursor: pointer; backdrop-filter: blur(1rem); border-radius: 5rem; transition: 0.5s; animation: gradient_301 5s ease infinite; border: double 4px transparent; background-image: linear-gradient(#212121, #212121), linear-gradient( 137.48deg, #ffdb3b 10%, #fe53bb 45%, #8f51ea 67%, #0044ff 87%); background-origin: border-box; background-clip: content-box, border-box; }
     .btn .container-stars { position: absolute; z-index: -1; width: 100%; height: 100%; overflow: hidden; transition: 0.5s; backdrop-filter: blur(1rem); border-radius: 5rem; }
     .btn strong { z-index: 2; font-size: 16px; letter-spacing: 2px; color: #ffffff; text-shadow: 0 0 4px white; font-weight: bold; }
@@ -90,72 +29,30 @@
     .btn .circle { width: 100%; height: 30px; filter: blur(2rem); animation: pulse_3011 4s infinite; z-index: -1; }
     .btn .circle:nth-of-type(1) { background: rgba(254, 83, 186, 0.636); }
     .btn .circle:nth-of-type(2) { background: rgba(142, 81, 234, 0.704); }
-    .btn:hover .container-stars { z-index: 1; background-color: #212121; }
     .btn:hover { transform: scale(1.1); }
     .btn:active { border: double 4px #fe53bb; background-origin: border-box; background-clip: content-box, border-box; animation: none; }
-    .btn:active .circle { background: #fe53bb; }
-    .btn .stars { position: relative; background: transparent; width: 200rem; height: 200rem; }
-    .btn .stars::after { content: ""; position: absolute; top: -10rem; left: -100rem; width: 100%; height: 100%; animation: animStarRotate 90s linear infinite; background-image: radial-gradient(#ffffff 1px, transparent 1%); background-size: 50px 50px; }
-    .btn .stars::before { content: ""; position: absolute; top: 0; left: -50%; width: 170%; height: 500%; animation: animStar 60s linear infinite; background-image: radial-gradient(#ffffff 1px, transparent 1%); background-size: 50px 50px; opacity: 0.5; }
     .btn[disabled] { cursor: not-allowed; filter: grayscale(70%); animation: none; pointer-events: none; }
-    .btn[disabled]:hover { transform: scale(1); }
-    .btn[disabled] .container-stars, .btn[disabled] .glow { display: none; }
-    @keyframes animStar { from { transform: translateY(0); } to { transform: translateY(-135rem); } }
-    @keyframes animStarRotate { from { transform: rotate(360deg); } to { transform: rotate(0); } }
-    @keyframes gradient_301 { 0% { background-position: 0% 50%; } 50% { background-position: 100% 50%; } 100% { background-position: 0% 50%; } }
-    @keyframes pulse_3011 { 0% { transform: scale(0.75); box-shadow: 0 0 0 0 rgba(0, 0, 0, 0.7); } 70% { transform: scale(1); box-shadow: 0 0 0 10px rgba(0, 0, 0, 0); } 100% { transform: scale(0.75); box-shadow: 0 0 0 0 rgba(0, 0, 0, 0); } }
     .bar-wrap{ height:14px; background:#0a0f1a; border:1px solid var(--line); border-radius:999px; overflow:hidden; width: 100%; }
     .bar{ height:100%; width:0%; border-radius:999px; background:linear-gradient(90deg,var(--c2),var(--c1)); transition:width .12s; }
     .bar.running{ animation:slide 1.1s linear infinite; background:linear-gradient(90deg,transparent 0%,rgba(255,255,255,.15) 50%,transparent 100%); width:40%; }
-    @keyframes slide{ from{margin-inline-start:-40%} to{margin-inline-start:100%} }
     .status{ font-size:14px; color:var(--muted); height: 20px; }
     .footer{ position:fixed; bottom:15px; left:0; right:0; text-align:center; font-size:18px; font-weight:700; color:var(--ink); display:flex; justify-content:center; align-items:center; gap:10px; z-index:20; }
     .heart{ color:var(--c2); font-size:20px; animation:beat 1s infinite; }
     @keyframes beat{ 0%,100%{transform:scale(1)} 50%{transform:scale(1.3)} }
     ul.guide{ padding:0 20px 0 0; margin:0; line-height:1.8; }
-    ul.guide li{ margin-bottom:6px; color:var(--muted); }
-    @media (max-width: 600px) { .brand { font-size: 34px; } .wrap { padding-bottom: 120px; } .card { padding: 20px; } .upload { padding: 24px; } .u-title { font-size: 18px; } .row { flex-direction: column; align-items: stretch; gap: 14px; } #process { width: 100%; max-width: 300px; } .footer { font-size: 15px; } }
-
-    /* --- Styles for Login Form --- */
-    .login-overlay {
-        position: fixed;
-        top: 0; left: 0; right: 0; bottom: 0;
-        background-color: rgba(10, 11, 18, 0.9);
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        z-index: 1000;
-        backdrop-filter: blur(5px);
-    }
-    .login-overlay .login-card {
-        background-image: linear-gradient(163deg, #00ff75 0%, #3700ff 100%);
-        border-radius: 22px;
-        transition: all 0.3s;
-        max-width: 350px;
-        width: 90%;
-    }
-    .login-overlay .login-card:hover { box-shadow: 0px 0px 30px 1px rgba(0, 255, 117, 0.3); }
-    .login-overlay .card2 { border-radius: 0; transition: all 0.2s; }
-    .login-overlay .card2:hover { transform: scale(0.98); border-radius: 20px; }
-    .login-overlay .form { display: flex; flex-direction: column; gap: 10px; padding: 1.5em 2em; background-color: #171717; border-radius: 25px; }
+    .login-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background-color: rgba(10, 11, 18, 0.9); display: flex; justify-content: center; align-items: center; z-index: 1000; backdrop-filter: blur(5px); }
+    .login-overlay .login-card { background-image: linear-gradient(163deg, #00ff75 0%, #3700ff 100%); border-radius: 22px; transition: all 0.3s; max-width: 350px; width: 90%; }
+    .login-overlay .card2 { background-color: #171717; border-radius: 20px; }
+    .login-overlay .form { display: flex; flex-direction: column; gap: 10px; padding: 1.5em 2em; }
     .login-overlay #heading { text-align: center; margin: 1em 0 2em 0; color: rgb(255, 255, 255); font-size: 1.2em; }
     .login-overlay .field { display: flex; align-items: center; justify-content: center; gap: 0.5em; border-radius: 25px; padding: 0.6em; border: none; outline: none; color: white; background-color: #171717; box-shadow: inset 2px 5px 10px rgb(5, 5, 5); }
     .login-overlay .input-icon { height: 1.3em; width: 1.3em; fill: white; }
-    .login-overlay .input-field { background: none; border: none; outline: none; width: 100%; color: #d3d3d3; }
-    .login-overlay .input-field:read-only { color: #888; cursor: not-allowed; }
+    .login-overlay .input-field { background: none; border: none; outline: none; width: 100%; color: #d3d3d3; text-align: right; }
     .login-overlay .btn-container { display: flex; justify-content: center; margin-top: 2.5em; }
     .login-overlay .login-button { padding: 0.8em; width: 100%; border-radius: 5px; border: none; outline: none; transition: 0.4s ease-in-out; background-color: #252525; color: white; font-size: 1em; font-family: 'Cairo', sans-serif; cursor: pointer; }
     .login-overlay .login-button:hover { background-color: #00ff75; color: black; }
     .login-overlay .login-button:disabled { background-color: #555; cursor: not-allowed; }
-    .login-feedback {
-        text-align: center;
-        color: #FE2C55;
-        font-size: 14px;
-        height: 20px;
-        margin-top: 10px;
-        color: var(--c1); /* Use a less alarming color for status updates */
-    }
-
+    .login-feedback { text-align: center; color: #FE2C55; font-size: 14px; height: 20px; margin-top: 10px; color: var(--c1); }
   </style>
 </head>
 <body>
@@ -167,16 +64,8 @@
           <h1 class="brand" style="text-align: center; font-size: 38px; margin-bottom: 20px;">4TIK PRO</h1>
           <p id="heading">تسجيل الدخول</p>
           <div class="field">
-            <svg viewBox="0 0 16 16" fill="currentColor" height="16" width="16" xmlns="http://www.w3.org/2000/svg" class="input-icon">
-              <path d="M13.106 7.222c0-2.967-2.249-5.032-5.482-5.032-3.35 0-5.646 2.318-5.646 5.702 0 3.493 2.235 5.708 5.762 5.708.862 0 1.689-.123 2.304-.335v-.862c-.43.۱۹۹-۱.۳۵۴.۳۲۸-۲.۲۹.۳۲۸-۲.۹۲۶ ۰-۴.۸۱۳-۱.۸۸-۴.۸۱۳-۴.۷۹۸ ۰-۲.۸۴۴ ۱.۹۲۱-۴.۸۸۱ ۴.۵۹۴-۴.۸۸۱ ۲.۷۳۵ ۰ ۴.۶۰۸ ۱.۶۸۸ ۴.۶۰۸ ۴.۱۵۶ ۰ ۱.۶۸۲-.۵۵۴ ۲.۷۶۹-۱.۴۱۶ ۲.۷۶۹-.۴۹۲ ۰-.۷۷۲-.۲۸-.۷۷۲-.۷۶V5.206H8.923v.834h-.11c-.266-.595-.881-.964-۱.۶-.964-۱.۴ ۰-۲.۳۷۸ ۱.۱۶۲-۲.۳۷۸ ۲.۸۲۳ ۰ ۱.۷۳۷.۹۵۷ ۲.۹۰۶ ۲.۳۷۹ ۲.۹۰۶.۸ ۰ ۱.۴۱۵-.۳۹ ۱.۷۰۹-۱.۰۸۷h.۱۱c.۰۸۱.۶۷.۷۰۳ ۱.۱۴۸ ۱.۵۰۳ ۱.۱۴۸ ۱.۵۷۲ ۰ ۲.۵۷-۱.۴۱۵ ۲.۵۷-۳.۶۴۳zm-۷.۱۷۷.۷۰۴c۰-۱.۱۹۷.۵۴-۱.۹۰۷ ۱.۴۵۶-۱.۹۰۷.۹۳ ۰ ۱.۵۲۴.۷۳۸ ۱.۵۲۴ ۱.۹۰۷S8.۳۰۸ ۹.۸۴ 7.37۱ ۹.۸۴c-.۸۹۵ ۰-۱.۴۴۲-.۷۲۵-۱.۴۴۲-۱.۹۱۴z"></path>
-            </svg>
-            <input type="text" class="input-field" placeholder="اسم المستخدم" id="username-field">
-            </div>
-          <div class="field">
-            <svg viewBox="0 0 16 16" fill="currentColor" height="16" width="16" xmlns="http://www.w3.org/2000/svg" class="input-icon">
-              <path d="M8 1a2 2 0 0 1 2 2v4H6V3a2 2 0 0 1 2-2zm3 6V3a3 3 0 0 0-6 0v4a2 2 0 0 0-2 2v5a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2z"></path>
-            </svg>
-            <input type="text" class="input-field" placeholder="مفتاح الاشتراك" id="key-field">
+            <svg viewBox="0 0 16 16" fill="currentColor" height="16" width="16" xmlns="http://www.w3.org/2000/svg" class="input-icon"><path d="M8 1a2 2 0 0 1 2 2v4H6V3a2 2 0 0 1 2-2zm3 6V3a3 3 0 0 0-6 0v4a2 2 0 0 0-2 2v5a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2z"></path></svg>
+            <input type="text" class="input-field" placeholder="مفتاح الاشتراك" id="key-field" required>
           </div>
           <div class="btn-container">
             <button class="login-button" type="submit">تسجيل الدخول</button>
@@ -197,23 +86,15 @@
           <div id="fileInfo" class="hint">اسحب المقطع هنا أو اضغط للاختيار</div>
         </div>
         <div class="controls-wrap">
-          <button type="button" id="process" class="btn" disabled>
-            <strong>معالجة</strong>
-            <div class="container-stars"><div class="stars"></div></div>
-            <div class="glow"><div class="circle"></div><div class="circle"></div></div>
-          </button>
+          <button type="button" id="process" class="btn" disabled><strong>معالجة</strong><div class="container-stars"><div class="stars"></div></div><div class="glow"><div class="circle"></div><div class="circle"></div></div></button>
           <div id="status" class="status"></div>
           <div class="bar-wrap"><div id="bar" class="bar"></div></div>
         </div>
       </section>
       <section class="card">
         <div class="row" style="justify-content: center;">
-          <button type="button" id="showSub" class="btn">
-              <strong>عرض اشتراكي</strong>
-              <div class="container-stars"><div class="stars"></div></div>
-              <div class="glow"><div class="circle"></div><div class="circle"></div></div>
-            </button>
-          <div id="subToast" style="font-size:13px;color:#aab6c5; flex-basis: 100%; text-align: center;"></div>
+          <button type="button" id="showSub" class="btn"><strong>تحديث اشتراكي</strong><div class="container-stars"><div class="stars"></div></div><div class="glow"><div class="circle"></div><div class="circle"></div></div></button>
+          <div id="subToast" style="font-size:13px;color:#aab6c5; flex-basis: 100%; text-align: center; margin-top: 10px;"></div>
         </div>
         <div style="margin-top:10px;line-height:1.9">
           <div>المفتاح: <b id="subKey">—</b></div>
@@ -221,7 +102,6 @@
           <div>الأيام المتبقية: <b id="subDays">—</b></div>
           <div>حالة الربط: <b id="subBind">—</b></div>
           <div>الجهاز المربوط: <b id="subDevice">—</b></div>
-          <div>آخر استخدام: <b id="subLast">—</b></div>
         </div>
       </section>
       <section class="card">
@@ -242,95 +122,92 @@
     processBtn=document.getElementById('process'),bar=document.getElementById('bar'),status=document.getElementById('status'),
     showSubBtn=document.getElementById('showSub'),subKey=document.getElementById('subKey'),
     subExp=document.getElementById('subExp'),subDays=document.getElementById('subDays'),subBind=document.getElementById('subBind'),
-    subDevice=document.getElementById('subDevice'),subLast=document.getElementById('subLast'),subToast=document.getElementById('subToast');
+    subDevice=document.getElementById('subDevice'),subToast=document.getElementById('subToast');
     const loginOverlay = document.getElementById('login-overlay');
     const loginForm = document.getElementById('login-form');
     const keyField = document.getElementById('key-field');
-    const usernameField = document.getElementById('username-field');
     const loginFeedback = document.getElementById('login-feedback');
     const appContent = document.getElementById('app-content');
 
     // --- Helper Functions ---
     const mb=n=>(n/1024/1024).toFixed(2)+' MB';
-    function getDeviceName(){const ua=navigator.userAgent;if(/mobile/i.test(ua)){if(/iphone|ipad|ipod/i.test(ua))return"Apple Device";if(/android/i.test(ua)){const matches=ua.match(/Android\s+[\d\.]+;\s+([\w\s]+)\s+Build/i);if(matches&&matches.length>1)return matches[1];return"Android Device"}}if(/windows/i.test(ua))return"Windows PC";if(/macintosh|mac os x/i.test(ua))return"Mac";return"Unknown Device"}
-    async function sha256(text){const enc=new TextEncoder().encode(text),buf=await crypto.subtle.digest('SHA-256',enc);return Array.from(new Uint8Array(buf)).map(b=>b.toString(16).padStart(2,'0')).join('')}
-    function canvasFingerprint(){try{const c=document.createElement('canvas');c.width=200;c.height=60;const g=c.getContext('2d');g.textBaseline='top';g.font='16px Arial';g.fillStyle='#f60';g.fillRect(0,0,200,30);g.fillStyle='#069';g.fillText('4TikPro-fp',2,2);g.strokeStyle='#f00';g.arc(100,30,20,0,Math.PI*2);g.stroke();return c.toDataURL()}catch{return'no-canvas'}}
-    function webglInfo(){try{const c=document.createElement('canvas'),gl=c.getContext('webgl')||c.getContext('experimental-webgl');if(!gl)return'no-webgl';const dbg=gl.getExtension('WEBGL_debug_renderer_info');return(dbg?gl.getParameter(dbg.UNMASKED_VENDOR_WEBGL):'v?')+'|'+(dbg?gl.getParameter(dbg.UNMASKED_RENDERER_WEBGL):'r?')}catch{return'no-webgl'}}
-    async function getDeviceHash(){const seedParts=[navigator.platform||'pf?',(screen.width||0)+'x'+(screen.height||0),window.devicePixelRatio||1,navigator.hardwareConcurrency||'hc?',navigator.deviceMemory||'dm?',navigator.maxTouchPoints||0,Intl.DateTimeFormat().resolvedOptions().timeZone||'tz?',canvasFingerprint(),webglInfo()];return await sha256(seedParts.join('|'))}
-    
+    function getDeviceName(){const ua=navigator.userAgent;if(/mobile/i.test(ua)){if(/iphone|ipad|ipod/i.test(ua))return"Apple Device";if(/android/i.test(ua)){const m=ua.match(/Android\s+[\d\.]+;\s+([\w\s]+)\s+Build/i);return m&&m.length>1?m[1]:"Android Device"}}if(/windows/i.test(ua))return"Windows PC";if(/macintosh|mac os x/i.test(ua))return"Mac";return"Unknown Device"}
+    async function getDeviceID(){const s=screen,p=navigator,d=document.createElement('canvas'),t=d.getContext('webgl')||d.getContext('experimental-webgl'),n=t?t.getExtension('WEBGL_debug_renderer_info'):null,i=[p.platform,s.width+'x'+s.height,p.deviceMemory,p.hardwareConcurrency,n?t.getParameter(n.UNMASKED_VENDOR_WEBGL):'',n?t.getParameter(n.UNMASKED_RENDERER_WEBGL):''].join('|');const e=new TextEncoder().encode(i),a=await crypto.subtle.digest('SHA-256',e);return Array.from(new Uint8Array(a)).map(t=>t.toString(16).padStart(2,'0')).join('')}
 
     // --- Main App Logic ---
     function showApp() {
         loginOverlay.style.display = 'none';
         appContent.style.display = 'block';
-        // --- START CHANGE 3: Remove class to re-enable scrolling ---
         document.body.classList.remove('login-active');
-        // --- END CHANGE 3 ---
     }
 
     function showLogin(message = '') {
-        keyField.value = ''; // Clear key field on re-login
-        loginFeedback.style.color = '#FE2C55'; // Set color to red for errors
+        localStorage.removeItem('SUB_KEY'); // Clear key on logout/error
+        keyField.value = '';
+        loginFeedback.style.color = '#FE2C55';
         loginFeedback.textContent = message;
         loginOverlay.style.display = 'flex';
         appContent.style.display = 'none';
-        // --- START CHANGE 4: Add class to disable scrolling ---
         document.body.classList.add('login-active');
-        // --- END CHANGE 4 ---
     }
     
-    async function refreshSubscriptionBox(isAutoCheck = false) {
+    // =================================================================
+    // THIS IS THE MAIN CORRECTED FUNCTION
+    // =================================================================
+    async function refreshSubscriptionInfo(isAutoCheck = false) {
       const key = localStorage.getItem('SUB_KEY');
       if (!key) {
-        if (!isAutoCheck) showLogin('الرجاء إدخال مفتاح الاشتراك.');
+        if (!isAutoCheck) showLogin('الرجاء إدخال مفتاح اشتراك صالح.');
         return false;
       }
 
       if (!isAutoCheck) {
-          loginFeedback.style.color = 'var(--c1)'; // Set color to cyan for status
+          subToast.textContent = 'جاري تحديث المعلومات...';
       }
 
       try {
-        const device = await getDeviceHash();
-        const headers = { 'X-DEVICE': device, 'X-DEVICE-NAME': getDeviceName() };
-        if (key !== "__DEVICE_ONLY__") headers['X-KEY'] = key;
-
-        const res = await fetch('/me', { headers });
+        const device = await getDeviceID();
+        const res = await fetch('/me', {
+          headers: {
+            'X-KEY': key,
+            'X-DEVICE': device,
+            'X-DEVICE-NAME': getDeviceName()
+          }
+        });
+        
         const data = await res.json();
 
         if (!res.ok) {
-          localStorage.removeItem('SUB_KEY');
-          subKey.textContent='—'; subExp.textContent='—'; subDays.textContent='—';
-          subBind.textContent=data.error||'غير متوفر'; subDevice.textContent='—'; subLast.textContent='—';
-          if (!isAutoCheck) showLogin(data.error || 'المفتاح غير صالح أو منتهي الصلاحية');
+          // If server returns an error (4xx, 5xx), show it
+          showLogin(data.detail || 'المفتاح غير صالح أو منتهي الصلاحية');
           return false;
         }
 
-        let displayKey = data.key_masked || '—';
-        if (key && key !== "__DEVICE_ONLY__") {
-          displayKey = key.substring(0, 4) + "****" + key.slice(-4);
-        }
-        subKey.textContent = displayKey;
-        subExp.textContent = data.expires ? new Date(data.expires).toLocaleString() : '—';
+        // --- Map backend data to frontend elements ---
+        subKey.textContent = data.key_masked || '—';
+        subExp.textContent = data.expires_on ? new Date(data.expires_on).toLocaleString('ar-EG') : 'غير مفعل';
         subDays.textContent = data.days_left ?? '—';
-        subBind.textContent = data.bound === false ? 'غير مربوط بعد' : (data.bound_to_this_device ? 'مربوط بهذا الجهاز' : 'مربوط بجهاز آخر');
         subDevice.textContent = data.device_name || '—';
-        subLast.textContent = data.last_used ? new Date(data.last_used).toLocaleString() : '—';
+        
+        // --- Simplified Binding Status ---
+        // If the API call was successful, it means the key is bound to this device.
+        subBind.textContent = 'مربوط بهذا الجهاز';
         
         if (!isAutoCheck) {
-            subToast.textContent = '✅ تم تحديث معلومات الاشتراك';
-            setTimeout(() => subToast.textContent = '', 2000);
+            subToast.textContent = '✅ تم تحديث معلومات الاشتراك بنجاح!';
+            setTimeout(() => subToast.textContent = '', 2500);
         }
         
-        showApp(); // Show the main application on success
+        showApp();
         return true;
 
       } catch (e) {
+        console.error("Fetch Error:", e);
         if (!isAutoCheck) {
-            subToast.textContent = 'تعذر جلب معلومات الاشتراك';
-            showLogin('فشل الاتصال بالخادم. تحقق من اتصالك بالإنترنت.');
-            setTimeout(() => subToast.textContent = '', 2000);
+            subToast.textContent = '❌ فشل الاتصال بالخادم.';
+            setTimeout(() => subToast.textContent = '', 2500);
         }
+        // Don't log out the user on a temporary network error
         return false;
       }
     }
@@ -340,89 +217,42 @@
         e.preventDefault();
         const loginButton = e.target.querySelector('.login-button');
         const userKey = keyField.value.trim();
-        const username = usernameField.value.trim(); // Get username value
 
-        if (!username || !userKey) {
+        if (!userKey) {
             loginFeedback.style.color = '#FE2C55';
-            loginFeedback.textContent = 'يجب إدخال اسم المستخدم والمفتاح.';
+            loginFeedback.textContent = 'الرجاء إدخال مفتاح الاشتراك.';
             return;
         }
 
         loginButton.disabled = true;
-        loginFeedback.style.color = 'var(--c1)'; // Cyan for status updates
+        loginFeedback.style.color = 'var(--c1)';
         loginFeedback.textContent = 'جار التحقق...';
 
-        // Staged feedback for a smoother feel
-        setTimeout(async () => {
-            loginFeedback.textContent = 'جاري التحقق من الخادم...';
-            
-            // Now, perform the actual check
-            localStorage.setItem('SUB_KEY', userKey);
-            const isValid = await refreshSubscriptionBox(false);
-
-            // If the login fails, re-enable the button so the user can try again.
-            if (!isValid) {
-                loginButton.disabled = false;
-            }
-        }, 800); // 800ms delay before showing the second message
+        localStorage.setItem('SUB_KEY', userKey);
+        const isValid = await refreshSubscriptionInfo(false);
+        
+        if (!isValid) {
+            loginButton.disabled = false;
+        }
     });
-
 
     function updateInfo(){const f=fileInput.files[0];status.textContent='';if(!f){info.textContent='اسحب المقطع هنا أو اضغط للاختيار';processBtn.disabled=!0;return}
     const MAX_SIZE=209715200;if(f.size>MAX_SIZE){info.textContent=`الملف: ${f.name}`;status.textContent=`❌ حجم الملف كبير جدًا (${mb(f.size)}). الحد الأقصى 200 MB.`;processBtn.disabled=!0;fileInput.value='';return}
     info.textContent=`الملف: ${f.name} — ${mb(f.size)}`;processBtn.disabled=!1}
     drop.addEventListener('click',()=>fileInput.click());drop.addEventListener('dragover',e=>e.preventDefault());drop.addEventListener('drop',e=>{e.preventDefault();if(e.dataTransfer.files.length){fileInput.files=e.dataTransfer.files;updateInfo()}});fileInput.addEventListener('change',updateInfo);
     
-    processBtn.addEventListener('click',async()=>{const f=fileInput.files[0];if(!f)return;const key=localStorage.getItem('SUB_KEY');if(!key){showLogin('انتهت الجلسة، الرجاء تسجيل الدخول مجددًا.');return}const device=await getDeviceHash();status.textContent='جارٍ الرفع…';bar.classList.remove('running');bar.style.width='0%';processBtn.disabled=!0;fileInput.disabled=!0;drop.style.pointerEvents='none';drop.style.opacity='0.5';const fd=new FormData;fd.append('file',f);const xhr=new XMLHttpRequest;xhr.open('POST','/process',!0);xhr.responseType='blob';if(key!=="__DEVICE_ONLY__")xhr.setRequestHeader('X-KEY',key);xhr.setRequestHeader('X-DEVICE',device);xhr.setRequestHeader('X-DEVICE-NAME',getDeviceName());
+    processBtn.addEventListener('click',async()=>{const f=fileInput.files[0];if(!f)return;const key=localStorage.getItem('SUB_KEY');const device=await getDeviceID();if(!key){showLogin('انتهت الجلسة، الرجاء تسجيل الدخول مجددًا.');return}status.textContent='جارٍ الرفع…';bar.classList.remove('running');bar.style.width='0%';processBtn.disabled=!0;fileInput.disabled=!0;drop.style.pointerEvents='none';drop.style.opacity='0.5';const fd=new FormData;fd.append('file',f);const xhr=new XMLHttpRequest;xhr.open('POST','/process',!0);xhr.responseType='blob';xhr.setRequestHeader('X-KEY',key);xhr.setRequestHeader('X-DEVICE',device);xhr.setRequestHeader('X-DEVICE-NAME',getDeviceName());
     xhr.upload.onprogress=e=>{if(e.lengthComputable){bar.style.width=Math.round(e.loaded/e.total*100)+'%'}};xhr.onreadystatechange=()=>{if(xhr.readyState===XMLHttpRequest.HEADERS_RECEIVED){status.textContent='جارٍ تحسين الفيديو…';bar.classList.add('running')}};
-    
-    xhr.onload=()=>{
-        bar.classList.remove('running');
-        if(xhr.status===200){
-            status.textContent='تمّت المعالجة — يبدأ التنزيل الآن';
-            const blob=xhr.response,url=URL.createObjectURL(blob);
-            const a=document.createElement('a');
-            a.href=url;a.download='output.mp4';
-            document.body.appendChild(a);
-            a.click();
-            URL.revokeObjectURL(url);
-            a.remove();
-            setTimeout(()=>{drop.style.pointerEvents='auto';drop.style.opacity='1';fileInput.disabled=!1;fileInput.value='';updateInfo()},800)
-        } else {
-            const reader = new FileReader();
-            reader.onload = () => {
-                let errorMsg = 'حدث خطأ غير متوقع. حاول مجددًا.';
-                try {
-                    const errorResponse = JSON.parse(reader.result);
-                    errorMsg = errorResponse.detail || errorResponse.error || 'المفتاح غير صالح أو انتهت صلاحيته.';
-                } catch (e) {
-                    errorMsg = 'المفتاح غير صالح أو انتهت صلاحيته. سجل الدخول مجددًا.';
-                }
-                localStorage.removeItem('SUB_KEY');
-                showLogin(errorMsg);
-            };
-            reader.onerror = () => {
-                localStorage.removeItem('SUB_KEY');
-                showLogin('خطأ في معالجة الاستجابة من الخادم.');
-            };
-            reader.readAsText(xhr.response);
-
-            drop.style.pointerEvents = 'auto';
-            drop.style.opacity = '1';
-            fileInput.disabled = false;
-            updateInfo();
-        }
-    };
-    
+    xhr.onload=()=>{bar.classList.remove('running');if(xhr.status===200){status.textContent='تمّت المعالجة — يبدأ التنزيل الآن';const u=URL.createObjectURL(xhr.response),a=document.createElement('a');a.href=u;a.download=`processed_${f.name}`;document.body.appendChild(a);a.click();URL.revokeObjectURL(u);a.remove();setTimeout(()=>{drop.style.pointerEvents='auto';drop.style.opacity='1';fileInput.disabled=!1;fileInput.value='';updateInfo()},800)}else{const r=new FileReader();r.onload=()=>{let m='حدث خطأ غير متوقع';try{const d=JSON.parse(r.result);m=d.detail||d.error||'المفتاح غير صالح'}catch(e){}showLogin(m)};r.readAsText(xhr.response);drop.style.pointerEvents='auto';drop.style.opacity='1';fileInput.disabled=!1;updateInfo()}};
     xhr.onerror=()=>{bar.classList.remove('running');status.textContent='تعذّر الاتصال.';drop.style.pointerEvents='auto';drop.style.opacity='1';fileInput.disabled=!1;updateInfo()};xhr.send(fd)});
     
-    showSubBtn?.addEventListener('click',()=>refreshSubscriptionBox(false));
+    showSubBtn?.addEventListener('click',()=>refreshSubscriptionInfo(false));
 
     // --- Initial Load ---
     window.addEventListener('load', async () => {
       const keyExists = localStorage.getItem('SUB_KEY');
       if (keyExists) {
-        const isValid = await refreshSubscriptionBox(true);
+        const isValid = await refreshSubscriptionInfo(true);
         if (!isValid) {
           showLogin('المفتاح المحفوظ غير صالح، أدخل مفتاحًا جديدًا.');
         }
