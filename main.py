@@ -124,7 +124,7 @@ async def home():
     index_path = BASE_DIR / "index.html"
     if not index_path.exists():
         return HTMLResponse("<h1>Welcome! Server is running.</h1>", status_code=200)
-    return index_path.read_text(encoding="utf-8")
+    return FileResponse(str(index_path))
 
 # --- مسارات المشرف المحمية ---
 @app.post("/subscribe", dependencies=[Depends(verify_admin_key)], summary="إنشاء مفتاح اشتراك جديد (للمشرف فقط)")
@@ -151,7 +151,7 @@ async def me(request: Request):
         raise HTTPException(status_code=404, detail="المفتاح غير صالح")
     if not ensure_bound_or_bind(db, row, device, device_name):
         raise HTTPException(status_code=403, detail="هذا المفتاح مربوط بجهاز آخر")
-    
+
     expires_on = calc_expiry(row.get("activated_on"), row.get("duration_days", 30))
     now = datetime.datetime.utcnow()
     is_expired = expires_on and now >= expires_on
@@ -159,7 +159,7 @@ async def me(request: Request):
     last_used_time = now_iso()
     row["last_used"] = last_used_time
     save_db(db)
-    
+
     return {"key_masked": row["key"][:4] + "****", "device_name": row.get("device_name"), "activated_on": row.get("activated_on"), "expires_on": expires_on.isoformat() if expires_on else None, "days_left": days_left, "is_active": not is_expired, "last_used": last_used_time}
 
 @app.post("/process", summary="معالجة الفيديو للمستخدمين المشتركين")
@@ -168,25 +168,41 @@ async def process_video(request: Request, file: UploadFile = File(...)):
     device = request.headers.get("X-DEVICE")
     if not key or not device:
         raise HTTPException(status_code=401, detail="المفتاح ومعرف الجهاز مطلوبان")
+
+    # <-- الخطوة 1: تحميل قاعدة البيانات من JSONBin
     db = load_db()
+
+    # <-- الخطوة 2: البحث عن المفتاح الذي أرسله المستخدم
     row = find_key(db, key)
-    if not row: raise HTTPException(status_code=401, detail="المفتاح غير صحيح")
-    if not ensure_bound_or_bind(db, row, device, None): raise HTTPException(status_code=403, detail="المفتاح مربوط بجهاز آخر")
+
+    # <-- الخطوة 3: التحقق الأهم. إذا لم يتم العثور على المفتاح، نتوقف هنا ونرسل خطأ
+    if not row:
+        raise HTTPException(status_code=401, detail="المفتاح غير صحيح")
+
+    # ... إذا نجح التحقق، نكمل باقي الفحوصات (الجهاز، الصلاحية)
+    if not ensure_bound_or_bind(db, row, device, None):
+        raise HTTPException(status_code=403, detail="المفتاح مربوط بجهاز آخر")
+
     expires_on = calc_expiry(row.get("activated_on"), row.get("duration_days", 30))
-    if not expires_on or datetime.datetime.utcnow() >= expires_on: raise HTTPException(status_code=403, detail="⛔ انتهت صلاحية هذا المفتاح")
-    
+    if not expires_on or datetime.datetime.utcnow() >= expires_on:
+        raise HTTPException(status_code=403, detail="⛔ انتهت صلاحية هذا المفتاح")
+
     row["last_used"] = now_iso()
     save_db(db)
-    
+
+    # <-- فقط إذا مرت كل التحققات السابقة، تبدأ معالجة الفيديو هنا
     try:
         suffix = Path(file.filename).suffix
         with tempfile.NamedTemporaryFile(delete=False, suffix=suffix) as tmp_in:
             contents = await file.read()
             tmp_in.write(contents)
             tmp_in_path = tmp_in.name
+        
         tmp_out_path = tmp_in_path.replace(suffix, f"_out{suffix}")
+        
         cmd = ["ffmpeg", "-itsscale", "2", "-i", tmp_in_path, "-c:v", "copy", "-c:a", "copy", tmp_out_path]
         subprocess.run(cmd, check=True, capture_output=True, text=True, encoding='utf-8')
+        
         return FileResponse(tmp_out_path, filename=f"processed_{file.filename}")
     except subprocess.CalledProcessError as e:
         raise HTTPException(status_code=500, detail=f"خطأ في معالجة الفيديو: {e.stderr}")
