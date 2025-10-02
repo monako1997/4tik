@@ -56,7 +56,6 @@
   </style>
 </head>
 <body>
-
   <div id="login-overlay" class="login-overlay">
     <div class="login-card">
       <div class="card2">
@@ -75,7 +74,6 @@
       </div>
     </div>
   </div>
-
   <div id="app-content" style="display: none; width: 100%;">
     <header class="topbar"><h1 class="brand">4TIK PRO </h1></header>
     <main class="wrap">
@@ -115,7 +113,6 @@
     </main>
     <div class="footer">Made by 4Tik <span class="heart">🌐</span></div>
   </div>
-
   <script>
     // --- DOM Elements ---
     const drop=document.getElementById('drop'),fileInput=document.getElementById('file'),info=document.getElementById('fileInfo'),
@@ -128,19 +125,16 @@
     const keyField = document.getElementById('key-field');
     const loginFeedback = document.getElementById('login-feedback');
     const appContent = document.getElementById('app-content');
-
     // --- Helper Functions ---
     const mb=n=>(n/1024/1024).toFixed(2)+' MB';
     function getDeviceName(){const ua=navigator.userAgent;if(/mobile/i.test(ua)){if(/iphone|ipad|ipod/i.test(ua))return"Apple Device";if(/android/i.test(ua)){const m=ua.match(/Android\s+[\d\.]+;\s+([\w\s]+)\s+Build/i);return m&&m.length>1?m[1]:"Android Device"}}if(/windows/i.test(ua))return"Windows PC";if(/macintosh|mac os x/i.test(ua))return"Mac";return"Unknown Device"}
     async function getDeviceID(){const s=screen,p=navigator,d=document.createElement('canvas'),t=d.getContext('webgl')||d.getContext('experimental-webgl'),n=t?t.getExtension('WEBGL_debug_renderer_info'):null,i=[p.platform,s.width+'x'+s.height,p.deviceMemory,p.hardwareConcurrency,n?t.getParameter(n.UNMASKED_VENDOR_WEBGL):'',n?t.getParameter(n.UNMASKED_RENDERER_WEBGL):''].join('|');const e=new TextEncoder().encode(i),a=await crypto.subtle.digest('SHA-256',e);return Array.from(new Uint8Array(a)).map(t=>t.toString(16).padStart(2,'0')).join('')}
-
     // --- Main App Logic ---
     function showApp() {
         loginOverlay.style.display = 'none';
         appContent.style.display = 'block';
         document.body.classList.remove('login-active');
     }
-
     function showLogin(message = '') {
         localStorage.removeItem('SUB_KEY'); // Clear key on logout/error
         keyField.value = '';
@@ -150,7 +144,6 @@
         appContent.style.display = 'none';
         document.body.classList.add('login-active');
     }
-    
     // =================================================================
     // THIS IS THE MAIN CORRECTED FUNCTION
     // =================================================================
@@ -160,11 +153,9 @@
         if (!isAutoCheck) showLogin('الرجاء إدخال مفتاح اشتراك صالح.');
         return false;
       }
-
       if (!isAutoCheck) {
           subToast.textContent = 'جاري تحديث المعلومات...';
       }
-
       try {
         const device = await getDeviceID();
         const res = await fetch('/me', {
@@ -174,33 +165,26 @@
             'X-DEVICE-NAME': getDeviceName()
           }
         });
-        
         const data = await res.json();
-
         if (!res.ok) {
           // If server returns an error (4xx, 5xx), show it
           showLogin(data.detail || 'المفتاح غير صالح أو منتهي الصلاحية');
           return false;
         }
-
         // --- Map backend data to frontend elements ---
         subKey.textContent = data.key_masked || '—';
         subExp.textContent = data.expires_on ? new Date(data.expires_on).toLocaleString('ar-EG') : 'غير مفعل';
         subDays.textContent = data.days_left ?? '—';
         subDevice.textContent = data.device_name || '—';
-        
         // --- Simplified Binding Status ---
         // If the API call was successful, it means the key is bound to this device.
         subBind.textContent = 'مربوط بهذا الجهاز';
-        
         if (!isAutoCheck) {
             subToast.textContent = '✅ تم تحديث معلومات الاشتراك بنجاح!';
             setTimeout(() => subToast.textContent = '', 2500);
         }
-        
         showApp();
         return true;
-
       } catch (e) {
         console.error("Fetch Error:", e);
         if (!isAutoCheck) {
@@ -211,43 +195,34 @@
         return false;
       }
     }
-
     // --- Event Listeners ---
     loginForm.addEventListener('submit', async (e) => {
         e.preventDefault();
         const loginButton = e.target.querySelector('.login-button');
         const userKey = keyField.value.trim();
-
         if (!userKey) {
             loginFeedback.style.color = '#FE2C55';
             loginFeedback.textContent = 'الرجاء إدخال مفتاح الاشتراك.';
             return;
         }
-
         loginButton.disabled = true;
         loginFeedback.style.color = 'var(--c1)';
         loginFeedback.textContent = 'جار التحقق...';
-
         localStorage.setItem('SUB_KEY', userKey);
         const isValid = await refreshSubscriptionInfo(false);
-        
         if (!isValid) {
             loginButton.disabled = false;
         }
     });
-
     function updateInfo(){const f=fileInput.files[0];status.textContent='';if(!f){info.textContent='اسحب المقطع هنا أو اضغط للاختيار';processBtn.disabled=!0;return}
     const MAX_SIZE=209715200;if(f.size>MAX_SIZE){info.textContent=`الملف: ${f.name}`;status.textContent=`❌ حجم الملف كبير جدًا (${mb(f.size)}). الحد الأقصى 200 MB.`;processBtn.disabled=!0;fileInput.value='';return}
     info.textContent=`الملف: ${f.name} — ${mb(f.size)}`;processBtn.disabled=!1}
     drop.addEventListener('click',()=>fileInput.click());drop.addEventListener('dragover',e=>e.preventDefault());drop.addEventListener('drop',e=>{e.preventDefault();if(e.dataTransfer.files.length){fileInput.files=e.dataTransfer.files;updateInfo()}});fileInput.addEventListener('change',updateInfo);
-    
     processBtn.addEventListener('click',async()=>{const f=fileInput.files[0];if(!f)return;const key=localStorage.getItem('SUB_KEY');const device=await getDeviceID();if(!key){showLogin('انتهت الجلسة، الرجاء تسجيل الدخول مجددًا.');return}status.textContent='جارٍ الرفع…';bar.classList.remove('running');bar.style.width='0%';processBtn.disabled=!0;fileInput.disabled=!0;drop.style.pointerEvents='none';drop.style.opacity='0.5';const fd=new FormData;fd.append('file',f);const xhr=new XMLHttpRequest;xhr.open('POST','/process',!0);xhr.responseType='blob';xhr.setRequestHeader('X-KEY',key);xhr.setRequestHeader('X-DEVICE',device);xhr.setRequestHeader('X-DEVICE-NAME',getDeviceName());
     xhr.upload.onprogress=e=>{if(e.lengthComputable){bar.style.width=Math.round(e.loaded/e.total*100)+'%'}};xhr.onreadystatechange=()=>{if(xhr.readyState===XMLHttpRequest.HEADERS_RECEIVED){status.textContent='جارٍ تحسين الفيديو…';bar.classList.add('running')}};
-    xhr.onload=()=>{bar.classList.remove('running');if(xhr.status===200){status.textContent='تمّت المعالجة — يبدأ التنزيل الآن';const u=URL.createObjectURL(xhr.response),a=document.createElement('a');a.href=u;a.download=`processed_${f.name}`;document.body.appendChild(a);a.click();URL.revokeObjectURL(u);a.remove();setTimeout(()=>{drop.style.pointerEvents='auto';drop.style.opacity='1';fileInput.disabled=!1;fileInput.value='';updateInfo()},800)}else{const r=new FileReader();r.onload=()=>{let m='حدث خطأ غير متوقع';try{const d=JSON.parse(r.result);m=d.detail||d.error||'المفتاح غير صالح'}catch(e){}showLogin(m)};r.readAsText(xhr.response);drop.style.pointerEvents='auto';drop.style.opacity='1';fileInput.disabled=!1;updateInfo()}};
+    xhr.onload=()=>{bar.classList.remove('running');if(xhr.status===200){status.textContent='تمّت المعالجة — يبدأ التنزيل الآن';const u=URL.createObjectURL(xhr.response),a=document.createElement('a');a.href=u;a.download=`processed_${f.name}`;document.body.appendChild(a);a.click();URL.revokeObjectURL(u);a.remove();setTimeout(()=>{drop.style.pointerEvents='auto';drop.style.opacity='1';fileInput.disabled=!1;updateInfo()},800)}else{const r=new FileReader();r.onload=()=>{let m='حدث خطأ غير متوقع';try{const d=JSON.parse(r.result);m=d.detail||d.error||'المفتاح غير صالح'}catch(e){}showLogin(m)};r.readAsText(xhr.response);drop.style.pointerEvents='auto';drop.style.opacity='1';fileInput.disabled=!1;updateInfo()}};
     xhr.onerror=()=>{bar.classList.remove('running');status.textContent='تعذّر الاتصال.';drop.style.pointerEvents='auto';drop.style.opacity='1';fileInput.disabled=!1;updateInfo()};xhr.send(fd)});
-    
     showSubBtn?.addEventListener('click',()=>refreshSubscriptionInfo(false));
-
     // --- Initial Load ---
     window.addEventListener('load', async () => {
       const keyExists = localStorage.getItem('SUB_KEY');
@@ -260,7 +235,21 @@
         showLogin();
       }
     });
-
+    // --- Security: Disable right-click, F12, and other dev tools ---
+    document.addEventListener('contextmenu', event => event.preventDefault());
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'F12' || (e.ctrlKey && e.shiftKey && (e.key === 'I' || e.key === 'C' || e.key === 'J')) || (e.ctrlKey && e.key === 'U')) {
+            e.preventDefault();
+            return false;
+        }
+    });
+    // --- Security: Disable selection and copy/paste ---
+    document.onselectstart = function() { return false; };
+    document.ondragstart = function() { return false; };
+    // --- Security: Periodic check every 5 minutes ---
+    setInterval(() => {
+        refreshSubscriptionInfo(true);
+    }, 5 * 60 * 1000);
   </script>
 </body>
 </html>
