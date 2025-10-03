@@ -34,7 +34,17 @@
     .btn[disabled] { cursor: not-allowed; filter: grayscale(70%); animation: none; pointer-events: none; }
     .bar-wrap{ height:14px; background:#0a0f1a; border:1px solid var(--line); border-radius:999px; overflow:hidden; width: 100%; }
     .bar{ height:100%; width:0%; border-radius:999px; background:linear-gradient(90deg,var(--c2),var(--c1)); transition:width .12s; }
-    .bar.running{ animation:slide 1.1s linear infinite; background:linear-gradient(90deg,transparent 0%,rgba(255,255,255,.15) 50%,transparent 100%); width:40%; }
+    
+    /* ==================== START: CODE MODIFICATION ==================== */
+    /* This is the only part that has been changed as you requested */
+    .bar.running{
+      width: 100%; /* يجعل الشريط يملأ المساحة عند المعالجة */
+      background: linear-gradient(90deg, var(--c2), var(--c1), var(--c2)); /* يستخدم نفس تدرج الألوان الخاص بالعلامة التجارية */
+      background-size: 200% auto; /* ضروري لعمل التأثير الحركي */
+      animation: shine 2s linear infinite; /* يعيد استخدام نفس حركة اللمعان الموجودة مسبقًا */
+    }
+    /* ===================== END: CODE MODIFICATION ===================== */
+
     .status{ font-size:14px; color:var(--muted); height: 20px; }
     .footer{ position:fixed; bottom:15px; left:0; right:0; text-align:center; font-size:18px; font-weight:700; color:var(--ink); display:flex; justify-content:center; align-items:center; gap:10px; z-index:20; }
     .heart{ color:var(--c2); font-size:20px; animation:beat 1s infinite; }
@@ -111,7 +121,7 @@
         </ul>
       </section>
     </main>
-    <div class="footer">Made by 4Tik <span class="heart">🌐</span></div>
+    <div class="footer">Made by 4Tik <span class="heart">♥️</span></div>
   </div>
   <script>
     // --- DOM Elements ---
