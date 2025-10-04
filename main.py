@@ -1,4 +1,4 @@
-Import os
+import os
 import json
 import hashlib
 import datetime
