@@ -221,7 +221,7 @@ async def process_video(request: Request, file: UploadFile = File(...)):
         
         subprocess.run(cmd, check=True, capture_output=True, text=True, encoding='utf-8')
         
-        return FileResponse(tmp_out_path, filename=f"processed_{file.filename}")
+        return FileResponse(tmp_out_path, filename=f"4tik_{file.filename}")
     except subprocess.CalledProcessError as e:
         raise HTTPException(status_code=500, detail=f"خطأ في معالجة الفيديو: {e.stderr}")
     except Exception as e:
