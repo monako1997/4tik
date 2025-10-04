@@ -190,7 +190,7 @@ async def process_video(request: Request, file: UploadFile = File(...)):
     key = request.headers.get("X-KEY")
     device = request.headers.get("X-DEVICE")
     if not key or not device:
-        raise HTTPException(status_code=401, detail="المفتاح ومعرف الجهاز مطلوبان")
+        raise HTTPException(status_code=401, detail="FUCK OFF BITCH 🖕")
 
     db = load_db()
     row = find_key(db, key)
