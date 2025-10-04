@@ -1,4 +1,4 @@
-import os
+Import os
 import json
 import hashlib
 import datetime
@@ -167,6 +167,11 @@ async def me(request: Request):
     expires_on = calc_expiry(row.get("activated_on"), row.get("duration_days", 30))
     now = datetime.datetime.utcnow()
     is_expired = expires_on and now >= expires_on
+    
+    # 🔴 التعديل الضروري هنا: التحقق من الانتهاء ورفع خطأ 403
+    if is_expired:
+        raise HTTPException(status_code=403, detail="⛔ انتهت صلاحية هذا المفتاح")
+    
     days_left = 0 if is_expired else ((expires_on - now).days if expires_on else row.get("duration_days", 30))
     
     last_used_time = now_iso()
@@ -226,4 +231,3 @@ async def process_video(request: Request, file: UploadFile = File(...)):
         raise HTTPException(status_code=500, detail=f"خطأ في معالجة الفيديو: {e.stderr}")
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"حدث خطأ غير متوقع: {str(e)}")
-
