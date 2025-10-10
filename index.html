@@ -34,17 +34,12 @@
     .btn[disabled] { cursor: not-allowed; filter: grayscale(70%); animation: none; pointer-events: none; }
     .bar-wrap{ height:14px; background:#0a0f1a; border:1px solid var(--line); border-radius:999px; overflow:hidden; width: 100%; }
     .bar{ height:100%; width:0%; border-radius:999px; background:linear-gradient(90deg,var(--c2),var(--c1)); transition:width .12s; }
-    
-    /* ==================== START: CODE MODIFICATION ==================== */
-    /* This is the only part that has been changed as you requested */
     .bar.running{
-      width: 100%; /* يجعل الشريط يملأ المساحة عند المعالجة */
-      background: linear-gradient(90deg, var(--c2), var(--c1), var(--c2)); /* يستخدم نفس تدرج الألوان الخاص بالعلامة التجارية */
-      background-size: 200% auto; /* ضروري لعمل التأثير الحركي */
-      animation: shine 2s linear infinite; /* يعيد استخدام نفس حركة اللمعان الموجودة مسبقًا */
+      width: 100%;
+      background: linear-gradient(90deg, var(--c2), var(--c1), var(--c2));
+      background-size: 200% auto;
+      animation: shine 2s linear infinite;
     }
-    /* ===================== END: CODE MODIFICATION ===================== */
-
     .status{ font-size:14px; color:var(--muted); height: 20px; }
     .footer{ position:fixed; bottom:15px; left:0; right:0; text-align:center; font-size:18px; font-weight:700; color:var(--ink); display:flex; justify-content:center; align-items:center; gap:10px; z-index:20; }
     .heart{ color:var(--c2); font-size:20px; animation:beat 1s infinite; }
@@ -63,9 +58,32 @@
     .login-overlay .login-button:hover { background-color: #00ff75; color: black; }
     .login-overlay .login-button:disabled { background-color: #555; cursor: not-allowed; }
     .login-feedback { text-align: center; color: #FE2C55; font-size: 14px; height: 20px; margin-top: 10px; color: var(--c1); }
+    /* Toast styles (already inline in the div, you can move here if you like) */
   </style>
 </head>
 <body>
+  <!-- Toast Notification Element -->
+  <div id="toast" style="
+    visibility: hidden;
+    min-width: 240px;
+    max-width: 95vw;
+    background: linear-gradient(90deg, #25F4EE, #FE2C55, #25F4EE);
+    color: #fff;
+    text-align: center;
+    border-radius: 10px;
+    padding: 15px 18px;
+    position: fixed;
+    z-index: 9999;
+    left: 50%;
+    transform: translateX(-50%);
+    bottom: 40px;
+    font-size: 18px;
+    box-shadow: 0 4px 18px rgba(0,0,0,0.18);
+    opacity: 0;
+    transition: opacity 0.5s, bottom 0.5s;
+    direction: rtl;
+  "></div>
+
   <div id="login-overlay" class="login-overlay">
     <div class="login-card">
       <div class="card2">
@@ -124,6 +142,26 @@
     <div class="footer">Made by 4Tik <span class="heart">♥️</span></div>
   </div>
   <script>
+    // Toast Notification Function
+    function showToast(message, type = "info") {
+      const toast = document.getElementById("toast");
+      let bg = "linear-gradient(90deg, #25F4EE, #FE2C55, #25F4EE)";
+      if(type==="success") bg = "linear-gradient(90deg, #36d399, #25F4EE)";
+      else if(type==="error") bg = "linear-gradient(90deg, #FE2C55, #ff4444)";
+      else if(type==="warn") bg = "linear-gradient(90deg, #fbbf24, #FE2C55)";
+      toast.style.background = bg;
+      toast.textContent = message;
+      toast.style.visibility = "visible";
+      toast.style.opacity = "1";
+      toast.style.bottom = "40px";
+      clearTimeout(window.__toastTimeout);
+      window.__toastTimeout = setTimeout(() => {
+          toast.style.opacity = "0";
+          toast.style.bottom = "10px";
+          setTimeout(()=>{ toast.style.visibility = "hidden"; }, 500);
+      }, 3500);
+    }
+
     // --- DOM Elements ---
     const drop=document.getElementById('drop'),fileInput=document.getElementById('file'),info=document.getElementById('fileInfo'),
     processBtn=document.getElementById('process'),bar=document.getElementById('bar'),status=document.getElementById('status'),
@@ -177,8 +215,8 @@
         });
         const data = await res.json();
         if (!res.ok) {
-          // If server returns an error (4xx, 5xx), show it
           showLogin(data.detail || 'المفتاح غير صالح أو منتهي الصلاحية');
+          showToast(data.detail || 'المفتاح غير صالح أو منتهي الصلاحية', "error");
           return false;
         }
         // --- Map backend data to frontend elements ---
@@ -186,11 +224,9 @@
         subExp.textContent = data.expires_on ? new Date(data.expires_on).toLocaleString('ar-EG') : 'غير مفعل';
         subDays.textContent = data.days_left ?? '—';
         subDevice.textContent = data.device_name || '—';
-        // --- Simplified Binding Status ---
-        // If the API call was successful, it means the key is bound to this device.
         subBind.textContent = 'مربوط بهذا الجهاز';
         if (!isAutoCheck) {
-            subToast.textContent = '✅ تم تحديث معلومات الاشتراك بنجاح!';
+            showToast('✅ تم تحديث معلومات الاشتراك بنجاح!', "success");
             setTimeout(() => subToast.textContent = '', 2500);
         }
         showApp();
@@ -198,10 +234,9 @@
       } catch (e) {
         console.error("Fetch Error:", e);
         if (!isAutoCheck) {
-            subToast.textContent = '❌ فشل الاتصال بالخادم.';
+            showToast('❌ فشل الاتصال بالخادم.', "error");
             setTimeout(() => subToast.textContent = '', 2500);
         }
-        // Don't log out the user on a temporary network error
         return false;
       }
     }
@@ -213,6 +248,7 @@
         if (!userKey) {
             loginFeedback.style.color = '#FE2C55';
             loginFeedback.textContent = 'الرجاء إدخال مفتاح الاشتراك.';
+            showToast('الرجاء إدخال مفتاح الاشتراك.', "warn");
             return;
         }
         loginButton.disabled = true;
@@ -225,13 +261,13 @@
         }
     });
     function updateInfo(){const f=fileInput.files[0];status.textContent='';if(!f){info.textContent='اسحب المقطع هنا أو اضغط للاختيار';processBtn.disabled=!0;return}
-    const MAX_SIZE=209715200;if(f.size>MAX_SIZE){info.textContent=`الملف: ${f.name}`;status.textContent=`❌ حجم الملف كبير جدًا (${mb(f.size)}). الحد الأقصى 200 MB.`;processBtn.disabled=!0;fileInput.value='';return}
+    const MAX_SIZE=209715200;if(f.size>MAX_SIZE){info.textContent=`الملف: ${f.name}`;status.textContent=`❌ حجم الملف كبير جدًا (${mb(f.size)}). الحد الأقصى 200 MB.`;processBtn.disabled=!0;fileInput.value='';showToast(`❌ حجم الملف كبير جدًا (${mb(f.size)}). الحد الأقصى 200 MB.`, "error");return}
     info.textContent=`الملف: ${f.name} — ${mb(f.size)}`;processBtn.disabled=!1}
     drop.addEventListener('click',()=>fileInput.click());drop.addEventListener('dragover',e=>e.preventDefault());drop.addEventListener('drop',e=>{e.preventDefault();if(e.dataTransfer.files.length){fileInput.files=e.dataTransfer.files;updateInfo()}});fileInput.addEventListener('change',updateInfo);
-    processBtn.addEventListener('click',async()=>{const f=fileInput.files[0];if(!f)return;const key=localStorage.getItem('SUB_KEY');const device=await getDeviceID();if(!key){showLogin('انتهت الجلسة، الرجاء تسجيل الدخول مجددًا.');return}status.textContent='جارٍ الرفع…';bar.classList.remove('running');bar.style.width='0%';processBtn.disabled=!0;fileInput.disabled=!0;drop.style.pointerEvents='none';drop.style.opacity='0.5';const fd=new FormData;fd.append('file',f);const xhr=new XMLHttpRequest;xhr.open('POST','/process',!0);xhr.responseType='blob';xhr.setRequestHeader('X-KEY',key);xhr.setRequestHeader('X-DEVICE',device);xhr.setRequestHeader('X-DEVICE-NAME',getDeviceName());
+    processBtn.addEventListener('click',async()=>{const f=fileInput.files[0];if(!f)return;const key=localStorage.getItem('SUB_KEY');const device=await getDeviceID();if(!key){showLogin('انتهت الجلسة، الرجاء تسجيل الدخول مجددًا.');showToast('انتهت الجلسة، الرجاء تسجيل الدخول مجددًا.', "warn");return}status.textContent='جارٍ الرفع…';bar.classList.remove('running');bar.style.width='0%';processBtn.disabled=!0;fileInput.disabled=!0;drop.style.pointerEvents='none';drop.style.opacity='0.5';const fd=new FormData;fd.append('file',f);const xhr=new XMLHttpRequest;xhr.open('POST','/process',!0);xhr.responseType='blob';xhr.setRequestHeader('X-KEY',key);xhr.setRequestHeader('X-DEVICE',device);xhr.setRequestHeader('X-DEVICE-NAME',getDeviceName());
     xhr.upload.onprogress=e=>{if(e.lengthComputable){bar.style.width=Math.round(e.loaded/e.total*100)+'%'}};xhr.onreadystatechange=()=>{if(xhr.readyState===XMLHttpRequest.HEADERS_RECEIVED){status.textContent='جارٍ تحسين الفيديو…';bar.classList.add('running')}};
-    xhr.onload=()=>{bar.classList.remove('running');if(xhr.status===200){status.textContent='تمّت المعالجة — يبدأ التنزيل الآن';const u=URL.createObjectURL(xhr.response),a=document.createElement('a');a.href=u;a.download=`processed_${f.name}`;document.body.appendChild(a);a.click();URL.revokeObjectURL(u);a.remove();setTimeout(()=>{drop.style.pointerEvents='auto';drop.style.opacity='1';fileInput.disabled=!1;updateInfo()},800)}else{const r=new FileReader();r.onload=()=>{let m='حدث خطأ غير متوقع';try{const d=JSON.parse(r.result);m=d.detail||d.error||'المفتاح غير صالح'}catch(e){}showLogin(m)};r.readAsText(xhr.response);drop.style.pointerEvents='auto';drop.style.opacity='1';fileInput.disabled=!1;updateInfo()}};
-    xhr.onerror=()=>{bar.classList.remove('running');status.textContent='تعذّر الاتصال.';drop.style.pointerEvents='auto';drop.style.opacity='1';fileInput.disabled=!1;updateInfo()};xhr.send(fd)});
+    xhr.onload=()=>{bar.classList.remove('running');if(xhr.status===200){status.textContent='تمّت المعالجة — يبدأ التنزيل الآن';showToast("✅ تمت معالجة الفيديو وجاهز للتنزيل!", "success");const u=URL.createObjectURL(xhr.response),a=document.createElement('a');a.href=u;a.download=`processed_${f.name}`;document.body.appendChild(a);a.click();URL.revokeObjectURL(u);a.remove();setTimeout(()=>{drop.style.pointerEvents='auto';drop.style.opacity='1';fileInput.disabled=!1;updateInfo()},800)}else{const r=new FileReader();r.onload=()=>{let m='حدث خطأ غير متوقع';try{const d=JSON.parse(r.result);m=d.detail||d.error||'المفتاح غير صالح'}catch(e){}showLogin(m);showToast(m, "error");};r.readAsText(xhr.response);drop.style.pointerEvents='auto';drop.style.opacity='1';fileInput.disabled=!1;updateInfo()}};
+    xhr.onerror=()=>{bar.classList.remove('running');status.textContent='تعذّر الاتصال.';showToast("تعذّر الاتصال بالخادم.", "error");drop.style.pointerEvents='auto';drop.style.opacity='1';fileInput.disabled=!1;updateInfo()};xhr.send(fd)});
     showSubBtn?.addEventListener('click',()=>refreshSubscriptionInfo(false));
     // --- Initial Load ---
     window.addEventListener('load', async () => {
@@ -240,6 +276,7 @@
         const isValid = await refreshSubscriptionInfo(true);
         if (!isValid) {
           showLogin('المفتاح المحفوظ غير صالح، أدخل مفتاحًا جديدًا.');
+          showToast('المفتاح المحفوظ غير صالح، أدخل مفتاحًا جديدًا.', "warn");
         }
       } else {
         showLogin();
